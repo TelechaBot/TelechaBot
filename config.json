@@ -1,0 +1,11 @@
+{
+    "statu": true,
+    "whiteGroupSwitch": false,
+    "whiteGroup": [
+        1111,
+        2222
+    ],
+    "newComer": {
+
+    }
+}
