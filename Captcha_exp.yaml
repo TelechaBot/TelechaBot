@@ -1,0 +1,7 @@
+# statu: True
+version: "2.0.5"
+desc: 'a bot'
+link: "https://t.me/SmartCapthaBot"
+botToken: '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
+#when you select lock:true,you must use aes to encode all Token! And Dont push your token to github directly.
+ClientBot :  {owner: '5477776859'}

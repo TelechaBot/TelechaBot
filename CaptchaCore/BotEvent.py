@@ -115,17 +115,27 @@ def Starts(bot, config):
                                              can_send_other_messages=True)
                     bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
 
+                def send_ok(message):
+                    msgss = bot.send_message(group,
+                                             f"刚刚{message.from_user.first_name}通过了验证！")
+                    return msgss
+
                 def verify_step2(message):
                     try:
-                        chat_id = message.chat.id
+                        bot.reply_to(message, '错误的回答....你还有一次机会')
+                        # chat_id = message.chat.id
                         answer = message.text
                         if int(answer) == int(paper.create()[1]):
                             unban(message)
-
+                            msgss = send_ok(message)
+                            from threading import Timer
+                            def delmsg(bot, chat, message):
+                                bot.delete_message(chat, message)
+                            t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
+                            t.start()
                         else:
                             if verifyRedis.read(str(message.from_user.id)):
                                 bot.kick_chat_member(group, message.from_user.id)
-
                     except Exception as e:
                         bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
 
@@ -137,6 +147,14 @@ def Starts(bot, config):
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
                         if int(answer) == int(paper.create()[1]):
                             unban(message)
+                            msgss = send_ok(message)
+                            from threading import Timer
+                            def delmsg(bot, chat, message):
+                                bot.delete_message(chat, message)
+
+                            t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
+                            t.start()
+
                         else:
                             bot.register_next_step_handler(message, verify_step2)
                         # user = User(name)
@@ -208,12 +226,18 @@ def New(bot, config):
         bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
                                  can_send_media_messages=False,
                                  can_send_other_messages=False)
-        InviteLink = "https://github.com/TelechaBot"
+        InviteLink = config.link
         mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        bot.send_message(msg.chat.id,
-                         f"Hey there {msg.from_user.first_name}.", reply_markup=mrkplink)
+        msgs = bot.send_message(msg.chat.id,
+                                f"Hey there {msg.from_user.first_name}.", reply_markup=mrkplink)
+        from threading import Timer
+        def delmsg(bot, chat, message):
+            bot.delete_message(chat, message)
+
+        t = Timer(25, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t.start()
 
     # InviteLink = "123"
     # mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
