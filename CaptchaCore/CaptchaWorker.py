@@ -188,7 +188,4 @@ class Importer(object):
         return verify.get("obj")
 
 
-some = Importer().pull()
-print(some.create())
-print(some.create()[0])
-print(some.create()[1])
+

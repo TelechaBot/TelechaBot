@@ -104,6 +104,30 @@ def Starts(bot, config):
             group = verifyRedis.read(str(message.from_user.id))
             if group:
                 bot.reply_to(message, f"开始验证群组{group}，你有175秒的时间计算这道题目")
+                from CaptchaCore import CaptchaWorker
+                paper = CaptchaWorker.Importer().pull(7)
+                bot.reply_to(message, paper.create()[0])
+
+                def unban(message):
+                    verifyRedis.promote(message.from_user.id)
+                    bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=True,
+                                             can_send_media_messages=True,
+                                             can_send_other_messages=True)
+                    bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+
+                def verify_step2(message):
+                    try:
+                        chat_id = message.chat.id
+                        answer = message.text
+                        if int(answer) == int(paper.create()[1]):
+                            unban(message)
+
+                        else:
+                            if verifyRedis.read(str(message.from_user.id)):
+                                bot.kick_chat_member(group, message.from_user.id)
+
+                    except Exception as e:
+                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
 
                 def verify_step(message):
                     try:
@@ -111,18 +135,16 @@ def Starts(bot, config):
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if True:
-                            verifyRedis.promote(message.from_user.id)
-                            bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=True,
-                                                     can_send_media_messages=True,
-                                                     can_send_other_messages=True)
-                            bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+                        if int(answer) == int(paper.create()[1]):
+                            unban(message)
+                        else:
+                            bot.register_next_step_handler(message, verify_step2)
                         # user = User(name)
                         # user_dict[chat_id] = user
                         # msg = bot.reply_to(message, 'How old are you?')
                         # bot.register_next_step_handler(msg, process_age_step)
                     except Exception as e:
-                        bot.reply_to(message, 'oooops')
+                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
 
                 bot.register_next_step_handler(message, verify_step)
                 # verify_step(bot, message)
