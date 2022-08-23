@@ -110,7 +110,7 @@ def Starts(bot, config):
 
                 def unban(message):
                     verifyRedis.promote(message.from_user.id)
-                    bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=True,
+                    bot.restrict_chat_member(group, message.from_user.id, can_send_messages=True,
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
                     bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
@@ -122,7 +122,6 @@ def Starts(bot, config):
 
                 def verify_step2(message):
                     try:
-                        bot.reply_to(message, '错误的回答....你还有一次机会')
                         # chat_id = message.chat.id
                         answer = message.text
                         if int(answer) == int(paper.create()[1]):
@@ -136,6 +135,7 @@ def Starts(bot, config):
                         else:
                             if verifyRedis.read(str(message.from_user.id)):
                                 bot.kick_chat_member(group, message.from_user.id)
+                                bot.reply_to(message, '验证失败...')
                     except Exception as e:
                         bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
 
@@ -156,6 +156,7 @@ def Starts(bot, config):
                             t.start()
 
                         else:
+                            bot.reply_to(message, '错误的回答....你还有一次机会')
                             bot.register_next_step_handler(message, verify_step2)
                         # user = User(name)
                         # user_dict[chat_id] = user

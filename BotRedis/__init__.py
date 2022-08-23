@@ -5,7 +5,7 @@ import time
 # 必须需要一个创建机器人对象的类才能使用KickMember功能！
 
 class JsonRedis(object):
-    def __init__(self, interval,config):
+    def __init__(self, interval):
         self.interval = interval
         JsonRedis.load_tasks()
         if not _tasks.get("Time_id"):
