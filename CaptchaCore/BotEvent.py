@@ -262,6 +262,7 @@ def New(bot, config):
                                  can_send_media_messages=False,
                                  can_send_other_messages=False)
         InviteLink = config.link
+        print(InviteLink)
         mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard

@@ -151,16 +151,16 @@ class JsonRedis(object):
         for key in ban:
             user = _tasks["Time_id"].pop(key)
             group = _tasks["Time_group"].pop(key)
-        try:
-            _tasks["User_group"][str(user)].remove(key)
-        except Exception as e:
-            pass
-        if not (key in tar):
-            # 过期验证的操作
-            from CaptchaCore.Bot import clinetBot
-            bot, config = clinetBot().botCreat()
-            bot.kick_chat_member(group, user)
-            # print("ban " + str(user) + str(group))
+            try:
+                _tasks["User_group"][str(user)].remove(key)
+            except Exception as e:
+                pass
+            if not (key in tar):
+                # 过期验证的操作
+                from CaptchaCore.Bot import clinetBot
+                bot, config = clinetBot().botCreat()
+                bot.kick_chat_member(group, user)
+                # print("ban " + str(user) + str(group))
 
         JsonRedis.save_tasks()
 
