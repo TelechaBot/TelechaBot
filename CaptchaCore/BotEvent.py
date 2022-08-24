@@ -210,12 +210,6 @@ def New(bot, config):
                 bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
                                          can_send_media_messages=False,
                                          can_send_other_messages=False)
-            except Exception as e:
-                print(e)
-                no_power = bot.send_message(msg.chat.id, "没有权限执行对新用户的限制")
-                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
-                t.start()
-            else:
                 verifyRedis.add(new.user.id, str(msg.chat.id))
                 InviteLink = config.link
                 # print(InviteLink)
@@ -223,10 +217,16 @@ def New(bot, config):
                 bot_link.add(
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        f"你好！{msg.from_user.id}.\n正在加入`{msg.chat.first_name}`\n管理员手动解封请使用`+unban {new.user.id}`",
+                                        # f"你好！{new.user.first_name}.\n正在加入:`{msg.chat.title}` `{msg.chat.id}`\n管理员手动解封请使用`+unban {new.user.id}`",
+                                        "s",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+            except Exception as e:
+                print(e)
+                no_power = bot.send_message(msg.chat.id, "启动失败，没有权限执行对新用户的限制")
+                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
                 t.start()
 
         # 验证白名单
