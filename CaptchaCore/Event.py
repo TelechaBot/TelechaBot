@@ -32,7 +32,7 @@ class botWorker(object):
         bot.delete_message(chat, message)
 
     @staticmethod
-    def unban(message, bot, groups):
+    def un_restrict(message, bot, groups):
         bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
                                  can_send_media_messages=True,
                                  can_send_other_messages=True)
@@ -40,7 +40,12 @@ class botWorker(object):
     @staticmethod
     def send_ban(message, bot, groups):
         msgss = bot.send_message(groups,
-                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被踢出群组...加入了黑名单！")
+                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被踢出群组...加入了黑名单！\n12分钟后可以重新加入")
+        return msgss
+
+    @staticmethod
+    def unbanUser(bot, chat, user):
+        msgss = bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
         return msgss
 
     @staticmethod

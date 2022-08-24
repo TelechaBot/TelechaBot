@@ -100,10 +100,26 @@ def Switch(bot, config):
                 bot.reply_to(message, "Wrong:" + str(e))
 
 
-# 手动解锁
+# 群组管理员操作命令
 def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
+        if "+test" in message.text:
+            def extract_arg(arg):
+                return arg.split()[1:]
+
+            status = extract_arg(message.text)
+            for user in status:
+                bot.reply_to(message, "6分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟:" + str(status))
+                try:
+                    userId = "".join(list(filter(str.isdigit, user)))
+                    verifyRedis.add(userId, str(message.chat.id))
+                    bot.restrict_chat_member(message.chat.id, userId, can_send_messages=False,
+                                             can_send_media_messages=False,
+                                             can_send_other_messages=False, until_date=message.date + 360)
+                except Exception as e:
+                    pass
+
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
@@ -120,7 +136,7 @@ def Admin(bot, config):
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
             # 机器人核心：发送通知并自毁消息
-            unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
+            unbanr = bot.reply_to(message, "已手动解封这些小可爱:" + str(status))
 
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
@@ -145,7 +161,7 @@ def Group(bot, config):
             else:
                 if _csonfig.get("whiteGroupSwitch"):
                     bot.send_message(message.chat.id,
-                                     "检查设置发现...")
+                                     "检查设置发现群组不在白名单之中！...")
                     bot.leave_chat(message.chat.id)
 
 
@@ -174,7 +190,7 @@ def New(bot, config):
         if _csonfig.get("whiteGroupSwitch"):
             if not (msg.chat.id in _csonfig.get("whiteGroup")):
                 bot.send_message(msg.chat.id,
-                                 "Somebody added me to this group,but the group not in my white list...")
+                                 "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
                 bot.leave_chat(msg.chat.id)
         try:
             bot.delete_message(msg.chat.id, msg.message_id)
@@ -189,22 +205,23 @@ def New(bot, config):
                                  can_send_other_messages=False)
         InviteLink = config.link
         # print(InviteLink)
-        mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-        mrkplink.add(
-            InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
+        bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+        bot_link.add(
+            InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
         msgs = bot.send_message(msg.chat.id,
-                                f"Hey there {msg.from_user.first_name}.\n管理员手动解封使用`+unban {msg.from_user.id}`",
-                                reply_markup=mrkplink,
+                                f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {msg.from_user.id}`",
+                                reply_markup=bot_link,
                                 parse_mode='Markdown')
 
-        def delmsg(bot, chat, message):
-            bot.delete_message(chat, message)
+        # def delmsg(bot, chat, message):
+        #     bot.delete_message(chat, message)
 
-        t = Timer(30, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         t.start()
 
+        # 启动验证流程
 
-# 启动验证流程
+
 def Starts(bot, config):
     @bot.message_handler(commands=['start'])
     def welcome(message):
@@ -217,17 +234,17 @@ def Starts(bot, config):
                 paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)
                 sth = paper.create()
                 bot.reply_to(message, sth[0])
-                print("生成了一道题目 " + str(sth))
+                print("生成了一道题目:" + str(sth))
 
                 def verify_step2(message):
                     try:
-                        group_k, key_k = verifyRedis.read(str(message.from_user.id))
+                        # group, keys = verifyRedis.read(str(message.from_user.id))
                         # chat_id = message.chat.id
                         answer = message.text
                         if str(answer) == str(sth[1]):
-                            botWorker.unban(message, bot, group_k)
+                            botWorker.un_restrict(message, bot, group_k)
                             verifyRedis.promote(message.from_user.id, group_k)
-                            bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+                            bot.reply_to(message, "好险！是正确的答案，如果没有被解封请通知群组管理员～")
                             msgss = botWorker.send_ok(message, bot, group_k)
                             t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
@@ -236,39 +253,41 @@ def Starts(bot, config):
                                 verifyRedis.checker(fail_user=[key])
                                 # bot.kick_chat_member(group, message.from_user.id)
                                 mgs = botWorker.send_ban(message, bot, group_k)
-
-                                t = Timer(25, botWorker.delmsg, args=[bot, mgs.chat.id, mgs.message_id])
+                                t = Timer(30, botWorker.delmsg, args=[bot, mgs.chat.id, mgs.message_id])
                                 t.start()
-                                bot.reply_to(message, '验证失败...')
+                                bot.reply_to(message, '回答错误，很抱歉我不能让您进入这个群组...您不符合管理员的筛选预期\n12分钟后可以重新进入')
+                                t = Timer(720, botWorker.unbanUser, args=[bot, group_k, message.from_user.id])
+                                t.start()
                     except Exception as e:
-                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                        bot.reply_to(message, f'机器人出错了，请发送日志到项目 Issue ,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
                 def verify_step(message):
                     try:
-                        chat_id = message.chat.id
+                        # chat_id = message.chat.id
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
                         if str(answer) == str(sth[1]):
-                            botWorker.unban(message, bot, group_k)
+                            botWorker.un_restrict(message, bot, group_k)
                             verifyRedis.promote(message.from_user.id, group_k)
-                            bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+                            bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
                             msgss = botWorker.send_ok(message, bot, group_k)
                             t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
 
                         else:
-                            bot.reply_to(message, '错误的回答....你还有一次机会')
+                            bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
                             bot.register_next_step_handler(message, verify_step2)
                     except Exception as e:
-                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                        bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
                 bot.register_next_step_handler(message, verify_step)
                 # verify_step(bot, message)
 
             else:
-                bot.reply_to(message, "未检索到你的信息。你无需验证")
+                bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
         else:
-            print(0)
+            pass
+            # print(0)
