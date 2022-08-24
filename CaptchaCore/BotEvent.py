@@ -184,7 +184,10 @@ def message_del(bot, config):
         try:
             bot.delete_message(message.chat.id, message.message_id)
         except Exception as e:
-            print(e)
+            if "bot was kicked" in str(e):
+                print("Bot被踢出了群组")
+            else:
+                print(e)
             pass
 
         # print(cmu.from_user)  # User : The admin who changed the bot's status
@@ -226,16 +229,18 @@ def New(bot, config):
                 t.start()
 
         # 验证白名单
-        if _csonfig.get("whiteGroupSwitch"):
-            if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get("whiteGroup"):
-                verify_user()
+        if new.status == "member":
+            if _csonfig.get("whiteGroupSwitch"):
+                if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
+                        "whiteGroup"):
+                    verify_user()
+                else:
+                    bot.send_message(msg.chat.id,
+                                     "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
+                    bot.leave_chat(msg.chat.id)
             else:
-                bot.send_message(msg.chat.id,
-                                 "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
-                bot.leave_chat(msg.chat.id)
-        else:
-            verify_user()
-        # 启动验证流程
+                verify_user()
+            # 启动验证流程
 
 
 def Starts(bot, config):
