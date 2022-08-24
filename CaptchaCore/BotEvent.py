@@ -82,11 +82,11 @@ def Switch(bot, config):
                 command = message.text
                 if command == "/show":
                     bot.reply_to(message, str(_csonfig))
-                if command == "/onW":
+                if command == "/onw":
                     _csonfig["whiteGroupSwitch"] = True
                     bot.reply_to(message, "On:whiteGroup")
                     save_csonfig()
-                if command == "/offW":
+                if command == "/offw":
                     _csonfig["whiteGroupSwitch"] = False
                     bot.reply_to(message, "Off:whiteGroup")
                     save_csonfig()
@@ -103,7 +103,7 @@ def Switch(bot, config):
                         else:
                             bot.reply_to(message, "这个文件没有找到....")
 
-                if "/addWhite" in command:
+                if "/addwhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
 
@@ -112,7 +112,7 @@ def Switch(bot, config):
                         _csonfig["whiteGroup"].append(int(groupId))
                         bot.reply_to(message, '白名单加入了' + str(groupId))
                     save_csonfig()
-                if "/removeWhite" in command:
+                if "/removewhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
 
