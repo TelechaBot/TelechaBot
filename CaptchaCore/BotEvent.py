@@ -97,9 +97,8 @@ def Switch(bot, config):
                     for item in extract_arg(command):
                         path = str(pathlib.Path().cwd()) + "/" + item
                         if pathlib.Path(path).exists():
-                            with open(path, 'r') as f:
-                                con = (f.read())
-                            bot.reply_to(message, con)
+                            doc = open(path, 'rb')
+                            bot.send_document(message.chat.id, doc)
                         else:
                             bot.reply_to(message, "这个文件没有找到....")
 
