@@ -140,12 +140,13 @@ def About(bot, config):
 
 
 def Admin(bot, config):
-    @bot.message_handler(chat_types=['supergroup','group'], is_chat_admin=True)
+    @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
         # bot.send_message(message.chat.id, "hello my admin")
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
+
             status = extract_arg(message.text)
             for user in status:
                 userId = "".join(list(filter(str.isdigit, user)))
@@ -156,8 +157,10 @@ def Admin(bot, config):
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
             unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
+
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
+
             t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
@@ -294,6 +297,11 @@ def New(bot, config):
     def new_comer(msg):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
+        if _csonfig.get("whiteGroupSwitch"):
+            if not (msg.chat.id in _csonfig.get("whiteGroup")):
+                bot.send_message(msg.chat.id,
+                                 "Somebody added me to this group,but the group not in my white list...")
+                bot.leave_chat(msg.chat.id)
         try:
             bot.delete_message(msg.chat.id, msg.message_id)
 
