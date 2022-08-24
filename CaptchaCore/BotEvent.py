@@ -150,11 +150,12 @@ def Group(bot, config):
     # if bot is added to group
     @bot.my_chat_member_handler()
     def my_chat_m(message: types.ChatMemberUpdated):
-        old = message.old_chat_member
+        # old = message.old_chat_member
         new = message.new_chat_member
         if new.status == "member":
             load_csonfig()
-            if message.chat.id in _csonfig.get("whiteGroup"):
+            if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
+                    "whiteGroup"):
                 pass
                 # bot.send_message(message.chat.id,
                 #                 "Hello bro! i can use high level problem to verify new chat member~~")
@@ -172,7 +173,8 @@ def Left(bot, config):
         #   if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
         try:
-            bot.delete_message(msg.chat.id, msg.message_id)
+            if msg.left_chat_member.id != bot.get_me().id:
+                bot.delete_message(msg.chat.id, msg.message_id)
         except Exception as e:
             print(e)
             bot.send_message(msg.chat.id,
@@ -187,38 +189,51 @@ def New(bot, config):
     def new_comer(msg):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
+
+        def verify_user():
+            try:
+                if msg.new_chat_member.user.id != bot.get_me().id:
+                    bot.delete_message(msg.chat.id, msg.message_id)
+                else:
+                    bot.send_message(msg.chat.id,
+                                     "这个 Bot 需要管理员权限")
+            except Exception as e:
+                print(e)
+                bot.send_message(msg.chat.id,
+                                 f"sorry,i am not admin")
+            # 用户操作
+            try:
+                bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
+                                         can_send_media_messages=False,
+                                         can_send_other_messages=False)
+            except Exception as e:
+                no_power = bot.send_message(msg.chat.id, "没有权限执行对新用户的限制")
+                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
+                t.start()
+            else:
+                verifyRedis.add(msg.from_user.id, str(msg.chat.id))
+                InviteLink = config.link
+                # print(InviteLink)
+                bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+                bot_link.add(
+                    InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
+                msgs = bot.send_message(msg.chat.id,
+                                        f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {msg.from_user.id}`",
+                                        reply_markup=bot_link,
+                                        parse_mode='Markdown')
+                t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+
+        # 验证白名单
         if _csonfig.get("whiteGroupSwitch"):
-            if not (msg.chat.id in _csonfig.get("whiteGroup")):
+            if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get("whiteGroup"):
+                verify_user()
+            else:
                 bot.send_message(msg.chat.id,
                                  "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
                 bot.leave_chat(msg.chat.id)
-        try:
-            bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
-        # 用户操作
-        verifyRedis.add(msg.from_user.id, str(msg.chat.id))
-        bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
-                                 can_send_media_messages=False,
-                                 can_send_other_messages=False)
-        InviteLink = config.link
-        # print(InviteLink)
-        bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-        bot_link.add(
-            InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        msgs = bot.send_message(msg.chat.id,
-                                f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {msg.from_user.id}`",
-                                reply_markup=bot_link,
-                                parse_mode='Markdown')
-
-        # def delmsg(bot, chat, message):
-        #     bot.delete_message(chat, message)
-
-        t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        t.start()
-
+        else:
+            verify_user()
         # 启动验证流程
 
 
