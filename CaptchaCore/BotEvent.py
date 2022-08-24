@@ -123,7 +123,8 @@ def Banme(bot, config):
                 t.start()
                 try:
                     # userId = "".join(list(filter(str.isdigit, user)))
-                    verifyRedis.add(message.from_user.id, str(message.chat.id))
+                    key = verifyRedis.add(message.from_user.id, str(message.chat.id))
+                    verifyRedis.checker(tar=[key])
                     bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                              can_send_media_messages=False,
                                              can_send_other_messages=False, until_date=message.date + mins * 60)
