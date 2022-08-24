@@ -163,7 +163,10 @@ class JsonRedis(object):
                     # 过期验证的操作
                     from CaptchaCore.Bot import clinetBot
                     bot, config = clinetBot().botCreat()
-                    bot.kick_chat_member(group, user)
+                    try:
+                        bot.kick_chat_member(group, user)
+                    except Exception as e:
+                        print(e)
                     # print("ban " + str(user) + str(group))
             JsonRedis.save_tasks()
 
