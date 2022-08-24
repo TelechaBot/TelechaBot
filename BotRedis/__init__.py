@@ -170,7 +170,8 @@ class JsonRedis(object):
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))
-        JsonRedis.save_tasks()
+            JsonRedis.save_tasks()
+
 
     def interval(self):
         return self.interval
