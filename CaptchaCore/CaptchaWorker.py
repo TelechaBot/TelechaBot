@@ -67,7 +67,7 @@ class find_ball_cone(object):
     def create(self):
         # lena = (random.randint(1, 30) * 3)
         r = (random.randint(1, 14) * 3)
-        Q = f"一个球的半径为{r}，求其体积!(四舍五入，只答出数字部分！)"
+        Q = f"一个球的半径为{r}，求其体积是多少π!(四舍五入，只答出数字部分！)"
         A = 4 / 3 * r ** 3
         return Q, round(A)
 

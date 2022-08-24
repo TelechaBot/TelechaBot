@@ -10,67 +10,39 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
-from telebot import formatting
+
+# from telebot import formatting
+
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(175)
 
 
+# 全局加载配置
 def load_csonfig():
     global _csonfig
     with open("config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
+# 存储全局配置
 def save_csonfig():
     with open("config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
-# 支持三层读取创建操作并且不报错！
-def readUser(where, group):
-    where = str(where)
-    group = str(abs(group))
-    load_csonfig()
-    if _csonfig.get(where):
-        oss = _csonfig[where].get(group)
-        if oss:
-            return oss
-        else:
-            return []
-    else:
-        return []
+# 关于
+def About(bot, config):
+    @bot.message_handler(commands=['about'])
+    def send_about(message):
+        if message.chat.type == "private":
+            if config.desc:
+                bot.reply_to(message, config.desc)
+            else:
+                bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
 
 
-def popUser(where, group, key):
-    where = str(where)
-    group = str(abs(group))
-    load_csonfig()
-    if _csonfig.get(where):
-        if _csonfig[where].get(group):
-            if key in _csonfig[where][str(group)]:
-                _csonfig[where][str(group)].remove(key)
-    save_csonfig()
-
-
-def saveUser(where, group, key):
-    where = str(where)
-    group = str(abs(group))
-    load_csonfig()
-    if _csonfig.get(where):
-        if _csonfig[where].get(group):
-            if not key in _csonfig[where][str(group)]:
-                _csonfig[where][str(group)].append(key)
-        else:
-            _csonfig[where][str(group)] = []
-            _csonfig[where][str(group)].append(key)
-    else:
-        _csonfig[where] = {}
-        _csonfig[where][str(group)] = []
-        _csonfig[where][str(group)].append(key)
-    save_csonfig()
-
-
+# 主控模块
 def Switch(bot, config):
     @bot.message_handler(content_types=['text'])
     def masters(message, items=None):
@@ -78,7 +50,6 @@ def Switch(bot, config):
         load_csonfig()
         if str(userID) == config.ClientBot.owner:
             try:
-                # chat_id = message.chat.id
                 command = message.text
                 if command == "/show":
                     bot.reply_to(message, str(_csonfig))
@@ -128,20 +99,10 @@ def Switch(bot, config):
                 bot.reply_to(message, "Wrong:" + str(e))
 
 
-def About(bot, config):
-    @bot.message_handler(commands=['about'])
-    def send_about(message):
-        if message.chat.type == "private":
-            if config.desc:
-                bot.reply_to(message, config.desc)
-            else:
-                bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
-
-
+# 手动解锁
 def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
-        # bot.send_message(message.chat.id, "hello my admin")
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
@@ -151,19 +112,94 @@ def Admin(bot, config):
                 userId = "".join(list(filter(str.isdigit, user)))
                 group, key = verifyRedis.read(str(userId))
                 if group:
+                    # 机器人核心：通过用户注册请求
                     verifyRedis.promote(userId)
+                    # 解封用户
                     bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
+            # 机器人核心：发送通知并自毁消息
             unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
-
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
-
-            t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
+            t = Timer(30, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
+# 白名单系统
+def Group(bot, config):
+    # if bot is added to group
+    @bot.my_chat_member_handler()
+    def my_chat_m(message: types.ChatMemberUpdated):
+        old = message.old_chat_member
+        new = message.new_chat_member
+        if new.status == "member":
+            load_csonfig()
+            if message.chat.id in _csonfig.get("whiteGroup"):
+                pass
+                # bot.send_message(message.chat.id,
+                #                 "Hello bro! i can use high level problem to verify new chat member~~")
+            else:
+                if _csonfig.get("whiteGroupSwitch"):
+                    bot.send_message(message.chat.id,
+                                     "检查设置发现...")
+                    bot.leave_chat(message.chat.id)
 
+
+def Left(bot, config):
+    @bot.message_handler(content_types=['left_chat_member'])
+    def left(msg):
+        #   if msg.left_chat_member.id != bot.get_me().id:
+        load_csonfig()
+        try:
+            bot.delete_message(msg.chat.id, msg.message_id)
+        except Exception as e:
+            print(e)
+            bot.send_message(msg.chat.id,
+                             f"sorry,i am not admin")
+        # 用户操作
+        verifyRedis.removed(msg.from_user.id, str(msg.chat.id))
+
+
+# 启动新用户通知
+def New(bot, config):
+    @bot.message_handler(content_types=['new_chat_members'])
+    def new_comer(msg):
+        # if msg.left_chat_member.id != bot.get_me().id:
+        load_csonfig()
+        if _csonfig.get("whiteGroupSwitch"):
+            if not (msg.chat.id in _csonfig.get("whiteGroup")):
+                bot.send_message(msg.chat.id,
+                                 "Somebody added me to this group,but the group not in my white list...")
+                bot.leave_chat(msg.chat.id)
+        try:
+            bot.delete_message(msg.chat.id, msg.message_id)
+        except Exception as e:
+            print(e)
+            bot.send_message(msg.chat.id,
+                             f"sorry,i am not admin")
+        # 用户操作
+        verifyRedis.add(msg.from_user.id, str(msg.chat.id))
+        bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
+                                 can_send_media_messages=False,
+                                 can_send_other_messages=False)
+        InviteLink = config.link
+        # print(InviteLink)
+        mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+        mrkplink.add(
+            InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
+        msgs = bot.send_message(msg.chat.id,
+                                f"Hey there {msg.from_user.first_name}.\n管理员手动解封使用`+unban {msg.from_user.id}`",
+                                reply_markup=mrkplink,
+                                parse_mode='Markdown')
+
+        def delmsg(bot, chat, message):
+            bot.delete_message(chat, message)
+
+        t = Timer(30, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t.start()
+
+
+# 启动验证流程
 def Starts(bot, config):
     @bot.message_handler(commands=['start'])
     def welcome(message):
@@ -261,82 +297,3 @@ def Starts(bot, config):
         else:
             print(0)
 
-
-def Group(bot, config):
-    # if bot is added to group
-    @bot.my_chat_member_handler()
-    def my_chat_m(message: types.ChatMemberUpdated):
-        old = message.old_chat_member
-        new = message.new_chat_member
-        if new.status == "member":
-            load_csonfig()
-            if message.chat.id in _csonfig.get("whiteGroup"):
-                pass
-                # bot.send_message(message.chat.id,
-                #                 "Hello bro! i can use high level problem to verify new chat member~~")
-            else:
-                if _csonfig.get("whiteGroupSwitch"):
-                    bot.send_message(message.chat.id,
-                                     "Somebody added me to this group,but the group not in my white list...")
-                    bot.leave_chat(message.chat.id)
-
-
-def Left(bot, config):
-    @bot.message_handler(content_types=['left_chat_member'])
-    def left(msg):
-        #   if msg.left_chat_member.id != bot.get_me().id:
-        load_csonfig()
-        try:
-            bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
-        # 用户操作
-        verifyRedis.removed(msg.from_user.id, str(msg.chat.id))
-
-
-def New(bot, config):
-    @bot.message_handler(content_types=['new_chat_members'])
-    def new_comer(msg):
-        # if msg.left_chat_member.id != bot.get_me().id:
-        load_csonfig()
-        if _csonfig.get("whiteGroupSwitch"):
-            if not (msg.chat.id in _csonfig.get("whiteGroup")):
-                bot.send_message(msg.chat.id,
-                                 "Somebody added me to this group,but the group not in my white list...")
-                bot.leave_chat(msg.chat.id)
-        try:
-            bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
-        # 用户操作
-        verifyRedis.add(msg.from_user.id, str(msg.chat.id))
-        # saveUser("newComer", msg.chat.id, msg.from_user.id)
-        bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
-                                 can_send_media_messages=False,
-                                 can_send_other_messages=False)
-        InviteLink = config.link
-        # print(InviteLink)
-        mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-        mrkplink.add(
-            InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        msgs = bot.send_message(msg.chat.id,
-                                f"Hey there {msg.from_user.first_name}.\n管理员手动解封使用`+unban {msg.from_user.id}`",
-                                reply_markup=mrkplink,
-                                parse_mode='Markdown')
-
-        def delmsg(bot, chat, message):
-            bot.delete_message(chat, message)
-
-        t = Timer(30, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        t.start()
-
-    # InviteLink = "123"
-    # mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-    # mrkplink.add(InlineKeyboardButton("click here to verify yourself🚀", url=InviteLink))
-    # await bot.send_message(message.chat.id, "Hello {name}!, Pleas  Click the link below to verify".format(
-    #    name=new.user.first_name),
-    #                       reply_markup=mrkplink)  # Welcome message
