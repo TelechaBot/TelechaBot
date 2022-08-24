@@ -115,12 +115,12 @@ class JsonRedis(object):
                     for key, i in _tasks["Time_group"].items():
                         if i == str(groupId):
                             JsonRedis.checker([key])
-                            JsonRedis.saveUser("super", str(groupId), userId)
+                            JsonRedis.saveUser("super", str(userId), str(groupId))
                 else:
                     key = _tasks["User_group"].get(str(userId))[0]
                     groupId = _tasks["Time_group"].get(key)
                     JsonRedis.checker([key])
-                    JsonRedis.saveUser("super", userId, str(groupId))
+                    JsonRedis.saveUser("super", str(userId), str(groupId))
 
     @staticmethod
     def run_timer():
