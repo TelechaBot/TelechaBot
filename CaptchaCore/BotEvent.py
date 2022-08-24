@@ -11,6 +11,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
 from CaptchaCore.Event import botWorker
+from telebot.custom_filters import TextFilter, TextMatchFilter, IsReplyFilter
 
 # from telebot import formatting
 
@@ -102,24 +103,28 @@ def Switch(bot, config):
 
 # 群组管理员操作命令
 def Admin(bot, config):
-    @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
-    def answer_for_admin(message):
-        if "+test" in message.text:
-            def extract_arg(arg):
-                return arg.split()[1:]
+    @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'],
+                         text=TextFilter(starts_with=('+'), ignore_case=True))
+    def ban_command_handler(message: types.Message):
+        if len(message.text) == 5:
+            if "+banme" in message.text:
+                def extract_arg(arg):
+                    return arg.split()[1:]
 
-            status = extract_arg(message.text)
-            for user in status:
-                bot.reply_to(message, "6分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟:" + str(status))
+                # status = extract_arg(message.text)
+                bot.reply_to(message,
+                             "6分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟:" + str(message.from_user.first_name))
                 try:
-                    userId = "".join(list(filter(str.isdigit, user)))
-                    verifyRedis.add(userId, str(message.chat.id))
-                    bot.restrict_chat_member(message.chat.id, userId, can_send_messages=False,
+                    # userId = "".join(list(filter(str.isdigit, user)))
+                    verifyRedis.add(message.from_user.id, str(message.chat.id))
+                    bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                              can_send_media_messages=False,
                                              can_send_other_messages=False, until_date=message.date + 360)
                 except Exception as e:
                     pass
 
+    @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
+    def answer_for_admin(message):
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
@@ -204,7 +209,7 @@ def New(bot, config):
         # old = msg.old_chat_member
         new = msg.new_chat_member
 
-        def verify_user():
+        def verify_user(bot, config):
             # 用户操作
             try:
                 bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
@@ -217,8 +222,7 @@ def New(bot, config):
                 bot_link.add(
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        # f"你好！{new.user.first_name}.\n正在加入:`{msg.chat.title}` `{msg.chat.id}`\n管理员手动解封请使用`+unban {new.user.id}`",
-                                        "s",
+                                        f"你好！ {new.user.first_name}.\n 加入群组信息:`{msg.chat.title}`,`{msg.chat.id}` \n管理员手动解封请使用`+unban {new.user.id}`",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
@@ -234,14 +238,14 @@ def New(bot, config):
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):
-                    verify_user()
+                    verify_user(bot, config)
                 else:
                     bot.send_message(msg.chat.id,
                                      "Somebody added me to this group , but the group not in my white list... "
                                      "\n请向Bot所有者申请白名单")
                     bot.leave_chat(msg.chat.id)
             else:
-                verify_user()
+                verify_user(bot, config)
             # 启动验证流程
 
 
