@@ -150,6 +150,11 @@ def Starts(bot, config):
                                              can_send_other_messages=True)
                     bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
 
+                def send_ban(message):
+                    msgss = bot.send_message(group,
+                                             f"刚刚{message.from_user.first_name}通过了验证！")
+                    return msgss
+
                 def send_ok(message):
                     msgss = bot.send_message(group,
                                              f"刚刚{message.from_user.first_name}通过了验证！")
@@ -162,7 +167,7 @@ def Starts(bot, config):
                         if int(answer) == int(sth[1]):
                             unban(message)
                             msgss = send_ok(message)
-                            from threading import Timer
+
                             def delmsg(bot, chat, message):
                                 bot.delete_message(chat, message)
 
@@ -171,6 +176,13 @@ def Starts(bot, config):
                         else:
                             if verifyRedis.read(str(message.from_user.id)):
                                 bot.kick_chat_member(group, message.from_user.id)
+                                mgs = send_ban(message)
+
+                                def delmsg(bot, chat, message):
+                                    bot.delete_message(chat, message)
+
+                                t = Timer(25, delmsg, args=[bot, mgs.chat.id, mgs.message_id])
+                                t.start()
                                 bot.reply_to(message, '验证失败...')
                     except Exception as e:
                         bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
