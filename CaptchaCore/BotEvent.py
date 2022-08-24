@@ -6,7 +6,7 @@
 import json
 import pathlib
 
-from telebot import types
+from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
@@ -172,38 +172,50 @@ def Left(bot, config):
     def left(msg):
         #   if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        try:
-            if msg.left_chat_member.id != bot.get_me().id:
-                bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
         # 用户操作
         verifyRedis.removed(msg.from_user.id, str(msg.chat.id))
 
 
+def message_del(bot, config):
+    @bot.message_handler(content_types=util.content_type_service)
+    def del_msg(message: types.Message):
+        try:
+            bot.delete_message(message.chat.id, message.message_id)
+        except Exception as e:
+            print(e)
+            pass
+
+
+def botSelf(bot, config):
+    @bot.my_chat_member_handler()
+    def my_chat_member_update(msg: types.ChatMemberUpdated):
+        # The bot's chat member status was updated in a chat.
+        # old = msg.old_chat_member
+        new = msg.new_chat_member
+        print(new.user.id)
+        print(bot.get_me().id)
+        if new.user.id == bot.get_me().id:
+            bot.send_message(msg.chat.id,
+                             "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
+
+        # print(cmu.from_user)  # User : The admin who changed the bot's status
+        # print(cmu.old_chat_member)  # ChatMember : The bot's previous status
+        # print(cmu.new_chat_member)  # ChatMember : The bot's new status
+
+
 # 启动新用户通知
 def New(bot, config):
-    @bot.message_handler(content_types=['new_chat_members'])
-    def new_comer(msg):
+    @bot.chat_member_handler()
+    def newer(msg: types.ChatMemberUpdated):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
+        old = msg.old_chat_member
+        new = msg.new_chat_member
 
         def verify_user():
-            try:
-                if msg.new_chat_member.user.id != bot.get_me().id:
-                    bot.delete_message(msg.chat.id, msg.message_id)
-                else:
-                    bot.send_message(msg.chat.id,
-                                     "这个 Bot 需要管理员权限")
-            except Exception as e:
-                print(e)
-                bot.send_message(msg.chat.id,
-                                 f"sorry,i am not admin")
             # 用户操作
             try:
-                bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
+                bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
                                          can_send_media_messages=False,
                                          can_send_other_messages=False)
             except Exception as e:
@@ -211,14 +223,14 @@ def New(bot, config):
                 t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
                 t.start()
             else:
-                verifyRedis.add(msg.from_user.id, str(msg.chat.id))
+                verifyRedis.add(new.user.id, str(msg.chat.id))
                 InviteLink = config.link
                 # print(InviteLink)
                 bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
                 bot_link.add(
                     InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {msg.from_user.id}`",
+                                        f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {new.user.id}`",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])

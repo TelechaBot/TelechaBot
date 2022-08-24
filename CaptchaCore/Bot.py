@@ -47,11 +47,14 @@ class clinetBot(object):
             bot, config = self.botCreat()
             import CaptchaCore.BotEvent
             from telebot import custom_filters
+            from telebot import types, util
             # 开关
             CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.New(bot, config)
             CaptchaCore.BotEvent.About(bot, config)
             CaptchaCore.BotEvent.Switch(bot, config)
+            CaptchaCore.BotEvent.botSelf(bot, config)
+            CaptchaCore.BotEvent.message_del(bot, config)
             CaptchaCore.BotEvent.Admin(bot, config)
             # 加载事件
             CaptchaCore.BotEvent.Group(bot, config)
@@ -61,7 +64,7 @@ class clinetBot(object):
             JsonRedis.timer()
             bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
             bot.add_custom_filter(custom_filters.ChatFilter())
-            bot.infinity_polling()
+            bot.infinity_polling(allowed_updates=util.update_types)
 
 
 class sendBot(object):
