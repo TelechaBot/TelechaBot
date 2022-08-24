@@ -201,7 +201,7 @@ def New(bot, config):
     def newer(msg: types.ChatMemberUpdated):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        old = msg.old_chat_member
+        # old = msg.old_chat_member
         new = msg.new_chat_member
 
         def verify_user():
@@ -211,6 +211,7 @@ def New(bot, config):
                                          can_send_media_messages=False,
                                          can_send_other_messages=False)
             except Exception as e:
+                print(e)
                 no_power = bot.send_message(msg.chat.id, "没有权限执行对新用户的限制")
                 t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
                 t.start()
@@ -220,9 +221,9 @@ def New(bot, config):
                 # print(InviteLink)
                 bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
                 bot_link.add(
-                    InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
+                    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {new.user.id}`",
+                                        f"你好！{msg.from_user.id}.\n正在加入`{msg.chat.first_name}`\n管理员手动解封请使用`+unban {new.user.id}`",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
@@ -236,7 +237,8 @@ def New(bot, config):
                     verify_user()
                 else:
                     bot.send_message(msg.chat.id,
-                                     "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
+                                     "Somebody added me to this group , but the group not in my white list... "
+                                     "\n请向Bot所有者申请白名单")
                     bot.leave_chat(msg.chat.id)
             else:
                 verify_user()
