@@ -6,11 +6,11 @@
 import json
 import pathlib
 
-from telebot import types
+from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
-from Event import botWorker
+from CaptchaCore.Event import botWorker
 
 # from telebot import formatting
 
@@ -150,11 +150,12 @@ def Group(bot, config):
     # if bot is added to group
     @bot.my_chat_member_handler()
     def my_chat_m(message: types.ChatMemberUpdated):
-        old = message.old_chat_member
+        # old = message.old_chat_member
         new = message.new_chat_member
         if new.status == "member":
             load_csonfig()
-            if message.chat.id in _csonfig.get("whiteGroup"):
+            if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
+                    "whiteGroup"):
                 pass
                 # bot.send_message(message.chat.id,
                 #                 "Hello bro! i can use high level problem to verify new chat member~~")
@@ -171,54 +172,80 @@ def Left(bot, config):
     def left(msg):
         #   if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        try:
-            bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
         # 用户操作
         verifyRedis.removed(msg.from_user.id, str(msg.chat.id))
 
 
+def message_del(bot, config):
+    @bot.message_handler(content_types=util.content_type_service)
+    def del_msg(message: types.Message):
+        try:
+            bot.delete_message(message.chat.id, message.message_id)
+        except Exception as e:
+            print(e)
+            pass
+
+
+def botSelf(bot, config):
+    @bot.my_chat_member_handler()
+    def my_chat_member_update(msg: types.ChatMemberUpdated):
+        # The bot's chat member status was updated in a chat.
+        # old = msg.old_chat_member
+        new = msg.new_chat_member
+        print(new.user.id)
+        print(bot.get_me().id)
+        if new.user.id == bot.get_me().id:
+            bot.send_message(msg.chat.id,
+                             "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
+
+        # print(cmu.from_user)  # User : The admin who changed the bot's status
+        # print(cmu.old_chat_member)  # ChatMember : The bot's previous status
+        # print(cmu.new_chat_member)  # ChatMember : The bot's new status
+
+
 # 启动新用户通知
 def New(bot, config):
-    @bot.message_handler(content_types=['new_chat_members'])
-    def new_comer(msg):
+    @bot.chat_member_handler()
+    def newer(msg: types.ChatMemberUpdated):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
+        old = msg.old_chat_member
+        new = msg.new_chat_member
+
+        def verify_user():
+            # 用户操作
+            try:
+                bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
+                                         can_send_media_messages=False,
+                                         can_send_other_messages=False)
+            except Exception as e:
+                no_power = bot.send_message(msg.chat.id, "没有权限执行对新用户的限制")
+                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
+                t.start()
+            else:
+                verifyRedis.add(new.user.id, str(msg.chat.id))
+                InviteLink = config.link
+                # print(InviteLink)
+                bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+                bot_link.add(
+                    InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
+                msgs = bot.send_message(msg.chat.id,
+                                        f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {new.user.id}`",
+                                        reply_markup=bot_link,
+                                        parse_mode='Markdown')
+                t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+
+        # 验证白名单
         if _csonfig.get("whiteGroupSwitch"):
-            if not (msg.chat.id in _csonfig.get("whiteGroup")):
+            if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get("whiteGroup"):
+                verify_user()
+            else:
                 bot.send_message(msg.chat.id,
                                  "Somebody added me to this group , but the group not in my white list... 请向Bot所有者申请白名单")
                 bot.leave_chat(msg.chat.id)
-        try:
-            bot.delete_message(msg.chat.id, msg.message_id)
-        except Exception as e:
-            print(e)
-            bot.send_message(msg.chat.id,
-                             f"sorry,i am not admin")
-        # 用户操作
-        verifyRedis.add(msg.from_user.id, str(msg.chat.id))
-        bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
-                                 can_send_media_messages=False,
-                                 can_send_other_messages=False)
-        InviteLink = config.link
-        # print(InviteLink)
-        bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-        bot_link.add(
-            InlineKeyboardButton("接受测试", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        msgs = bot.send_message(msg.chat.id,
-                                f"你好！{msg.from_user.first_name}.\n请start我进行私聊验证，来证明你的资格\n管理员手动解封请使用`+unban {msg.from_user.id}`",
-                                reply_markup=bot_link,
-                                parse_mode='Markdown')
-
-        # def delmsg(bot, chat, message):
-        #     bot.delete_message(chat, message)
-
-        t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        t.start()
-
+        else:
+            verify_user()
         # 启动验证流程
 
 
