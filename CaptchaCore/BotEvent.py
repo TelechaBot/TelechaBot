@@ -127,7 +127,7 @@ def Banme(bot, config):
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 mins = (random.randint(1, 10) * 1)
                 msgs = bot.reply_to(message,
-                                    f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
+                                    f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题会被踢出群组，答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
                                     reply_markup=bot_link,
                                     parse_mode='Markdown')
                 t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
@@ -135,7 +135,7 @@ def Banme(bot, config):
                 try:
                     # userId = "".join(list(filter(str.isdigit, user)))
                     key = verifyRedis.add(message.from_user.id, str(message.chat.id))
-                    verifyRedis.checker(tar=[key])
+                    # verifyRedis.checker(tar=[key])
                     bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                              can_send_media_messages=False,
                                              can_send_other_messages=False, until_date=message.date + mins * 60)
