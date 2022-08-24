@@ -95,9 +95,9 @@ class JsonRedis(object):
                 group = _tasks["Time_group"].get(key)
                 return group, key
             else:
-                return False
+                return False, False
         else:
-            return False
+            return False, False
 
     def removed(self, userId, groupId):
         User = _tasks["User_group"].get(str(userId))

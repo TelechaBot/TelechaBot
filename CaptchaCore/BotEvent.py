@@ -207,6 +207,7 @@ def Starts(bot, config):
 
                             def delmsg(bot, chat, message):
                                 bot.delete_message(chat, message)
+
                             t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
                         else:
