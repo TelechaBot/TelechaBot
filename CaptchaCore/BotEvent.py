@@ -179,7 +179,7 @@ def Starts(bot, config):
                 print("生成了一道题目 " + str(sth))
 
                 def unban(message):
-                    verifyRedis.promote(message.from_user.id)
+                    verifyRedis.promote(message.from_user.id, group)
                     bot.restrict_chat_member(group, message.from_user.id, can_send_messages=True,
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
@@ -305,7 +305,6 @@ def New(bot, config):
                 bot.leave_chat(msg.chat.id)
         try:
             bot.delete_message(msg.chat.id, msg.message_id)
-
         except Exception as e:
             print(e)
             bot.send_message(msg.chat.id,
