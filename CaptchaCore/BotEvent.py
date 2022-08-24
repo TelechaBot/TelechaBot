@@ -97,6 +97,16 @@ def Switch(bot, config):
                         _csonfig["whiteGroup"].append(int(groupId))
                     save_csonfig()
                     bot.reply_to(message, '白名单加入了' + str(group))
+                if "/removeWhite" in command:
+                    def extract_arg(arg):
+                        return arg.split()[1:]
+
+                    for group in extract_arg(command):
+                        groupId = "".join(list(filter(str.isdigit, group)))
+                        if groupId in _csonfig["whiteGroup"]:
+                            _csonfig["whiteGroup"].remove(int(groupId))
+                    save_csonfig()
+                    bot.reply_to(message, '白名单移除了' + str(group))
             except Exception as e:
                 bot.reply_to(message, "Wrong:" + str(e))
 
@@ -105,7 +115,10 @@ def About(bot, config):
     @bot.message_handler(commands=['about'])
     def send_about(message):
         if message.chat.type == "private":
-            bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
+            if config.desc:
+                bot.reply_to(message, config.desc)
+            else:
+                bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
 
 
 def Admin(bot, config):
@@ -115,14 +128,16 @@ def Admin(bot, config):
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
-            status=extract_arg(message.text)
+
+            status = extract_arg(message.text)
             for user in status:
                 userId = "".join(list(filter(str.isdigit, user)))
                 verifyRedis.promote(userId)
                 bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
                                          can_send_media_messages=True,
                                          can_send_other_messages=True)
-            unbanr = bot.reply_to(message, "已手动解封这些小可爱"+str(status))
+            unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
+
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
 
