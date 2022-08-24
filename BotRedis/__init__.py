@@ -138,7 +138,6 @@ class JsonRedis(object):
         if tar is None:
             tar = []
             # 豁免名单
-        JsonRedis.load_tasks()
         ban = []
         ban = ban + tar
         for key, item in _tasks["Time_id"].items():
