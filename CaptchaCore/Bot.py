@@ -5,9 +5,11 @@
 # @Github    ：sudoskys
 # import aiohttp
 from pathlib import Path
-import joblib, json
+import joblib
+import json
 from CaptchaCore.Event import Tool
 import telebot
+from telebot import custom_filters
 
 
 # from telebot import types, util
@@ -63,18 +65,18 @@ class clinetBot(object):
 
             CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.About(bot, config)
+            CaptchaCore.BotEvent.Admin(bot, config)
             CaptchaCore.BotEvent.Switch(bot, config)
             # 加载事件
             CaptchaCore.BotEvent.New(bot, config)
-            CaptchaCore.BotEvent.About(bot, config)
-            CaptchaCore.BotEvent.Starts(bot, config)
+            # CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.Group(bot, config)
-            CaptchaCore.BotEvent.Admin(bot, config)
             CaptchaCore.BotEvent.Left(bot, config)
 
             # asyncio.run(bot.polling(allowed_updates=util.update_types))
             from BotRedis import JsonRedis
             JsonRedis.timer()
+            bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
             bot.add_custom_filter(custom_filters.ChatFilter())
             bot.infinity_polling()
 
