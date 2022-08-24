@@ -4,9 +4,8 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 
-from pathlib import Path
-from CaptchaCore.Bot import sendBot, clinetBot
-from CaptchaCore.Event import Check, Read, Tool
+from CaptchaCore.Bot import clinetBot
+from CaptchaCore.Event import Check
 
 # 初始化文件系统
 Check().run()

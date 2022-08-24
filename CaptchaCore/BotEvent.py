@@ -4,10 +4,11 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import json
-import telebot
-from telebot import types, util
+from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
+from threading import Timer
+from telebot import formatting
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(175)
@@ -77,14 +78,22 @@ def Switch(bot, config):
             try:
                 # chat_id = message.chat.id
                 command = message.text
-                if command == "off":
-                    _csonfig["statu"] = False
+                if command == "/show":
+                    bot.reply_to(message, _csonfig)
+                if command == "/onW":
+                    _csonfig["whiteGroupSwitch"] = True
                     save_csonfig()
-                    bot.reply_to(message, 'success！')
-                if command == "on":
-                    _csonfig["statu"] = True
+                if command == "/offW":
+                    _csonfig["whiteGroupSwitch"] = False
                     save_csonfig()
-                    bot.reply_to(message, 'success！')
+                if "/addWhite" in command:
+                    def extract_arg(arg):
+                        return arg.split()[1:]
+
+                    group = extract_arg(command)
+                    _csonfig["whiteGroup"].append(group)
+                    save_csonfig()
+                    bot.reply_to(message, '白名单加入了' + (group))
             except Exception as e:
                 bot.reply_to(message, "Wrong:" + str(e))
 
@@ -93,7 +102,31 @@ def About(bot, config):
     @bot.message_handler(commands=['about'])
     def send_about(message):
         if message.chat.type == "private":
-            bot.reply_to(message, "学习永不停息，进步永不止步，Project:https://github.com/sudoskys/")
+            bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
+
+
+def Admin(bot, config):
+    @bot.message_handler(chat_types=['supergroup'], is_chat_admin=True)
+    def answer_for_admin(message):
+        bot.send_message(message.chat.id, "hello my admin")
+
+        def extract_arg(arg):
+            return arg.split()[1:]
+
+        @bot.message_handler(commands=['unban'])
+        def unban(message):
+            status = extract_arg(message.text)
+            verifyRedis.promote(message.from_user.id)
+            bot.restrict_chat_member(message.chat.id, status, can_send_messages=True,
+                                     can_send_media_messages=True,
+                                     can_send_other_messages=True)
+            unbanr = bot.reply_to(message, "已手动解封")
+
+            def delmsg(bot, chat, message):
+                bot.delete_message(chat, message)
+
+            t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
+            t.start()
 
 
 def Starts(bot, config):
@@ -130,6 +163,7 @@ def Starts(bot, config):
                             from threading import Timer
                             def delmsg(bot, chat, message):
                                 bot.delete_message(chat, message)
+
                             t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
                         else:
@@ -232,8 +266,10 @@ def New(bot, config):
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
         msgs = bot.send_message(msg.chat.id,
-                                f"Hey there {msg.from_user.first_name}.", reply_markup=mrkplink)
-        from threading import Timer
+                                f"Hey there {msg.from_user.first_name}，ID: `{msg.from_user.id}` .\n手动解封请使用/unban + id",
+                                reply_markup=mrkplink,
+                                parse_mode='Markdown')
+
         def delmsg(bot, chat, message):
             bot.delete_message(chat, message)
 
