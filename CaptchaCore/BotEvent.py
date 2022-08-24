@@ -103,8 +103,10 @@ def Switch(bot, config):
 
                     for group in extract_arg(command):
                         groupId = "".join(list(filter(str.isdigit, group)))
-                        if groupId in _csonfig["whiteGroup"]:
+                        if int(groupId) in _csonfig["whiteGroup"]:
                             _csonfig["whiteGroup"].remove(int(groupId))
+                    if isinstance(_csonfig["whiteGroup"], list):
+                        _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                     save_csonfig()
                     bot.reply_to(message, '白名单移除了' + str(group))
             except Exception as e:
