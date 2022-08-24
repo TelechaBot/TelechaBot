@@ -108,25 +108,25 @@ def About(bot, config):
 def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup'], is_chat_admin=True)
     def answer_for_admin(message):
-        bot.send_message(message.chat.id, "hello my admin")
+        # bot.send_message(message.chat.id, "hello my admin")
 
-        def extract_arg(arg):
-            return arg.split()[1:]
+        if "/unban" in message.text:
+            def extract_arg(arg):
+                return arg.split()[1:]
 
-        @bot.message_handler(commands=['unban'])
-        def unban(message):
-            status = extract_arg(message.text)
-            verifyRedis.promote(message.from_user.id)
-            bot.restrict_chat_member(message.chat.id, status, can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True)
-            unbanr = bot.reply_to(message, "已手动解封")
+            def unban(message):
+                status = extract_arg(message.text)
+                verifyRedis.promote(message.from_user.id)
+                bot.restrict_chat_member(message.chat.id, status, can_send_messages=True,
+                                         can_send_media_messages=True,
+                                         can_send_other_messages=True)
+                unbanr = bot.reply_to(message, "已手动解封")
 
-            def delmsg(bot, chat, message):
-                bot.delete_message(chat, message)
+                def delmsg(bot, chat, message):
+                    bot.delete_message(chat, message)
 
-            t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
-            t.start()
+                t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
+                t.start()
 
 
 def Starts(bot, config):
