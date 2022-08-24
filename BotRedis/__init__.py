@@ -191,7 +191,7 @@ class JsonRedis(object):
                 user_something = _tasks["super"].get(str(user))
                 if user_something is None:
                     user_something = []
-                if not (group in user_something):
+                if True:  # not (group in user_something):
                     # 过期验证的操作
                     from CaptchaCore.Bot import clinetBot
                     bot, config = clinetBot().botCreat()

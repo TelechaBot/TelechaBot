@@ -119,6 +119,8 @@ def Banme(bot, config):
                                     f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
                                     reply_markup=bot_link,
                                     parse_mode='Markdown')
+                t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
                 try:
                     # userId = "".join(list(filter(str.isdigit, user)))
                     verifyRedis.add(message.from_user.id, str(message.chat.id))
@@ -152,10 +154,7 @@ def Admin(bot, config):
             # 机器人核心：发送通知并自毁消息
             unbanr = bot.reply_to(message, "已手动解封这些小可爱:" + str(status))
 
-            def delmsg(bot, chat, message):
-                bot.delete_message(chat, message)
-
-            t = Timer(30, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
+            t = Timer(30, botWorker.delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
 
@@ -166,7 +165,7 @@ def botSelf(bot, config):
     def my_chat_m(message: types.ChatMemberUpdated):
         # old = message.old_chat_member
         new = message.new_chat_member
-        if new.status == "member":
+        if new.status == "member" and message.chat.type != "private":
             load_csonfig()
             bot.send_message(message.chat.id,
                              "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
@@ -231,7 +230,7 @@ def New(bot, config):
                 bot_link.add(
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        f"你好！ {new.user.first_name}.\n 加入群组信息:`{msg.chat.title}`,`{msg.chat.id}` \n管理员手动解封请使用`+unban {new.user.id}`",
+                                        f"你好！ {new.user.first_name}.\n加入群组信息:`{msg.chat.title}` `{msg.chat.id}` \n管理员手动解封请使用`+unban {new.user.id}`",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
@@ -243,7 +242,7 @@ def New(bot, config):
                 t.start()
 
         # 验证白名单
-        if not (old.status in ['administrator', 'creator']) and new.status == "member":
+        if new.status == "member" and msg.chat.type != "private":
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):

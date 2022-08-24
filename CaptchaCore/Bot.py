@@ -49,8 +49,8 @@ class clinetBot(object):
             from telebot import custom_filters
             from telebot import types, util
             # 开关
-            CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.New(bot, config)
+            CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.About(bot, config)
             CaptchaCore.BotEvent.Banme(bot, config)
             CaptchaCore.BotEvent.Admin(bot, config)
