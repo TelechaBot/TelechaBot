@@ -10,7 +10,7 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
-from Event import botWorker
+from CaptchaCore.Event import botWorker
 
 # from telebot import formatting
 

@@ -1,8 +1,7 @@
 {
     "statu": true,
-    "whiteGroupSwitch": false,
+    "whiteGroupSwitch": true,
     "whiteGroup": [
-        1111,
-        2222
+        -1001662266151
     ]
 }
