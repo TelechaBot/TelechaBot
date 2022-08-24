@@ -135,8 +135,8 @@ class JsonRedis(object):
 
     @staticmethod
     def checker(tar=None, fail_user=None):
-        if tar is None:
-            tar = []
+        if fail_user is None:
+            fail_user = []
         if tar is None:
             tar = []
             # 豁免名单
