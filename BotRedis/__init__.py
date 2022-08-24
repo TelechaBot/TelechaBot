@@ -203,7 +203,6 @@ class JsonRedis(object):
         JsonRedis.save_tasks()
         # 同步配置队列
 
-#
 # JsonRedis(6).add(1222, str(-52333))
 #
 # JsonRedis.timer()
