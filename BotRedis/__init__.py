@@ -81,7 +81,7 @@ class JsonRedis(object):
 
     def add(self, userId, groupId):
         JsonRedis.load_tasks()
-        _tasks["Time_id"][str(int(time.time()))] = userId
+        _tasks["Time_id"][str(int(time.time()))] = str(userId)
         _tasks["Time_group"][str(int(time.time()))] = str(groupId)
         JsonRedis.save_tasks()
         JsonRedis.saveUser("User_group", userId, str(int(time.time())))
@@ -149,20 +149,24 @@ class JsonRedis(object):
                 # 用户未过期
                 # print("No")
         for key in ban:
-            user = _tasks["Time_id"].pop(key)
-            group = _tasks["Time_group"].pop(key)
+            user = _tasks["Time_id"].pop(str(key))
+            group = _tasks["Time_group"].pop(str(key))
             try:
-                _tasks["User_group"][str(user)].remove(key)
+                _tasks["User_group"].get(str(user)).remove(str(key))
             except Exception as e:
                 pass
-            if not (key in tar):
-                # 过期验证的操作
-                from CaptchaCore.Bot import clinetBot
-                bot, config = clinetBot().botCreat()
-                bot.kick_chat_member(group, user)
-                # print("ban " + str(user) + str(group))
 
-        JsonRedis.save_tasks()
+            if not (key in tar):
+                user_something = _tasks["super"].get(str(user))
+                if user_something is None:
+                    user_something = []
+                if not (group in user_something):
+                    # 过期验证的操作
+                    from CaptchaCore.Bot import clinetBot
+                    bot, config = clinetBot().botCreat()
+                    bot.kick_chat_member(group, user)
+                    # print("ban " + str(user) + str(group))
+                JsonRedis.save_tasks()
 
     def interval(self):
         return self.interval
