@@ -93,6 +93,7 @@ kill -9  进程号
 
 ### 关于验证模型
 
+
 作用是抽取并随机生成题目，支持难度梯度过滤
 `some = model_name.Importer().pull(difficulty_limit=5)`
 
