@@ -87,10 +87,12 @@ class JsonRedis(object):
         :return:
         """
         JsonRedis.load_tasks()
-        _tasks["Time_id"][str(int(time.time()))] = str(userId)
-        _tasks["Time_group"][str(int(time.time()))] = str(groupId)
+        key=str(int(time.time()))
+        _tasks["Time_id"][key] = str(userId)
+        _tasks["Time_group"][key] = str(groupId)
         JsonRedis.save_tasks()
-        JsonRedis.saveUser("User_group", userId, str(int(time.time())))
+        JsonRedis.saveUser("User_group", userId, key)
+        return key
 
     def read(self, userId):
         """
