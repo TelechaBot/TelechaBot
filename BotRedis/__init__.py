@@ -7,8 +7,11 @@ import time
 
 class JsonRedis(object):
     def __init__(self, interval):
-        self.interval = interval
         JsonRedis.load_tasks()
+        if not _tasks.get("interval"):
+            if interval:
+                _tasks["interval"] = interval
+                JsonRedis.save_tasks()
         if not _tasks.get("Time_id"):
             _tasks["Time_id"] = {}
             JsonRedis.save_tasks()
@@ -20,9 +23,6 @@ class JsonRedis(object):
             JsonRedis.save_tasks()
         if not _tasks.get("super"):
             _tasks["super"] = {}
-            JsonRedis.save_tasks()
-        if not _tasks.get("interval"):
-            _tasks["interval"] = self.interval
             JsonRedis.save_tasks()
 
     @staticmethod
@@ -93,7 +93,7 @@ class JsonRedis(object):
                 key = _tasks["User_group"].get(str(userId))[0]
                 # user = _tasks["Time_id"].get(key)
                 group = _tasks["Time_group"].get(key)
-                return group
+                return group, key
             else:
                 return False
         else:
@@ -135,10 +135,10 @@ class JsonRedis(object):
 
     @staticmethod
     def checker(tar=None, fail_user=None):
-        if fail_user is None:
-            fail_user = []
         if tar is None:
             tar = []
+        if fail_user is None:
+            fail_user = []
             # 豁免名单
         ban = []
         ban = ban + tar
