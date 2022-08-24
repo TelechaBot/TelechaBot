@@ -146,7 +146,7 @@ def Admin(bot, config):
 
 
 # 白名单系统
-def Group(bot, config):
+def botSelf(bot, config):
     # if bot is added to group
     @bot.my_chat_member_handler()
     def my_chat_m(message: types.ChatMemberUpdated):
@@ -154,6 +154,8 @@ def Group(bot, config):
         new = message.new_chat_member
         if new.status == "member":
             load_csonfig()
+            bot.send_message(message.chat.id,
+                             "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
             if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
                     "whiteGroup"):
                 pass
@@ -184,19 +186,6 @@ def message_del(bot, config):
         except Exception as e:
             print(e)
             pass
-
-
-def botSelf(bot, config):
-    @bot.my_chat_member_handler()
-    def my_chat_member_update(msg: types.ChatMemberUpdated):
-        # The bot's chat member status was updated in a chat.
-        # old = msg.old_chat_member
-        new = msg.new_chat_member
-        print(new.user.id)
-        print(bot.get_me().id)
-        if new.user.id == bot.get_me().id:
-            bot.send_message(msg.chat.id,
-                             "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
 
         # print(cmu.from_user)  # User : The admin who changed the bot's status
         # print(cmu.old_chat_member)  # ChatMember : The bot's previous status
