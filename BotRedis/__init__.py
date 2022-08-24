@@ -166,7 +166,7 @@ class JsonRedis(object):
                     bot, config = clinetBot().botCreat()
                     bot.kick_chat_member(group, user)
                     # print("ban " + str(user) + str(group))
-                JsonRedis.save_tasks()
+            JsonRedis.save_tasks()
 
     def interval(self):
         return self.interval
