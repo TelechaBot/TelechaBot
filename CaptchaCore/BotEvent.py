@@ -149,7 +149,7 @@ def Admin(bot, config):
             status = extract_arg(message.text)
             for user in status:
                 userId = "".join(list(filter(str.isdigit, user)))
-                group = verifyRedis.read(str(userId))
+                group, key = verifyRedis.read(str(userId))
                 if group:
                     verifyRedis.promote(userId)
                     bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
@@ -169,7 +169,7 @@ def Starts(bot, config):
     def welcome(message):
         # bot.reply_to(message, "未检索到你的信息。你无需验证")
         if message.chat.type == "private":
-            group = verifyRedis.read(str(message.from_user.id))
+            group, key = verifyRedis.read(str(message.from_user.id))
             if group:
                 bot.reply_to(message, f"开始验证群组{group}，你有175秒的时间计算这道题目")
                 from CaptchaCore import CaptchaWorker
@@ -197,20 +197,21 @@ def Starts(bot, config):
 
                 def verify_step2(message):
                     try:
+                        group, key = verifyRedis.read(str(message.from_user.id))
                         # chat_id = message.chat.id
                         answer = message.text
                         if str(answer) == str(sth[1]):
                             unban(message)
+                            # verifyRedis.checker(tar=[key]) # 与unban重合调用
                             msgss = send_ok(message)
 
                             def delmsg(bot, chat, message):
                                 bot.delete_message(chat, message)
-
                             t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
                         else:
-                            if verifyRedis.read(str(message.from_user.id)):
-                                JsonRedis.checker(fail_user=[message.from_user.id])
+                            if group:
+                                verifyRedis.checker(fail_user=[key])
                                 # bot.kick_chat_member(group, message.from_user.id)
                                 mgs = send_ban(message)
 
