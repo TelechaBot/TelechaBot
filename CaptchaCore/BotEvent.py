@@ -210,7 +210,8 @@ def Starts(bot, config):
                             t.start()
                         else:
                             if verifyRedis.read(str(message.from_user.id)):
-                                bot.kick_chat_member(group, message.from_user.id)
+                                JsonRedis.checker(fail_user=[message.from_user.id])
+                                # bot.kick_chat_member(group, message.from_user.id)
                                 mgs = send_ban(message)
 
                                 def delmsg(bot, chat, message):
