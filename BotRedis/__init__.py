@@ -155,7 +155,6 @@ class JsonRedis(object):
                 _tasks["User_group"].get(str(user)).remove(str(key))
             except Exception as e:
                 pass
-
             if not (key in tar):
                 user_something = _tasks["super"].get(str(user))
                 if user_something is None:
@@ -167,6 +166,7 @@ class JsonRedis(object):
                     bot.kick_chat_member(group, user)
                     # print("ban " + str(user) + str(group))
             JsonRedis.save_tasks()
+
 
     def interval(self):
         return self.interval
