@@ -80,6 +80,17 @@ ps -aux|grep python3
 kill -9  进程号
 ```
 
+**无缝更新**
+
+```shell
+cd TelechaBot
+```
+
+```shell
+kill -9 3344547 && nohup python3 main.py > output.log 2>&1 &
+```
+
+
 ### 使用
 
 | 命令                      | 含义                      | 作用域        | 

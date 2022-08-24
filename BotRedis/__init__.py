@@ -138,11 +138,10 @@ class JsonRedis(object):
         if tar is None:
             tar = []
             # 豁免名单
-        JsonRedis.load_tasks()
         ban = []
         ban = ban + tar
         for key, item in _tasks["Time_id"].items():
-            if int(time.time()) - int(key) > int(_tasks["interval"]):
+            if abs(int(time.time()) - int(key)) > int(_tasks["interval"]):
                 ban.append(key)
             else:
                 pass
@@ -154,8 +153,7 @@ class JsonRedis(object):
             try:
                 _tasks["User_group"].get(str(user)).remove(str(key))
             except Exception as e:
-                pass
-
+                print(e)
             if not (key in tar):
                 user_something = _tasks["super"].get(str(user))
                 if user_something is None:
@@ -164,9 +162,12 @@ class JsonRedis(object):
                     # 过期验证的操作
                     from CaptchaCore.Bot import clinetBot
                     bot, config = clinetBot().botCreat()
-                    bot.kick_chat_member(group, user)
+                    try:
+                        bot.kick_chat_member(group, user)
+                    except Exception as e:
+                        print(e)
                     # print("ban " + str(user) + str(group))
-            JsonRedis.save_tasks()
+        JsonRedis.save_tasks()
 
     def interval(self):
         return self.interval
