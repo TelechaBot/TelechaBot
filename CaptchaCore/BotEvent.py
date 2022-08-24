@@ -4,6 +4,8 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import json
+import pathlib
+
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
@@ -88,6 +90,19 @@ def Switch(bot, config):
                     _csonfig["whiteGroupSwitch"] = False
                     bot.reply_to(message, "Off:whiteGroup")
                     save_csonfig()
+                if "/cat" in command:
+                    def extract_arg(arg):
+                        return arg.split()[1:]
+
+                    for item in extract_arg(command):
+                        path = pathlib.Path().cwd() + "/" + item
+                        if pathlib.Path(path).exists():
+                            with open(path, 'r') as f:
+                                con = (f.read())
+                            bot.reply_to(message, con)
+                        else:
+                            bot.reply_to(message, "这个文件没有找到....")
+
                 if "/addWhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
@@ -95,8 +110,8 @@ def Switch(bot, config):
                     for group in extract_arg(command):
                         groupId = "".join(list(filter(str.isdigit, group)))
                         _csonfig["whiteGroup"].append(int(groupId))
+                        bot.reply_to(message, '白名单加入了' + str(groupId))
                     save_csonfig()
-                    bot.reply_to(message, '白名单加入了' + str(group))
                 if "/removeWhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
@@ -105,10 +120,11 @@ def Switch(bot, config):
                         groupId = "".join(list(filter(str.isdigit, group)))
                         if int(groupId) in _csonfig["whiteGroup"]:
                             _csonfig["whiteGroup"].remove(int(groupId))
+                            bot.reply_to(message, '白名单移除了' + str(groupId))
                     if isinstance(_csonfig["whiteGroup"], list):
                         _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                     save_csonfig()
-                    bot.reply_to(message, '白名单移除了' + str(group))
+
             except Exception as e:
                 bot.reply_to(message, "Wrong:" + str(e))
 
