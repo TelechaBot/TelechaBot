@@ -221,7 +221,8 @@ def Starts(bot, config):
                                 t.start()
                                 bot.reply_to(message, '验证失败...')
                     except Exception as e:
-                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!\n 日志:' + str(e))
+                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                                     parse_mode='Markdown')
 
                 def verify_step(message):
                     try:
@@ -247,7 +248,8 @@ def Starts(bot, config):
                         # msg = bot.reply_to(message, 'How old are you?')
                         # bot.register_next_step_handler(msg, process_age_step)
                     except Exception as e:
-                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!\n 日志:' + str(e))
+                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                                     parse_mode='Markdown')
 
                 bot.register_next_step_handler(message, verify_step)
                 # verify_step(bot, message)
