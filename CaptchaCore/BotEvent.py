@@ -10,6 +10,7 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
+from Event import botWorker
 
 # from telebot import formatting
 
@@ -209,57 +210,34 @@ def Starts(bot, config):
     def welcome(message):
         # bot.reply_to(message, "未检索到你的信息。你无需验证")
         if message.chat.type == "private":
-            group, key = verifyRedis.read(str(message.from_user.id))
-            if group:
-                bot.reply_to(message, f"开始验证群组{group}，你有175秒的时间计算这道题目")
+            group_k, key = verifyRedis.read(str(message.from_user.id))
+            if group_k:
+                bot.reply_to(message, f"开始验证群组{group_k}，你有175秒的时间计算这道题目")
                 from CaptchaCore import CaptchaWorker
                 paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)
                 sth = paper.create()
                 bot.reply_to(message, sth[0])
                 print("生成了一道题目 " + str(sth))
 
-                def unban(message):
-                    verifyRedis.promote(message.from_user.id, group)
-                    bot.restrict_chat_member(group, message.from_user.id, can_send_messages=True,
-                                             can_send_media_messages=True,
-                                             can_send_other_messages=True)
-                    bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
-
-                def send_ban(message):
-                    msgss = bot.send_message(group,
-                                             f"刚刚{message.from_user.first_name}没有通过验证，已经被踢出群组...加入了黑名单！")
-                    return msgss
-
-                def send_ok(message):
-                    msgss = bot.send_message(group,
-                                             f"刚刚{message.from_user.first_name}通过了验证！")
-                    return msgss
-
                 def verify_step2(message):
                     try:
-                        group, key = verifyRedis.read(str(message.from_user.id))
+                        group_k, key_k = verifyRedis.read(str(message.from_user.id))
                         # chat_id = message.chat.id
                         answer = message.text
                         if str(answer) == str(sth[1]):
-                            unban(message)
-                            # verifyRedis.checker(tar=[key]) # 与unban重合调用
-                            msgss = send_ok(message)
-
-                            def delmsg(bot, chat, message):
-                                bot.delete_message(chat, message)
-
-                            t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
+                            botWorker.unban(message, bot, group_k)
+                            verifyRedis.promote(message.from_user.id, group_k)
+                            bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+                            msgss = botWorker.send_ok(message, bot, group_k)
+                            t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
                         else:
-                            if group:
+                            if group_k:
                                 verifyRedis.checker(fail_user=[key])
                                 # bot.kick_chat_member(group, message.from_user.id)
-                                mgs = send_ban(message)
+                                mgs = botWorker.send_ban(message, bot, group_k)
 
-                                def delmsg(bot, chat, message):
-                                    bot.delete_message(chat, message)
-
-                                t = Timer(25, delmsg, args=[bot, mgs.chat.id, mgs.message_id])
+                                t = Timer(25, botWorker.delmsg, args=[bot, mgs.chat.id, mgs.message_id])
                                 t.start()
                                 bot.reply_to(message, '验证失败...')
                     except Exception as e:
@@ -273,22 +251,16 @@ def Starts(bot, config):
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
                         if str(answer) == str(sth[1]):
-                            unban(message)
-                            msgss = send_ok(message)
-                            from threading import Timer
-                            def delmsg(bot, chat, message):
-                                bot.delete_message(chat, message)
-
-                            t = Timer(25, delmsg, args=[bot, msgss.chat.id, msgss.message_id])
+                            botWorker.unban(message, bot, group_k)
+                            verifyRedis.promote(message.from_user.id, group_k)
+                            bot.reply_to(message, "验证成功，如果没有解封请通知管理员")
+                            msgss = botWorker.send_ok(message, bot, group_k)
+                            t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                             t.start()
 
                         else:
                             bot.reply_to(message, '错误的回答....你还有一次机会')
                             bot.register_next_step_handler(message, verify_step2)
-                        # user = User(name)
-                        # user_dict[chat_id] = user
-                        # msg = bot.reply_to(message, 'How old are you?')
-                        # bot.register_next_step_handler(msg, process_age_step)
                     except Exception as e:
                         bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
                                      parse_mode='Markdown')

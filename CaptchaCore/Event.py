@@ -23,6 +23,33 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
+class botWorker(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def delmsg(bot, chat, message):
+        bot.delete_message(chat, message)
+
+    @staticmethod
+    def unban(message, bot, groups):
+        bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
+                                 can_send_media_messages=True,
+                                 can_send_other_messages=True)
+
+    @staticmethod
+    def send_ban(message, bot, groups):
+        msgss = bot.send_message(groups,
+                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被踢出群组...加入了黑名单！")
+        return msgss
+
+    @staticmethod
+    def send_ok(message, bot, groups):
+        msgss = bot.send_message(groups,
+                                 f"刚刚{message.from_user.first_name}通过了验证！")
+        return msgss
+
+
 class yamler(object):
     # sudoskys@github
     def __init__(self):
@@ -84,7 +111,7 @@ class Check(object):
             "/Captcha.yaml",
         ]
         self.dir = [
-           # "/data",
+            # "/data",
         ]
         self.inits = [
             "/data/whitelist.user",
