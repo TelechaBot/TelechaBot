@@ -173,7 +173,7 @@ def Starts(bot, config):
             if group:
                 bot.reply_to(message, f"开始验证群组{group}，你有175秒的时间计算这道题目")
                 from CaptchaCore import CaptchaWorker
-                paper = CaptchaWorker.Importer().pull(7)
+                paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)
                 sth = paper.create()
                 bot.reply_to(message, sth[0])
                 print("生成了一道题目 " + str(sth))

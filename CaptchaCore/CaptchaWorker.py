@@ -196,13 +196,13 @@ class Importer(object):
                       {"diff": binary_first_equation().difficulty, "obj": binary_first_equation()},
                       ]
 
-    def pull(self, difficulty_min=0, difficulty_limit=5):
+    def pull(self, difficulty_min=1, difficulty_limit=5):
         from random import choice
         if difficulty_limit < 1 or difficulty_limit < difficulty_min:
-            if difficulty_min < 1:
-                difficulty_limit = 2
-            if difficulty_min >= 1:
-                difficulty_limit = difficulty_min * 3
+            if difficulty_limit < 0:
+                difficulty_limit = 9
+            if difficulty_min >= 9:
+                difficulty_min = 1
         verify_papaer = [i for i in self.items if difficulty_min <= i.get("diff") <= difficulty_limit]
         verify = (choice(verify_papaer))
         return verify.get("obj")
