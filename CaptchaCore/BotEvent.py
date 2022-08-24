@@ -79,21 +79,24 @@ def Switch(bot, config):
                 # chat_id = message.chat.id
                 command = message.text
                 if command == "/show":
-                    bot.reply_to(message, _csonfig)
+                    bot.reply_to(message, str(_csonfig))
                 if command == "/onW":
                     _csonfig["whiteGroupSwitch"] = True
+                    bot.reply_to(message, "On:whiteGroup")
                     save_csonfig()
                 if command == "/offW":
                     _csonfig["whiteGroupSwitch"] = False
+                    bot.reply_to(message, "Off:whiteGroup")
                     save_csonfig()
                 if "/addWhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
 
-                    group = extract_arg(command)
-                    _csonfig["whiteGroup"].append(group)
+                    for group in extract_arg(command):
+                        groupId = "".join(list(filter(str.isdigit, group)))
+                        _csonfig["whiteGroup"].append(int(groupId))
                     save_csonfig()
-                    bot.reply_to(message, '白名单加入了' + (group))
+                    bot.reply_to(message, '白名单加入了' + str(group))
             except Exception as e:
                 bot.reply_to(message, "Wrong:" + str(e))
 
@@ -112,14 +115,14 @@ def Admin(bot, config):
         if "/unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
-
-            status = extract_arg(message.text)
-            verifyRedis.promote(status)
-            bot.restrict_chat_member(message.chat.id, status, can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True)
-            unbanr = bot.reply_to(message, "已手动解封")
-
+            status=extract_arg(message.text)
+            for user in status:
+                userId = "".join(list(filter(str.isdigit, user)))
+                verifyRedis.promote(userId)
+                bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
+                                         can_send_media_messages=True,
+                                         can_send_other_messages=True)
+            unbanr = bot.reply_to(message, "已手动解封这些小可爱"+str(status))
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
 
@@ -285,7 +288,7 @@ def New(bot, config):
         def delmsg(bot, chat, message):
             bot.delete_message(chat, message)
 
-        t = Timer(25, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t = Timer(30, delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         t.start()
 
     # InviteLink = "123"
