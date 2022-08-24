@@ -139,7 +139,9 @@ def Starts(bot, config):
                 bot.reply_to(message, f"开始验证群组{group}，你有175秒的时间计算这道题目")
                 from CaptchaCore import CaptchaWorker
                 paper = CaptchaWorker.Importer().pull(7)
-                bot.reply_to(message, paper.create()[0])
+                sth = paper.create()
+                bot.reply_to(message, sth[0])
+                print("生成了一道题目 " + str(sth))
 
                 def unban(message):
                     verifyRedis.promote(message.from_user.id)
@@ -157,7 +159,7 @@ def Starts(bot, config):
                     try:
                         # chat_id = message.chat.id
                         answer = message.text
-                        if int(answer) == int(paper.create()[1]):
+                        if int(answer) == int(sth[1]):
                             unban(message)
                             msgss = send_ok(message)
                             from threading import Timer
@@ -179,7 +181,7 @@ def Starts(bot, config):
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if int(answer) == int(paper.create()[1]):
+                        if int(answer) == int(sth[1]):
                             unban(message)
                             msgss = send_ok(message)
                             from threading import Timer
@@ -234,7 +236,6 @@ def Left(bot, config):
         load_csonfig()
         try:
             bot.delete_message(msg.chat.id, msg.message_id)
-
         except Exception as e:
             print(e)
             bot.send_message(msg.chat.id,
@@ -262,7 +263,7 @@ def New(bot, config):
                                  can_send_media_messages=False,
                                  can_send_other_messages=False)
         InviteLink = config.link
-        print(InviteLink)
+        # print(InviteLink)
         mrkplink = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
