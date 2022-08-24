@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 import json
 import pathlib
+import random
 
 from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -100,26 +101,41 @@ def Switch(bot, config):
                 bot.reply_to(message, "Wrong:" + str(e))
 
 
+def Banme(bot, config):
+    @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
+    def very_useful(message):
+        if len(message.text) == 6:
+            if "+banme" == message.text:
+                def extract_arg(arg):
+                    return arg.split()[1:]
+
+                InviteLink = config.link
+                # print(InviteLink)
+                bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+                bot_link.add(
+                    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
+                mins = (random.randint(1, 10) * 1)
+                msgs = bot.reply_to(message,
+                                    f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
+                                    reply_markup=bot_link,
+                                    parse_mode='Markdown')
+                t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+                try:
+                    # userId = "".join(list(filter(str.isdigit, user)))
+                    verifyRedis.add(message.from_user.id, str(message.chat.id))
+                    bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
+                                             can_send_media_messages=False,
+                                             can_send_other_messages=False, until_date=message.date + mins * 60)
+                except Exception as e:
+                    pass
+
+
 # 群组管理员操作命令
 def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
-        if "+test" in message.text:
-            def extract_arg(arg):
-                return arg.split()[1:]
-
-            status = extract_arg(message.text)
-            for user in status:
-                bot.reply_to(message, "6分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟:" + str(status))
-                try:
-                    userId = "".join(list(filter(str.isdigit, user)))
-                    verifyRedis.add(userId, str(message.chat.id))
-                    bot.restrict_chat_member(message.chat.id, userId, can_send_messages=False,
-                                             can_send_media_messages=False,
-                                             can_send_other_messages=False, until_date=message.date + 360)
-                except Exception as e:
-                    pass
-
+        # print(0)
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
@@ -138,10 +154,7 @@ def Admin(bot, config):
             # 机器人核心：发送通知并自毁消息
             unbanr = bot.reply_to(message, "已手动解封这些小可爱:" + str(status))
 
-            def delmsg(bot, chat, message):
-                bot.delete_message(chat, message)
-
-            t = Timer(30, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
+            t = Timer(30, botWorker.delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
 
@@ -152,7 +165,7 @@ def botSelf(bot, config):
     def my_chat_m(message: types.ChatMemberUpdated):
         # old = message.old_chat_member
         new = message.new_chat_member
-        if new.status == "member":
+        if new.status == "member" and message.chat.type != "private":
             load_csonfig()
             bot.send_message(message.chat.id,
                              "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
@@ -201,21 +214,15 @@ def New(bot, config):
     def newer(msg: types.ChatMemberUpdated):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        # old = msg.old_chat_member
+        old = msg.old_chat_member
         new = msg.new_chat_member
 
-        def verify_user():
+        def verify_user(bot, config):
             # 用户操作
             try:
                 bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
                                          can_send_media_messages=False,
                                          can_send_other_messages=False)
-            except Exception as e:
-                print(e)
-                no_power = bot.send_message(msg.chat.id, "没有权限执行对新用户的限制")
-                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
-                t.start()
-            else:
                 verifyRedis.add(new.user.id, str(msg.chat.id))
                 InviteLink = config.link
                 # print(InviteLink)
@@ -223,25 +230,30 @@ def New(bot, config):
                 bot_link.add(
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 msgs = bot.send_message(msg.chat.id,
-                                        f"你好！{msg.from_user.id}.\n正在加入`{msg.chat.first_name}`\n管理员手动解封请使用`+unban {new.user.id}`",
+                                        f"你好！ {new.user.first_name}.\n加入群组信息:`{msg.chat.title}` `{msg.chat.id}` \n管理员手动解封请使用`+unban {new.user.id}`",
                                         reply_markup=bot_link,
                                         parse_mode='Markdown')
                 t = Timer(30, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
                 t.start()
+            except Exception as e:
+                print(e)
+                no_power = bot.send_message(msg.chat.id, "启动失败，没有权限执行对新用户的限制")
+                t = Timer(30, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
+                t.start()
 
         # 验证白名单
-        if new.status == "member":
+        if new.status == "member" and msg.chat.type != "private":
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):
-                    verify_user()
+                    verify_user(bot, config)
                 else:
                     bot.send_message(msg.chat.id,
                                      "Somebody added me to this group , but the group not in my white list... "
                                      "\n请向Bot所有者申请白名单")
                     bot.leave_chat(msg.chat.id)
             else:
-                verify_user()
+                verify_user(bot, config)
             # 启动验证流程
 
 
