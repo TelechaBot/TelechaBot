@@ -32,18 +32,6 @@ class clinetBot(object):
     def __init__(self):
         pass
 
-    @staticmethod
-    def life():
-        try:
-            if joblib.load('life.pkl') == "on":
-                return True
-            else:
-                return False
-        except Exception as e:
-            print("Wrong:life.pkl do not exist" + str(e))
-            joblib.dump("off", 'life.pkl')
-            return False
-
     def botCreat(self):
         from CaptchaCore.Event import Read, Tool
         config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
@@ -59,8 +47,6 @@ class clinetBot(object):
             bot, config = self.botCreat()
             import CaptchaCore.BotEvent
             from telebot import custom_filters
-            # from CaptchaCore.BotEvent import Event
-            # from CaptchaCore.BotEvent import Group
             # 开关
             CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.New(bot, config)
@@ -68,11 +54,9 @@ class clinetBot(object):
             CaptchaCore.BotEvent.Switch(bot, config)
             CaptchaCore.BotEvent.Admin(bot, config)
             # 加载事件
-            # CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.Group(bot, config)
             CaptchaCore.BotEvent.Left(bot, config)
 
-            # asyncio.run(bot.polling(allowed_updates=util.update_types))
             from BotRedis import JsonRedis
             JsonRedis.timer()
             bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
