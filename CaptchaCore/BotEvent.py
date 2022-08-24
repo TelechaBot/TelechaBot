@@ -97,9 +97,8 @@ def Switch(bot, config):
                     for item in extract_arg(command):
                         path = str(pathlib.Path().cwd()) + "/" + item
                         if pathlib.Path(path).exists():
-                            with open(path, 'r') as f:
-                                con = (f.read())
-                            bot.reply_to(message, con)
+                            doc = open(path, 'rb')
+                            bot.send_document(message.chat.id, doc)
                         else:
                             bot.reply_to(message, "这个文件没有找到....")
 
@@ -200,7 +199,7 @@ def Starts(bot, config):
                     try:
                         # chat_id = message.chat.id
                         answer = message.text
-                        if int(answer) == int(sth[1]):
+                        if str(answer) == str(sth[1]):
                             unban(message)
                             msgss = send_ok(message)
 
@@ -221,7 +220,8 @@ def Starts(bot, config):
                                 t.start()
                                 bot.reply_to(message, '验证失败...')
                     except Exception as e:
-                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
+                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                                     parse_mode='Markdown')
 
                 def verify_step(message):
                     try:
@@ -229,7 +229,7 @@ def Starts(bot, config):
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if int(answer) == int(sth[1]):
+                        if str(answer) == str(sth[1]):
                             unban(message)
                             msgss = send_ok(message)
                             from threading import Timer
@@ -247,7 +247,8 @@ def Starts(bot, config):
                         # msg = bot.reply_to(message, 'How old are you?')
                         # bot.register_next_step_handler(msg, process_age_step)
                     except Exception as e:
-                        bot.reply_to(message, '机器人出错了，请立刻通知项目组？!')
+                        bot.reply_to(message, f'机器人出错了，请立刻通知项目组？!\n 日志:`{e}`',
+                                     parse_mode='Markdown')
 
                 bot.register_next_step_handler(message, verify_step)
                 # verify_step(bot, message)
