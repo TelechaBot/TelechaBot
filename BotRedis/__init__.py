@@ -80,6 +80,12 @@ class JsonRedis(object):
         JsonRedis.save_tasks()
 
     def add(self, userId, groupId):
+        """
+        注册队列
+        :param userId:
+        :param groupId:
+        :return:
+        """
         JsonRedis.load_tasks()
         _tasks["Time_id"][str(int(time.time()))] = str(userId)
         _tasks["Time_group"][str(int(time.time()))] = str(groupId)
@@ -87,6 +93,11 @@ class JsonRedis(object):
         JsonRedis.saveUser("User_group", userId, str(int(time.time())))
 
     def read(self, userId):
+        """
+        读取用户的注册键
+        :param userId:
+        :return:
+        """
         User = _tasks["User_group"].get(str(userId))
         if User:
             if len(User) != 0:
@@ -100,6 +111,12 @@ class JsonRedis(object):
             return False, False
 
     def removed(self, userId, groupId):
+        """
+        人员被移除或者退群，弹出对目标群组的验证任务
+        :param userId:
+        :param groupId:
+        :return:
+        """
         User = _tasks["User_group"].get(str(userId))
         if User:
             if len(User) != 0:
@@ -108,6 +125,12 @@ class JsonRedis(object):
                         JsonRedis.checker(tar=[key])
 
     def promote(self, userId, groupId=None):
+        """
+        提升用户并取消过期队列,解禁需要另外语句
+        :param userId:
+        :param groupId:
+        :return:
+        """
         User = _tasks["User_group"].get(str(userId))
         if User:
             if len(User) != 0:
@@ -135,6 +158,12 @@ class JsonRedis(object):
 
     @staticmethod
     def checker(tar=None, fail_user=None):
+        """
+        检查器，调用就会检查一次，弹出传入的键值，
+        :param tar: 传入这里，则不踢出而弹出
+        :param fail_user: 传入这里，则踢出且弹出
+        :return:
+        """
         if tar is None:
             tar = []
         if fail_user is None:
@@ -172,10 +201,7 @@ class JsonRedis(object):
                         print(e)
                     # print("ban " + str(user) + str(group))
         JsonRedis.save_tasks()
-
-
-    def interval(self):
-        return self.interval
+        # 同步配置队列
 
 #
 # JsonRedis(6).add(1222, str(-52333))

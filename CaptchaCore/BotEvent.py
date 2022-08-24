@@ -120,10 +120,13 @@ def Admin(bot, config):
                                              can_send_other_messages=True)
             # 机器人核心：发送通知并自毁消息
             unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
+
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
+
             t = Timer(30, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
+
 
 # 白名单系统
 def Group(bot, config):
@@ -145,6 +148,7 @@ def Group(bot, config):
                     bot.leave_chat(message.chat.id)
 
 
+# 群组离开
 def Left(bot, config):
     @bot.message_handler(content_types=['left_chat_member'])
     def left(msg):
@@ -296,4 +300,3 @@ def Starts(bot, config):
                 bot.reply_to(message, "未检索到你的信息。你无需验证")
         else:
             print(0)
-
