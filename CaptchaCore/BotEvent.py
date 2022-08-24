@@ -145,7 +145,6 @@ def Admin(bot, config):
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
-
             status = extract_arg(message.text)
             for user in status:
                 userId = "".join(list(filter(str.isdigit, user)))
@@ -159,7 +158,6 @@ def Admin(bot, config):
 
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
-
             t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
@@ -179,6 +177,7 @@ def Starts(bot, config):
                 print("生成了一道题目 " + str(sth))
 
                 def unban(message):
+
                     verifyRedis.promote(message.from_user.id)
                     bot.restrict_chat_member(group, message.from_user.id, can_send_messages=True,
                                              can_send_media_messages=True,
