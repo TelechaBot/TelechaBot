@@ -87,7 +87,7 @@ cd TelechaBot
 ```
 
 ```shell
-kill -9 3344547 && nohup python3 main.py > output.log 2>&1 &
+kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 ```
 
 
