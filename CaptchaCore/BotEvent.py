@@ -5,13 +5,13 @@
 # @Github    ：sudoskys
 import json
 import pathlib
+import random
 
 from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
 from CaptchaCore.Event import botWorker
-from telebot.custom_filters import TextFilter, TextMatchFilter, IsReplyFilter
 
 # from telebot import formatting
 
@@ -101,30 +101,39 @@ def Switch(bot, config):
                 bot.reply_to(message, "Wrong:" + str(e))
 
 
-# 群组管理员操作命令
-def Admin(bot, config):
-    @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'],
-                         text=TextFilter(starts_with=('+'), ignore_case=True))
-    def ban_command_handler(message: types.Message):
-        if len(message.text) == 5:
-            if "+banme" in message.text:
+def Banme(bot, config):
+    @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
+    def very_useful(message):
+        if len(message.text) == 6:
+            if "+banme" == message.text:
                 def extract_arg(arg):
                     return arg.split()[1:]
 
-                # status = extract_arg(message.text)
-                bot.reply_to(message,
-                             "6分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟:" + str(message.from_user.first_name))
+                InviteLink = config.link
+                # print(InviteLink)
+                bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+                bot_link.add(
+                    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
+                mins = (random.randint(1, 10) * 1)
+                msgs = bot.reply_to(message,
+                                    f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, 答题可以解锁，不答题请等待，但是答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
+                                    reply_markup=bot_link,
+                                    parse_mode='Markdown')
                 try:
                     # userId = "".join(list(filter(str.isdigit, user)))
                     verifyRedis.add(message.from_user.id, str(message.chat.id))
                     bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                              can_send_media_messages=False,
-                                             can_send_other_messages=False, until_date=message.date + 360)
+                                             can_send_other_messages=False, until_date=message.date + mins * 60)
                 except Exception as e:
                     pass
 
+
+# 群组管理员操作命令
+def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
+        # print(0)
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
@@ -206,7 +215,7 @@ def New(bot, config):
     def newer(msg: types.ChatMemberUpdated):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        # old = msg.old_chat_member
+        old = msg.old_chat_member
         new = msg.new_chat_member
 
         def verify_user(bot, config):
@@ -234,7 +243,7 @@ def New(bot, config):
                 t.start()
 
         # 验证白名单
-        if new.status == "member":
+        if not (old.status in ['administrator', 'creator']) and new.status == "member":
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):
