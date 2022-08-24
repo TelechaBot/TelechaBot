@@ -105,7 +105,7 @@ class JsonRedis(object):
             if len(User) != 0:
                 for key, i in _tasks["Time_group"].items():
                     if i == str(groupId):
-                        JsonRedis.checker([key])
+                        JsonRedis.checker(tar=[key])
 
     def promote(self, userId, groupId=None):
         User = _tasks["User_group"].get(str(userId))
@@ -114,12 +114,12 @@ class JsonRedis(object):
                 if groupId:
                     for key, i in _tasks["Time_group"].items():
                         if i == str(groupId):
-                            JsonRedis.checker([key])
+                            JsonRedis.checker(tar=[key])
                             JsonRedis.saveUser("super", str(userId), str(groupId))
                 else:
                     key = _tasks["User_group"].get(str(userId))[0]
                     groupId = _tasks["Time_group"].get(key)
-                    JsonRedis.checker([key])
+                    JsonRedis.checker(tar=[key])
                     JsonRedis.saveUser("super", str(userId), str(groupId))
 
     @staticmethod
@@ -134,12 +134,15 @@ class JsonRedis(object):
         t.start()
 
     @staticmethod
-    def checker(tar=None):
+    def checker(tar=None, fail_user=None):
+        if tar is None:
+            tar = []
         if tar is None:
             tar = []
             # 豁免名单
         ban = []
         ban = ban + tar
+        ban = ban + fail_user
         for key, item in _tasks["Time_id"].items():
             if abs(int(time.time()) - int(key)) > int(_tasks["interval"]):
                 ban.append(key)
