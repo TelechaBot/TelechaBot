@@ -67,7 +67,7 @@ class JsonRedis(object):
         where = str(where)
         JsonRedis.load_tasks()
         if _tasks.get(where):
-            if _tasks[where][str(group)]:
+            if _tasks[where].get(str(group)):
                 if not (key in _tasks[where][str(group)]):
                     _tasks[where][str(group)].append(key)
             else:
