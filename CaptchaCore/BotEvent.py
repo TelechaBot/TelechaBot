@@ -112,7 +112,7 @@ def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup'], is_chat_admin=True)
     def answer_for_admin(message):
         # bot.send_message(message.chat.id, "hello my admin")
-        if "/unban" in message.text:
+        if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
             status=extract_arg(message.text)
@@ -281,7 +281,7 @@ def New(bot, config):
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
         msgs = bot.send_message(msg.chat.id,
-                                f"Hey there {msg.from_user.first_name}，ID: `{msg.from_user.id}` .\n手动解封请使用/unban + id",
+                                f"Hey there {msg.from_user.first_name}，ID: `{msg.from_user.id}` .\n手动解封请使用`+unban` + id",
                                 reply_markup=mrkplink,
                                 parse_mode='Markdown')
 
