@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-# @Time    : 8/25/22 7:42 PM
-# @FileName: ScienceCaptcha.py
-# @Software: PyCharm
-# @Github    ：sudoskys
-# -*- coding: utf-8 -*-
 # @Time    : 8/24/22 12:57 AM
 # @FileName: main.py
 # @Software: PyCharm
@@ -169,6 +164,28 @@ class parabola_2(object):
         return Q, round(A)
 
 
+class biological_gene(object):
+    def __init__(self):
+        pass
+
+    @property
+    def difficulty(self):
+        return 9
+
+    def create(self):
+        num1 = (random.randint(7, 21) * 4)
+        num2 = (random.randint(7, 21) * 4)
+        num3 = (random.randint(7, 21) * 4)
+        from random import choice
+        chos = choice(["A", "a"])
+        Q = f"如若二倍体生物的某一基因位点上有一对等位基因A和a，该种群中相关的基因型有AA、Aa、aa，如果他们的个数是{num1, num2, num3}, 则该种群{chos}基因的基因频率是多少？(答出四舍五入取整后的百分数，不带%)"
+        if chos == "A":
+            An = (2 * num1 + num2) / (2 * (num1 + num2 + num3)) * 100
+        else:
+            An = (num2 + 2 * num3) / (2 * (num1 + num2 + num3)) * 100
+        return Q, round(An)
+
+
 class Importer(object):
     def __init__(self):
         self.items = [{"diff": parabola_2().difficulty, "obj": parabola_2()},
@@ -179,13 +196,21 @@ class Importer(object):
                       {"diff": binary_first_equation().difficulty, "obj": binary_first_equation()},
                       ]
 
-    def pull(self, difficulty_limit=5):
+    def pull(self, difficulty_min=0, difficulty_limit=5):
         from random import choice
-        if difficulty_limit < 1:
-            difficulty_limit = 1
-        verify_papaer = [i for i in self.items if i.get("diff") <= difficulty_limit]
+        if difficulty_limit < 1 or difficulty_limit < difficulty_min:
+            if difficulty_min < 1:
+                difficulty_limit = 2
+            if difficulty_min >= 1:
+                difficulty_limit = difficulty_min * 3
+        verify_papaer = [i for i in self.items if difficulty_min <= i.get("diff") <= difficulty_limit]
         verify = (choice(verify_papaer))
         return verify.get("obj")
 
+# print(biological_gene().create())
 
-
+#
+# some = Importer().pull()
+# print(some.create())
+# print(some.create()[0])
+# print(some.create()[1])

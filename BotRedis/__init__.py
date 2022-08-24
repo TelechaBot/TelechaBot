@@ -142,7 +142,7 @@ class JsonRedis(object):
         ban = []
         ban = ban + tar
         for key, item in _tasks["Time_id"].items():
-            if int(time.time()) - int(key) > int(_tasks["interval"]):
+            if abs(int(time.time()) - int(key)) > int(_tasks["interval"]):
                 ban.append(key)
             else:
                 pass
@@ -154,7 +154,7 @@ class JsonRedis(object):
             try:
                 _tasks["User_group"].get(str(user)).remove(str(key))
             except Exception as e:
-                pass
+                print(e)
             if not (key in tar):
                 user_something = _tasks["super"].get(str(user))
                 if user_something is None:
@@ -168,8 +168,7 @@ class JsonRedis(object):
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))
-            JsonRedis.save_tasks()
-
+        JsonRedis.save_tasks()
 
     def interval(self):
         return self.interval
