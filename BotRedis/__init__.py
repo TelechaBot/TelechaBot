@@ -2,6 +2,7 @@ import json
 import pathlib
 import time
 
+
 # 必须需要一个创建机器人对象的类才能使用KickMember功能！
 
 class JsonRedis(object):
@@ -150,14 +151,16 @@ class JsonRedis(object):
         for key in ban:
             user = _tasks["Time_id"].pop(key)
             group = _tasks["Time_group"].pop(key)
+        try:
             _tasks["User_group"][str(user)].remove(key)
-            if not (key in tar):
-                # 过期验证的操作
-                from CaptchaCore.Bot import clinetBot
-                bot, config =clinetBot().botCreat()
-                bot.kick_chat_member(group,user)
-                # print("ban " + str(user) + str(group))
-
+        except Exception as e:
+            pass
+        if not (key in tar):
+            # 过期验证的操作
+            from CaptchaCore.Bot import clinetBot
+            bot, config = clinetBot().botCreat()
+            bot.kick_chat_member(group, user)
+            # print("ban " + str(user) + str(group))
 
         JsonRedis.save_tasks()
 
