@@ -223,7 +223,7 @@ def Group(bot, config):
             else:
                 if _csonfig.get("whiteGroupSwitch"):
                     bot.send_message(message.chat.id,
-                                     "Somebody added me to THIS group,but the group not in my white list")
+                                     "Somebody added me to this group,but the group not in my white list...")
                     bot.leave_chat(message.chat.id)
 
 
