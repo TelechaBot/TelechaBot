@@ -95,7 +95,7 @@ def Switch(bot, config):
                         return arg.split()[1:]
 
                     for item in extract_arg(command):
-                        path = pathlib.Path().cwd() + "/" + item
+                        path = str(pathlib.Path().cwd()) + "/" + item
                         if pathlib.Path(path).exists():
                             with open(path, 'r') as f:
                                 con = (f.read())
@@ -140,25 +140,24 @@ def About(bot, config):
 
 
 def Admin(bot, config):
-    @bot.message_handler(chat_types=['supergroup'], is_chat_admin=True)
+    @bot.message_handler(chat_types=['supergroup','group'], is_chat_admin=True)
     def answer_for_admin(message):
         # bot.send_message(message.chat.id, "hello my admin")
         if "+unban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
-
             status = extract_arg(message.text)
             for user in status:
                 userId = "".join(list(filter(str.isdigit, user)))
-                verifyRedis.promote(userId)
-                bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
-                                         can_send_media_messages=True,
-                                         can_send_other_messages=True)
+                group = verifyRedis.read(str(userId))
+                if group:
+                    verifyRedis.promote(userId)
+                    bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
+                                             can_send_media_messages=True,
+                                             can_send_other_messages=True)
             unbanr = bot.reply_to(message, "已手动解封这些小可爱" + str(status))
-
             def delmsg(bot, chat, message):
                 bot.delete_message(chat, message)
-
             t = Timer(25, delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
 
@@ -314,7 +313,7 @@ def New(bot, config):
         mrkplink.add(
             InlineKeyboardButton("请与我展开私聊测试，来证明您是真人。 ", url=InviteLink))  # Added Invite Link to Inline Keyboard
         msgs = bot.send_message(msg.chat.id,
-                                f"Hey there {msg.from_user.first_name}，ID: `{msg.from_user.id}` .\n手动解封请使用`+unban` + id",
+                                f"Hey there {msg.from_user.first_name}.\n管理员手动解封使用`+unban {msg.from_user.id}`",
                                 reply_markup=mrkplink,
                                 parse_mode='Markdown')
 
