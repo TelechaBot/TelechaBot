@@ -6,6 +6,7 @@
 # @Version    ：1
 import math
 import random
+import time
 
 special_angle = [30, 60, 90, 120, 150, 180]
 
@@ -24,7 +25,8 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
 class radius(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -40,7 +42,8 @@ class radius(object):
 
 
 class find_volume_cone(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -57,7 +60,8 @@ class find_volume_cone(object):
 
 
 class find_ball_cone(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -73,7 +77,8 @@ class find_ball_cone(object):
 
 
 class gravity_work(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -92,7 +97,8 @@ class gravity_work(object):
 
 
 class binary_first_equation(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -133,7 +139,8 @@ class binary_first_equation(object):
 
 
 class parabola(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -149,7 +156,8 @@ class parabola(object):
 
 
 class parabola_2(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -165,7 +173,8 @@ class parabola_2(object):
 
 
 class biological_gene(object):
-    def __init__(self):
+    def __init__(self, sample):
+        self.id = sample
         pass
 
     @property
@@ -187,14 +196,16 @@ class biological_gene(object):
 
 
 class Importer(object):
-    def __init__(self):
-        self.items = [{"diff": parabola_2().difficulty, "obj": parabola_2()},
-                      {"diff": radius().difficulty, "obj": parabola()},
-                      {"diff": find_volume_cone().difficulty, "obj": find_volume_cone()},
-                      {"diff": find_ball_cone().difficulty, "obj": find_ball_cone()},
-                      {"diff": gravity_work().difficulty, "obj": gravity_work()},
-                      {"diff": binary_first_equation().difficulty, "obj": binary_first_equation()},
-                      {"diff": biological_gene().difficulty, "obj": biological_gene()},
+    def __init__(self, s=time.time()):
+        self.samples = s
+        import time
+        self.items = [{"diff": parabola_2(s).difficulty, "obj": parabola_2(s)},
+                      {"diff": radius(s).difficulty, "obj": parabola(s)},
+                      {"diff": find_volume_cone(s).difficulty, "obj": find_volume_cone(s)},
+                      {"diff": find_ball_cone(s).difficulty, "obj": find_ball_cone(s)},
+                      {"diff": gravity_work(s).difficulty, "obj": gravity_work(s)},
+                      {"diff": binary_first_equation(s).difficulty, "obj": binary_first_equation(s)},
+                      {"diff": biological_gene(s).difficulty, "obj": biological_gene(s)},
                       ]
 
     def pull(self, difficulty_min=1, difficulty_limit=5):
@@ -210,8 +221,17 @@ class Importer(object):
 
 # print(biological_gene().create())
 
+###########################
+# 如果需要创建不重复对象
+# import time
+# print(Importer(time.time()).pull().create())
+# print(Importer(time.time()).pull().create())
+# print(Importer(time.time()).pull().create())
+#########################
+
+
 #
-# some = Importer().pull()
+# some =
 # print(some.create())
 # print(some.create()[0])
 # print(some.create()[1])

@@ -6,7 +6,7 @@
 import json
 import pathlib
 import random
-
+import time
 from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
@@ -342,12 +342,12 @@ def Starts(bot, config):
                 bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
                 print("生成了一道题目:" + str(sth))
 
-                def verify_step2(message, sth):
+                def verify_step2(message, pipe2):
                     try:
                         # group, keys = verifyRedis.read_user(str(message.from_user.id))
                         # chat_id = message.chat.id
                         answer = message.text
-                        if str(answer) == str(sth[1]):
+                        if str(answer) == str(pipe2[1]):
                             botWorker.un_restrict(message, bot, group_k)
                             verifyRedis.grant_resign(message.from_user.id, group_k)
                             bot.reply_to(message, "好险！是正确的答案，如果没有被解封请通知群组管理员～")
@@ -368,7 +368,7 @@ def Starts(bot, config):
                         bot.reply_to(message, f'机器人出错了，请发送日志到项目 Issue ,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
-                def verify_step(message, sth, timea):
+                def verify_step(message, pipe, timea):
                     if message.text == "/saveme" and timea > 0:
                         timea = timea - 1
                         if timea == 0:
@@ -377,19 +377,22 @@ def Starts(bot, config):
                             tips = f"还可以重置{timea}次."
                         min_, limit_ = botWorker.get_difficulty(group_k)
                         now = limit_ - 2
-                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
-                        bot.register_next_step_handler(message, verify_step,
-                                                       CaptchaWorker.Importer().pull(difficulty_min=min_,
-                                                                                     difficulty_limit=limit_ - 1).create(),
+                        paper = (CaptchaWorker.Importer(s=time.time()).pull(
+                            difficulty_min=min_,
+                            difficulty_limit=limit_ - 1).create())
+                        bot.reply_to(message, paper[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
+                        print(paper)
+                        bot.register_next_step_handler(message,
+                                                       verify_step,
+                                                       paper,
                                                        timea)
-                        print("重新生成了一道题目:" + str(sth))
                     else:
                         try:
                             # chat_id = message.chat.id
                             answer = message.text
                             # 用户操作
                             # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                            if str(answer) == str(sth[1]):
+                            if str(answer) == str(pipe[1]):
                                 botWorker.un_restrict(message, bot, group_k)
                                 verifyRedis.grant_resign(message.from_user.id, group_k)
                                 msgs = botWorker.send_ok(message, bot, group_k)
@@ -398,7 +401,7 @@ def Starts(bot, config):
                                 t.start()
                             else:
                                 bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
-                                bot.register_next_step_handler(message, verify_step2, sth)
+                                bot.register_next_step_handler(message, verify_step2, pipe)
                         except Exception as e:
                             bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
                                          parse_mode='Markdown')
@@ -410,3 +413,5 @@ def Starts(bot, config):
         else:
             pass
             # print(0)
+
+
