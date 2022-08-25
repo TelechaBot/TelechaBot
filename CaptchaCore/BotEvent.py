@@ -64,10 +64,7 @@ def Switch(bot, config):
                     bot.reply_to(message, "Off:whiteGroup")
                     save_csonfig()
                 if "/cat" in command:
-                    def extract_arg(arg):
-                        return arg.split()[1:]
-
-                    for item in extract_arg(command):
+                    for item in command.split()[1:]:
                         path = str(pathlib.Path().cwd()) + "/" + item
                         if pathlib.Path(path).exists():
                             doc = open(path, 'rb')
@@ -76,16 +73,15 @@ def Switch(bot, config):
                             bot.reply_to(message, "这个文件没有找到....")
                 if "/unban" in command:
                     def extract_arg(arg):
-                        return arg.split()[1:]
+                        return arg
 
-                    if len(extract_arg(command)) == 2:
+                    if len(command.split()[1:]) == 2:
                         try:
                             botWorker.unbanUser(bot, extract_arg(command)[0], extract_arg(command)[1])
                         except:
                             pass
                         else:
                             bot.reply_to(message, "手动解封了" + str(extract_arg(command)))
-
                 if "/addwhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
@@ -117,9 +113,6 @@ def Banme(bot, config):
     def very_useful(message):
         if len(message.text) == 6:
             if "+banme" == message.text:
-                def extract_arg(arg):
-                    return arg.split()[1:]
-
                 InviteLink = config.link
                 # print(InviteLink)
                 bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
@@ -149,11 +142,32 @@ def Admin(bot, config):
     @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
     def answer_for_admin(message):
         # print(0)
+        if "+diff_limit" in message.text and len(message.text) != len("+diff_limit"):
+            status = message.text.split()[1:]
+            level = "".join(list(filter(str.isdigit, status[0])))
+            if level:
+                botWorker.set_difficulty(message.chat.id, difficulty_limit=level)
+                msgs = bot.reply_to(message, "调整难度上限为:" + str(level))
+                t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+            else:
+                msgs = bot.reply_to(message, "无效参数,必须为数字")
+                t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+        if "+diff_min" in message.text and len(message.text) != len("+diff_min"):
+            status = message.text.split()[1:]
+            level = "".join(list(filter(str.isdigit, status[0])))
+            if level:
+                botWorker.set_difficulty(message.chat.id, difficulty_min=level)
+                msgs = bot.reply_to(message, "调整难度下限为:" + str(level))
+                t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
+            else:
+                msgs = bot.reply_to(message, "无效参数,必须为数字")
+                t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                t.start()
         if "+unban" in message.text:
-            def extract_arg(arg):
-                return arg.split()[1:]
-
-            status = extract_arg(message.text)
+            status = message.text.split()[1:]
             for user in status:
                 bot.unban_chat_member(message.chat.id, user_id=user, only_if_banned=True)
                 userId = "".join(list(filter(str.isdigit, user)))
@@ -184,10 +198,7 @@ def Admin(bot, config):
         #             t.start()
 
         if "+ban" in message.text:
-            def extract_arg(arg):
-                return arg.split()[1:]
-
-            status = extract_arg(message.text)
+            status = message.text.split()[1:]
             if len(message.text) == 4:
                 try:
                     if message.reply_to_message.from_user.id:
@@ -325,12 +336,13 @@ def Starts(bot, config):
                              f"通行证ID: `{key}`\n用户识别码: `{message.from_user.id}`\n开始验证群组 `{group_k}` \n你有175秒的时间回答下面的问题...",
                              parse_mode='Markdown')
                 from CaptchaCore import CaptchaWorker
-                paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)
-                sth = paper.create()
-                bot.reply_to(message, sth[0])
+                load_csonfig()
+                min_, limit_ = botWorker.get_difficulty(group_k)
+                sth = CaptchaWorker.Importer().pull(min_, limit_).create()
+                bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
                 print("生成了一道题目:" + str(sth))
 
-                def verify_step2(message):
+                def verify_step2(message, sth):
                     try:
                         # group, keys = verifyRedis.read_user(str(message.from_user.id))
                         # chat_id = message.chat.id
@@ -356,29 +368,42 @@ def Starts(bot, config):
                         bot.reply_to(message, f'机器人出错了，请发送日志到项目 Issue ,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
-                def verify_step(message):
-                    try:
-                        # chat_id = message.chat.id
-                        answer = message.text
-                        # 用户操作
-                        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if str(answer) == str(sth[1]):
-                            botWorker.un_restrict(message, bot, group_k)
-                            verifyRedis.grant_resign(message.from_user.id, group_k)
-                            msgs = botWorker.send_ok(message, bot, group_k)
-                            bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                            t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                            t.start()
+                def verify_step(message, sth, timea):
+                    if message.text == "/saveme" and timea > 0:
+                        timea = timea - 1
+                        if timea == 0:
+                            tips = "必须回答"
                         else:
-                            bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
-                            bot.register_next_step_handler(message, verify_step2)
-                    except Exception as e:
-                        bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
-                                     parse_mode='Markdown')
+                            tips = f"剩余{timea}次重置."
+                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目,{tips}")
+                        min_, limit_ = botWorker.get_difficulty(group_k)
+                        bot.register_next_step_handler(message, verify_step,
+                                                       CaptchaWorker.Importer().pull(difficulty_min=min_,
+                                                                                     difficulty_limit=limit_ - 1).create(),
+                                                       timea)
+                        print("重新生成了一道题目:" + str(sth))
+                    else:
+                        try:
+                            # chat_id = message.chat.id
+                            answer = message.text
+                            # 用户操作
+                            # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
+                            if str(answer) == str(sth[1]):
+                                botWorker.un_restrict(message, bot, group_k)
+                                verifyRedis.grant_resign(message.from_user.id, group_k)
+                                msgs = botWorker.send_ok(message, bot, group_k)
+                                bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
+                                t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                                t.start()
+                            else:
+                                bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
+                                bot.register_next_step_handler(message, verify_step2, sth)
+                        except Exception as e:
+                            bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
+                                         parse_mode='Markdown')
 
-                bot.register_next_step_handler(message, verify_step)
-                # verify_step(bot, message)
-
+                times = 3
+                bot.register_next_step_handler(message, verify_step, sth, times)
             else:
                 bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
         else:
