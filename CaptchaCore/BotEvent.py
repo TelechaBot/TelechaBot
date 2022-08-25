@@ -6,7 +6,7 @@
 import json
 import pathlib
 import random
-
+import time
 from telebot import types, util
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
@@ -377,13 +377,14 @@ def Starts(bot, config):
                             tips = f"还可以重置{timea}次."
                         min_, limit_ = botWorker.get_difficulty(group_k)
                         now = limit_ - 2
-                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
-                        paper = CaptchaWorker.Importer().pull(difficulty_min=min_, difficulty_limit=limit_ - 1).create()
+                        bot.reply_to(message, sths[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
+                        paper = CaptchaWorker.Importer(something=time.time()).pull(difficulty_min=min_,
+                                                                                   difficulty_limit=limit_ - 1).create()
                         bot.register_next_step_handler(message,
                                                        verify_step,
-                                                       paper,
+                                                       str(paper),
                                                        timea)
-                        print("重新生成了一道题目:" + str(sths))
+                        print("重新生成了一道题目:" + str(paper))
                     else:
                         try:
                             # chat_id = message.chat.id

@@ -188,8 +188,8 @@ class biological_gene(object):
 
 
 class Importer(object):
-    def __init__(self):
-        self.sample = time.time()
+    def __init__(self, something=time.time()):
+        self.samples = something
         self.items = [{"diff": parabola_2().difficulty, "obj": parabola_2()},
                       {"diff": radius().difficulty, "obj": parabola()},
                       {"diff": find_volume_cone().difficulty, "obj": find_volume_cone()},
@@ -212,8 +212,17 @@ class Importer(object):
 
 # print(biological_gene().create())
 
+###########################
+# 如果需要创建不重复对象
+# import time
+# print(Importer(time.time()).pull().create())
+# print(Importer(time.time()).pull().create())
+# print(Importer(time.time()).pull().create())
+#########################
+
+
 #
-# some = Importer().pull()
+# some =
 # print(some.create())
 # print(some.create()[0])
 # print(some.create()[1])
