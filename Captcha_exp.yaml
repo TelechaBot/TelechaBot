@@ -1,7 +1,7 @@
 # statu: True
-version: "2.0.6"
-desc: 'a bot'
+version: "2.0.7"
+desc: "生物信息验证 Bot,@TelechaBot_real,github.com/sudoskys/"
 link: "https://t.me/SmartCapthaBot"
 botToken: '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
 #when you select lock:true,you must use aes to encode all Token! And Dont push your token to github directly.
-ClientBot :  {owner: '5477776859'}
+ClientBot: { owner: '5477776859',contact_details: "https://t.me/SmartCapthaBot" }
