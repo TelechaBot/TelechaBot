@@ -230,6 +230,7 @@ def Left(bot, config):
     def left(msg):
         #   if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
+        print(str(msg.from_user.id) + "离开了" + str(msg.chat.id))
         # 用户操作
         verifyRedis.remove_user(msg.from_user.id, str(msg.chat.id))
 
@@ -253,42 +254,42 @@ def message_del(bot, config):
 
 # 启动新用户通知
 def New(bot, config):
-    @bot.chat_member_handler()
-    def newer(msg: types.ChatMemberUpdated):
+    @bot.message_handler(content_types=['new_chat_members'])
+    def new_member(msg):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
-        old = msg.old_chat_member
-        new = msg.new_chat_member
+        print(str(msg.from_user.id) + "加入了" + str(msg.chat.id))
 
         def verify_user(bot, config):
             # 用户操作
-            resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
+            resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
             InviteLink = config.link
             # print(InviteLink)
             bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
             bot_link.add(
                 InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
             msgs = bot.send_message(msg.chat.id,
-                                    f"{new.user.first_name}正在申请加入 `{msg.chat.title}`\n通行证ID:`{resign_key}`\n群组识别码:`{msg.chat.id}`"
-                                    f"\n赫免命令`+unban {new.user.id}`",
+                                    f"{msg.from_user.first_name}正在申请加入 `{msg.chat.title}`\n通行证识别码:`{resign_key}`"
+                                    f"\nGroup ID:`{msg.chat.id}`"
+                                    f"\n赫免命令`+unban {msg.from_user.id}`",
                                     reply_markup=bot_link,
                                     parse_mode='Markdown')
             t = Timer(45, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             t.start()
             try:
-                bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
+                bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
                                          can_send_media_messages=False,
                                          can_send_other_messages=False)
             except Exception as e:
                 print(e)
                 no_power = bot.send_message(msg.chat.id,
-                                            f"对不起，没有权限执行对新用户`{new.user.id}`的限制\n通行证ID:`{resign_key}`\n群组识别码:`{msg.chat.id}`",
+                                            f"对不起，没有权限执行对新用户`{msg.from_user.id}`的限制\n通行证识别码:`{resign_key}`\nGroup ID:`{msg.chat.id}`",
                                             parse_mode='Markdown')
                 t = Timer(15, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
                 t.start()
 
         # 验证白名单
-        if new.status == "member" and msg.chat.type != "private":
+        if msg.chat.type != "private":
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):
