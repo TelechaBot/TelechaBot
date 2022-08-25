@@ -368,7 +368,7 @@ def Starts(bot, config):
                         bot.reply_to(message, f'机器人出错了，请发送日志到项目 Issue ,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
-                def verify_step(message, sths, timea):
+                def verify_step(message, pipe, timea):
                     if message.text == "/saveme" and timea > 0:
                         timea = timea - 1
                         if timea == 0:
@@ -377,7 +377,7 @@ def Starts(bot, config):
                             tips = f"还可以重置{timea}次."
                         min_, limit_ = botWorker.get_difficulty(group_k)
                         now = limit_ - 2
-                        bot.reply_to(message, sths[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
+                        bot.reply_to(message, pipe[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
                         paper = CaptchaWorker.Importer(something=time.time()).pull(difficulty_min=min_,
                                                                                    difficulty_limit=limit_ - 1).create()
                         bot.register_next_step_handler(message,
@@ -391,7 +391,7 @@ def Starts(bot, config):
                             answer = message.text
                             # 用户操作
                             # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                            if str(answer) == str(sths[1]):
+                            if str(answer) == str(pipe[1]):
                                 botWorker.un_restrict(message, bot, group_k)
                                 verifyRedis.grant_resign(message.from_user.id, group_k)
                                 msgs = botWorker.send_ok(message, bot, group_k)
@@ -400,7 +400,7 @@ def Starts(bot, config):
                                 t.start()
                             else:
                                 bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
-                                bot.register_next_step_handler(message, verify_step2, sths)
+                                bot.register_next_step_handler(message, verify_step2, pipe)
                         except Exception as e:
                             bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
                                          parse_mode='Markdown')
