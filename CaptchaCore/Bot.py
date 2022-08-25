@@ -45,19 +45,46 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreat()
-            import CaptchaCore.BotEvent
             from telebot import custom_filters
             from telebot import types, util
-            # 开关
-            CaptchaCore.BotEvent.New(bot, config)
-            CaptchaCore.BotEvent.Left(bot, config)
-            CaptchaCore.BotEvent.Starts(bot, config)
-            CaptchaCore.BotEvent.About(bot, config)
-            CaptchaCore.BotEvent.Admin(bot, config)
-            CaptchaCore.BotEvent.Banme(bot, config)
-            CaptchaCore.BotEvent.message_del(bot, config)
-            CaptchaCore.BotEvent.Switch(bot, config)
-            CaptchaCore.BotEvent.botSelf(bot, config)
+            import CaptchaCore.BotEvent
+
+            @bot.message_handler(commands=["start"])
+            def handle_start(message):
+                CaptchaCore.BotEvent.Start(bot, message, config)
+
+            @bot.message_handler(commands=['about'])
+            def handle_about(message):
+                CaptchaCore.BotEvent.About(bot, message, config)
+
+            @bot.message_handler(content_types=['text'], chat_types=['private'])
+            def handle_private_msg(message):
+                CaptchaCore.BotEvent.Switch(bot, message, config)
+
+            @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
+            def group_msg_no_admin(message):
+                CaptchaCore.BotEvent.Banme(bot, message, config)
+
+            @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
+            def group_msg_no_admin(message):
+                CaptchaCore.BotEvent.Admin(bot, message, config)
+
+            @bot.my_chat_member_handler()
+            def bot_self(message: types.ChatMemberUpdated):
+                CaptchaCore.BotEvent.botSelf(bot, message, config)
+
+            @bot.message_handler(content_types=['left_chat_member'])
+            def left_chat(message):
+                CaptchaCore.BotEvent.Left(bot, message, config)
+
+            @bot.message_handler(content_types=util.content_type_service)
+            def service_msg(message: types.Message):
+                CaptchaCore.BotEvent.msg_del(bot, message, config)
+
+            @bot.message_handler(content_types=['new_chat_members'], is_chat_admin=False,
+                                 chat_types=['supergroup', 'group'])
+            def new_member(message):
+                CaptchaCore.BotEvent.New(bot, message, config)
 
             from BotRedis import JsonRedis
             JsonRedis.timer()
