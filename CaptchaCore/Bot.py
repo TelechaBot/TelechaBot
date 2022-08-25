@@ -50,15 +50,15 @@ class clinetBot(object):
             from telebot import types, util
             # 开关
             CaptchaCore.BotEvent.New(bot, config)
+            CaptchaCore.BotEvent.Left(bot, config)
             CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.About(bot, config)
             CaptchaCore.BotEvent.Banme(bot, config)
             CaptchaCore.BotEvent.Admin(bot, config)
             # 加载事件
-            CaptchaCore.BotEvent.message_del(bot, config)
             CaptchaCore.BotEvent.botSelf(bot, config)
-            CaptchaCore.BotEvent.Left(bot, config)
             CaptchaCore.BotEvent.Switch(bot, config)
+            CaptchaCore.BotEvent.message_del(bot, config)
 
             from BotRedis import JsonRedis
             JsonRedis.timer()
