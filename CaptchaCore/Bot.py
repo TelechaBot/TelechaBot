@@ -53,12 +53,12 @@ class clinetBot(object):
             CaptchaCore.BotEvent.Left(bot, config)
             CaptchaCore.BotEvent.Starts(bot, config)
             CaptchaCore.BotEvent.About(bot, config)
-            CaptchaCore.BotEvent.Banme(bot, config)
             CaptchaCore.BotEvent.Admin(bot, config)
-            # 加载事件
-            CaptchaCore.BotEvent.botSelf(bot, config)
+            CaptchaCore.BotEvent.Banme(bot, config)
             CaptchaCore.BotEvent.message_del(bot, config)
             CaptchaCore.BotEvent.Switch(bot, config)
+            CaptchaCore.BotEvent.botSelf(bot, config)
+
             from BotRedis import JsonRedis
             JsonRedis.timer()
             bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
