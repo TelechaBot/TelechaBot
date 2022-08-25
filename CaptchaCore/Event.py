@@ -64,12 +64,39 @@ class botWorker(object):
             _csonfig["difficulty_min"] = {}
             save_csonfig()
         limit = _csonfig.get("difficulty_limit").get(str(cls))
-        min = _csonfig.get("difficulty_min").get(str(cls))
+        mina = _csonfig.get("difficulty_min").get(str(cls))
         if limit is None:
             limit = 7
-        if min is None:
-            min = 1
-        return min, limit
+        else:
+            limit = "".join(list(filter(str.isdigit, limit)))
+        if mina is None:
+            mina = 1
+        else:
+            mina = "".join(list(filter(str.isdigit, mina)))
+        return mina, limit
+
+    @staticmethod
+    def set_difficulty(group_id, difficulty_limit=None, difficulty_min=None):
+        if _csonfig.get("difficulty_limit") is None:
+            _csonfig["difficulty_limit"] = {}
+            save_csonfig()
+        if _csonfig.get("difficulty_min") is None:
+            _csonfig["difficulty_min"] = {}
+            save_csonfig()
+        set_difficulty_limit = False
+        set_difficulty_min = False
+        if not (difficulty_limit is None):
+            _csonfig["difficulty_limit"][str(group_id)] = difficulty_limit
+            set_difficulty_limit = True
+        if not (difficulty_min is None):
+            _csonfig["difficulty_min"][str(group_id)] = difficulty_min
+            set_difficulty_min = True
+        save_csonfig()
+        return set_difficulty_min, set_difficulty_limit
+
+    @staticmethod
+    def extract_arg(arg):
+        return arg.split()[1:]
 
 
 class yamler(object):
