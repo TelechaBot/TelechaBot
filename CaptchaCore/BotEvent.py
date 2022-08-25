@@ -362,11 +362,10 @@ def Starts(bot, config):
                         if str(answer) == str(sth[1]):
                             botWorker.un_restrict(message, bot, group_k)
                             verifyRedis.grant_resign(message.from_user.id, group_k)
+                            msgs = botWorker.send_ok(message, bot, group_k)
                             bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                            msgss = botWorker.send_ok(message, bot, group_k)
-                            t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
+                            t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
                             t.start()
-
                         else:
                             bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
                             bot.register_next_step_handler(message, verify_step2)
