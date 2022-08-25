@@ -85,7 +85,9 @@ def Switch(bot, config):
                             pass
                         else:
                             bot.reply_to(message, "手动解封了" + str(extract_arg(command)))
-
+                if "/addwhite" in command:
+                    def extract_arg(arg):
+                        return arg.split()[1:]
                 if "/addwhite" in command:
                     def extract_arg(arg):
                         return arg.split()[1:]
@@ -325,12 +327,13 @@ def Starts(bot, config):
                              f"通行证ID: `{key}`\n用户识别码: `{message.from_user.id}`\n开始验证群组 `{group_k}` \n你有175秒的时间回答下面的问题...",
                              parse_mode='Markdown')
                 from CaptchaCore import CaptchaWorker
-                paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)
-                sth = paper.create()
-                bot.reply_to(message, sth[0])
+                load_csonfig()
+                min, limit = botWorker.get_difficulty(message.chat.id)
+                sth = CaptchaWorker.Importer().pull(min, limit).create()
+                bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
                 print("生成了一道题目:" + str(sth))
 
-                def verify_step2(message):
+                def verify_step2(message, sth):
                     try:
                         # group, keys = verifyRedis.read_user(str(message.from_user.id))
                         # chat_id = message.chat.id
@@ -356,29 +359,41 @@ def Starts(bot, config):
                         bot.reply_to(message, f'机器人出错了，请发送日志到项目 Issue ,谢谢你！\n 日志:`{e}`',
                                      parse_mode='Markdown')
 
-                def verify_step(message):
-                    try:
-                        # chat_id = message.chat.id
-                        answer = message.text
-                        # 用户操作
-                        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if str(answer) == str(sth[1]):
-                            botWorker.un_restrict(message, bot, group_k)
-                            verifyRedis.grant_resign(message.from_user.id, group_k)
-                            msgs = botWorker.send_ok(message, bot, group_k)
-                            bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                            t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                            t.start()
+                def verify_step(message, sth, timea):
+                    if message.text == "/saveme" and timea > 0:
+                        timea = timea - 1
+                        if timea == 0:
+                            tips = "必须回答"
                         else:
-                            bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
-                            bot.register_next_step_handler(message, verify_step2)
-                    except Exception as e:
-                        bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
-                                     parse_mode='Markdown')
+                            tips = f"剩余{timea}次重置."
+                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目,{tips}")
+                        bot.register_next_step_handler(message, verify_step,
+                                                       CaptchaWorker.Importer().pull(difficulty_min=1,
+                                                                                     difficulty_limit=6).create(),
+                                                       timea)
+                        print("重新生成了一道题目:" + str(sth))
+                    else:
+                        try:
+                            # chat_id = message.chat.id
+                            answer = message.text
+                            # 用户操作
+                            # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
+                            if str(answer) == str(sth[1]):
+                                botWorker.un_restrict(message, bot, group_k)
+                                verifyRedis.grant_resign(message.from_user.id, group_k)
+                                msgs = botWorker.send_ok(message, bot, group_k)
+                                bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
+                                t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                                t.start()
+                            else:
+                                bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
+                                bot.register_next_step_handler(message, verify_step2, sth)
+                        except Exception as e:
+                            bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
+                                         parse_mode='Markdown')
 
-                bot.register_next_step_handler(message, verify_step)
-                # verify_step(bot, message)
-
+                times = 3
+                bot.register_next_step_handler(message, verify_step, sth, times)
             else:
                 bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
         else:

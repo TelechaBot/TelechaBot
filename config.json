@@ -1,6 +1,10 @@
 {
     "statu": true,
     "whiteGroupSwitch": true,
+    "difficulty_limit": {
+    },
+    "difficulty_min": {
+    },
     "whiteGroup": [
         -1001662266151,
         1001561314417

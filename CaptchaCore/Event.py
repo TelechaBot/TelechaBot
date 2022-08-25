@@ -55,6 +55,22 @@ class botWorker(object):
                                  f"刚刚{message.from_user.first_name}通过了验证！")
         return msgss
 
+    @staticmethod
+    def get_difficulty(cls):
+        if _csonfig.get("difficulty_limit") is None:
+            _csonfig["difficulty_limit"] = {}
+            save_csonfig()
+        if _csonfig.get("difficulty_min") is None:
+            _csonfig["difficulty_min"] = {}
+            save_csonfig()
+        limit = _csonfig.get("difficulty_limit").get(str(cls))
+        min = _csonfig.get("difficulty_min").get(str(cls))
+        if limit is None:
+            limit = 7
+        if min is None:
+            min = 1
+        return min, limit
+
 
 class yamler(object):
     # sudoskys@github
