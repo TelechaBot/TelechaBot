@@ -233,7 +233,7 @@ def member_update(bot, msg, config):
     old = msg.old_chat_member
     new = msg.new_chat_member
     load_csonfig()
-    print(msg)
+    # print(msg)
 
     def verify_user(bot, config, statu):
         # 用户操作
