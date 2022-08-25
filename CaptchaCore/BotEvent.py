@@ -374,9 +374,10 @@ def Starts(bot, config):
                         if timea == 0:
                             tips = "必须回答"
                         else:
-                            tips = f"剩余{timea}次重置."
-                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目,{tips}")
+                            tips = f"还可以重置{timea}次."
                         min_, limit_ = botWorker.get_difficulty(group_k)
+                        now = limit_ - 2
+                        bot.reply_to(message, sth[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
                         bot.register_next_step_handler(message, verify_step,
                                                        CaptchaWorker.Importer().pull(difficulty_min=min_,
                                                                                      difficulty_limit=limit_ - 1).create(),
