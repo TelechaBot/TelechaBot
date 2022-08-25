@@ -11,12 +11,6 @@ from CaptchaCore.Event import Tool
 import telebot
 from telebot import custom_filters
 
-
-# from telebot import types, util
-# from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-# from telebot.async_telebot import AsyncTeleBot
-
-
 def load_csonfig():
     global _csonfig
     with open("config.json", encoding="utf-8") as f:
@@ -45,19 +39,44 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreat()
-            import CaptchaCore.BotEvent
             from telebot import custom_filters
             from telebot import types, util
-            # 开关
-            CaptchaCore.BotEvent.New(bot, config)
-            CaptchaCore.BotEvent.Left(bot, config)
-            CaptchaCore.BotEvent.Starts(bot, config)
-            CaptchaCore.BotEvent.About(bot, config)
-            CaptchaCore.BotEvent.Admin(bot, config)
-            CaptchaCore.BotEvent.Banme(bot, config)
-            CaptchaCore.BotEvent.message_del(bot, config)
-            CaptchaCore.BotEvent.Switch(bot, config)
-            CaptchaCore.BotEvent.botSelf(bot, config)
+            import CaptchaCore.BotEvent
+
+            @bot.chat_member_handler()
+            def chat_m(message: types.ChatMemberUpdated):
+                CaptchaCore.BotEvent.member_update(bot, message, config)
+
+            @bot.message_handler(commands=["start", 'about'])
+            def handle_command(message):
+                if "/start" in message.text:
+                    CaptchaCore.BotEvent.Start(bot, message, config)
+                elif "/about" in message.text:
+                    CaptchaCore.BotEvent.About(bot, message, config)
+
+            @bot.message_handler(content_types=['text'], chat_types=['private'])
+            def handle_private_msg(message):
+                CaptchaCore.BotEvent.Switch(bot, message, config)
+
+            @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
+            def group_msg_no_admin(message):
+                CaptchaCore.BotEvent.Banme(bot, message, config)
+
+            @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
+            def group_msg_no_admin(message):
+                CaptchaCore.BotEvent.Admin(bot, message, config)
+
+            @bot.my_chat_member_handler()
+            def bot_self(message: types.ChatMemberUpdated):
+                CaptchaCore.BotEvent.botSelf(bot, message, config)
+
+            # @bot.message_handler(content_types=['left_chat_member'])
+            # def left_chat(message):
+            #     CaptchaCore.BotEvent.Left(bot, message, config)
+
+            @bot.message_handler(content_types=util.content_type_service)
+            def service_msg(message: types.Message):
+                CaptchaCore.BotEvent.msg_del(bot, message, config)
 
             from BotRedis import JsonRedis
             JsonRedis.timer()
