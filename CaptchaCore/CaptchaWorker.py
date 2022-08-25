@@ -6,6 +6,7 @@
 # @Version    ：1
 import math
 import random
+import time
 
 special_angle = [30, 60, 90, 120, 150, 180]
 
@@ -188,6 +189,7 @@ class biological_gene(object):
 
 class Importer(object):
     def __init__(self):
+        self.sample = time.time()
         self.items = [{"diff": parabola_2().difficulty, "obj": parabola_2()},
                       {"diff": radius().difficulty, "obj": parabola()},
                       {"diff": find_volume_cone().difficulty, "obj": find_volume_cone()},
