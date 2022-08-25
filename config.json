@@ -2,8 +2,10 @@
     "statu": true,
     "whiteGroupSwitch": true,
     "difficulty_limit": {
+        "-1001561314417": "6"
     },
     "difficulty_min": {
+        "-1001561314417": "2"
     },
     "whiteGroup": [
         -1001662266151,

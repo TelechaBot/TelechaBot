@@ -32,10 +32,23 @@ class botWorker(object):
         bot.delete_message(chat, message)
 
     @staticmethod
-    def un_restrict(message, bot, groups):
-        bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
-                                 can_send_media_messages=True,
-                                 can_send_other_messages=True)
+    def un_restrict(message, bot, groups, un_restrict_all=False):
+        if un_restrict_all:
+            bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
+                                     can_send_media_messages=True,
+                                     can_send_other_messages=True,
+                                     can_pin_messages=True,
+                                     can_change_info=True,
+                                     can_send_polls=True,
+                                     can_invite_users=True,
+                                     can_add_web_page_previews=True,
+                                     )
+        else:
+            bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
+                                     can_send_media_messages=True,
+                                     can_send_other_messages=True,
+                                     can_send_polls=True,
+                                     )
 
     @staticmethod
     def send_ban(message, bot, groups):
@@ -50,9 +63,13 @@ class botWorker(object):
         return msgss
 
     @staticmethod
-    def send_ok(message, bot, groups):
+    def send_ok(message, bot, groups, well_unban):
+        if well_unban:
+            info = "完全解封"
+        else:
+            info = "因为被踢出，只保留基本权限"
         msgss = bot.send_message(groups,
-                                 f"刚刚{message.from_user.first_name}通过了验证！")
+                                 f"刚刚{message.from_user.first_name}通过了验证！{info}")
         return msgss
 
     @staticmethod

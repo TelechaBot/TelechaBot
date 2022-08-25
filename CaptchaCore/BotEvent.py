@@ -12,6 +12,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
 from threading import Timer
 from CaptchaCore.Event import botWorker
+import binascii
 
 # from telebot import formatting
 
@@ -170,7 +171,7 @@ def Admin(bot, message, config):
                                          can_send_media_messages=True,
                                          can_send_other_messages=True)
         # 机器人核心：发送通知并自毁消息
-        TIPS = bot.reply_to(message, "已手动解封这些小可爱:" + str(status))
+        TIPS = bot.reply_to(message, "手动解禁:从欧几里得家里解救了" + str(status))
         t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
         t.start()
     if "+ban" in message.text:
@@ -179,13 +180,13 @@ def Admin(bot, message, config):
             try:
                 if message.reply_to_message.from_user.id:
                     bot.ban_chat_member(message.chat.id, message.reply_to_message.from_user.id)  # .from_user.id)
-                    bot.reply_to(message.reply_to_message, f'Banned{message.reply_to_message.from_user.id}')
+                    bot.reply_to(message.reply_to_message, f'我已经把{message.reply_to_message.from_user.id}送到璃月警察局了！')
             except:
                 pass
         for user in status:
             try:
-                bot.ban_chat_member(message.chat.id, user)  # )
-                bot.reply_to(message.reply_to_message, f'Banned{user}')
+                bot.ban_chat_member(message.chat.id, user)
+                bot.reply_to(message.reply_to_message, f'我已经把{user}送到璃月警察局了！')
             except Exception as err:
                 pass
 
@@ -211,15 +212,6 @@ def botSelf(bot, message, config):
                 bot.leave_chat(message.chat.id)
 
 
-# 群组离开
-def Left(bot, msg, config):
-    #   if msg.left_chat_member.id != bot.get_me().id:
-    load_csonfig()
-    print(str(msg.from_user.id) + "离开了" + str(msg.chat.id))
-    # 注销任务
-    verifyRedis.remove_user(msg.from_user.id, str(msg.chat.id))
-
-
 def msg_del(bot, message, config):
     try:
         bot.delete_message(message.chat.id, message.message_id)
@@ -236,45 +228,50 @@ def msg_del(bot, message, config):
 
 
 # 启动新用户通知
-def New(bot, msg, config):
+def member_update(bot, msg, config):
     # if msg.left_chat_member.id != bot.get_me().id:
+    old = msg.old_chat_member
+    new = msg.new_chat_member
     load_csonfig()
-    print(str(msg.from_user.id) + "加入了" + str(msg.chat.id))
+    print(msg)
 
-    def verify_user(bot, config):
+    def verify_user(bot, config, statu):
         # 用户操作
-        resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
-        InviteLink = config.link
+        resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
+        user_ke = str(resign_key) + " " + str(statu)
+        user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
+        InviteLink = config.link + "?start=" + str(user_key)
         # print(InviteLink)
         bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
         bot_link.add(
             InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
         msgs = bot.send_message(msg.chat.id,
-                                f"{msg.from_user.first_name}正在申请加入 `{msg.chat.title}`\n通行证识别码:`{resign_key}`"
+                                f"{msg.from_user.username}正在申请加入 `{msg.chat.title}`\n通行证:`{user_key}`"
                                 f"\n群组ID:`{msg.chat.id}`"
-                                f"\n赫免命令`+unban {msg.from_user.id}`",
+                                f"\n赫免命令`+unban {new.user.id}`",
                                 reply_markup=bot_link,
                                 parse_mode='Markdown')
         t = Timer(45, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         t.start()
         try:
-            bot.restrict_chat_member(msg.chat.id, msg.from_user.id, can_send_messages=False,
+            bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
                                      can_send_media_messages=False,
                                      can_send_other_messages=False)
         except Exception as e:
             print(e)
             no_power = bot.send_message(msg.chat.id,
-                                        f"对不起，没有权限执行对新用户 `{msg.from_user.id}` 的限制\n通行证识别码:`{resign_key}`\nGroup ID:`{msg.chat.id}`",
+                                        f"对不起，没有权限执行对新用户 `{new.user.id}` 的限制\n通行证识别码:`{resign_key}`\nGroup ID:`{msg.chat.id}`",
                                         parse_mode='Markdown')
             t = Timer(15, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
             t.start()
-    # 验证白名单
-    # if msg.chat.type != "private":
-    if True:
+
+    ######################################
+    if new.status in ["member", "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
+        print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
             if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                     "whiteGroup"):
-                verify_user(bot, config)
+                verify_user(bot, config, old.status)
             else:
                 if hasattr(config.ClientBot, "contact_details"):
                     contact = config.ClientBot.contact_details
@@ -288,17 +285,35 @@ def New(bot, msg, config):
                                  parse_mode='Markdown')
                 bot.leave_chat(msg.chat.id)
         else:
-            verify_user(bot, config)
+            verify_user(bot, config, old.status)
         # 启动验证流程
+    if new.status in ["left", 'kicked',
+                      "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
+        # 注销任务
+        if new.status in ["kicked", "left", "restricted"]:
+            print(str(new.user.id) + "离开了" + str(msg.chat.id))
+            verifyRedis.remove_user(new.user.id, str(msg.chat.id))
+            # bot.ban_chat_member(msg.chat.id, user_id=new.user.id)
 
 
 def Start(bot, message, config):
     # bot.reply_to(message, "未检索到你的信息。你无需验证")
     if message.chat.type == "private":
         group_k, key = verifyRedis.read_user(str(message.from_user.id))
+        code = botWorker.extract_arg(message.text)
+        if len(code) == 1:
+            param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
+            key = param[0]
+            statu = param[1]
+        else:
+            statu = "noparam!"
+        if statu in ["member", "left"]:
+            well_unban = True
+        else:
+            well_unban = False
         if group_k:
             bot.reply_to(message,
-                         f"通行证ID: `{key}`\n用户识别码: `{message.from_user.id}`\n开始验证群组 `{group_k}` \n你有175秒的时间回答下面的问题...",
+                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{code[0]}`\nAuthID:`{message.from_user.id}`",
                          parse_mode='Markdown')
             from CaptchaCore import CaptchaWorker
             load_csonfig()
@@ -313,10 +328,10 @@ def Start(bot, message, config):
                     # chat_id = message.chat.id
                     answer = message.text
                     if str(answer) == str(pipe2[1]):
-                        botWorker.un_restrict(message, bot, group_k)
+                        botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                         verifyRedis.grant_resign(message.from_user.id, group_k)
                         bot.reply_to(message, "好险！是正确的答案，如果没有被解封请通知群组管理员～")
-                        msgss = botWorker.send_ok(message, bot, group_k)
+                        msgss = botWorker.send_ok(message, bot, group_k, well_unban)
                         t = Timer(25, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.message_id])
                         t.start()
                     else:
@@ -358,9 +373,9 @@ def Start(bot, message, config):
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
                         if str(answer) == str(pipe[1]):
-                            botWorker.un_restrict(message, bot, group_k)
+                            botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                             verifyRedis.grant_resign(message.from_user.id, group_k)
-                            msgs = botWorker.send_ok(message, bot, group_k)
+                            msgs = botWorker.send_ok(message, bot, group_k, well_unban)
                             bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
                             t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
                             t.start()
