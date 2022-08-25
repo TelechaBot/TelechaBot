@@ -135,7 +135,7 @@ def Banme(bot, config):
                 t.start()
                 try:
                     # userId = "".join(list(filter(str.isdigit, user)))
-                    key = verifyRedis.resign_user(message.from_user.id, str(message.chat.id))
+                    key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
                     # verifyRedis.checker(tar=[key])
                     bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                              can_send_media_messages=False,
@@ -262,7 +262,7 @@ def New(bot, config):
 
         def verify_user(bot, config):
             # 用户操作
-            resign_key = verifyRedis.resign_user(new.user.id, str(msg.chat.id))
+            resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
             InviteLink = config.link
             # print(InviteLink)
             bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup

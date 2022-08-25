@@ -91,7 +91,7 @@ class JsonRedis(object):
         _tasks["Time_id"][key] = str(userId)
         _tasks["Time_group"][key] = str(groupId)
         JsonRedis.save_tasks()
-        JsonRedis.saveUser("User_group", userId, key)
+        JsonRedis.saveUser("User_group", str(userId), key)
         return key
 
     def read_user(self, userId):
@@ -103,7 +103,7 @@ class JsonRedis(object):
         User = _tasks["User_group"].get(str(userId))
         if User:
             if len(User) != 0:
-                key = _tasks["User_group"].get(str(userId))[0]
+                key = str(_tasks["User_group"].get(str(userId))[0])
                 # user = _tasks["Time_id"].get(key)
                 group = _tasks["Time_group"].get(key)
                 return group, key
