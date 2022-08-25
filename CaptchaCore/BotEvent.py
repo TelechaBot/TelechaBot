@@ -127,7 +127,7 @@ def Banme(bot, config):
                     InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
                 mins = (random.randint(1, 10) * 1)
                 msgs = bot.reply_to(message,
-                                    f"{message.from_user.first_name}获得了{mins}分钟封锁，俄罗斯转盘模式已经开启, "
+                                    f" {message.from_user.first_name} 获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
                                     f"答题可以解锁，不答题会被踢出群组，答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
                                     reply_markup=bot_link,
                                     parse_mode='Markdown')
@@ -283,7 +283,7 @@ def New(bot, config):
             except Exception as e:
                 print(e)
                 no_power = bot.send_message(msg.chat.id,
-                                            f"对不起，没有权限执行对新用户`{msg.from_user.id}`的限制\n通行证识别码:`{resign_key}`\nGroup ID:`{msg.chat.id}`",
+                                            f"对不起，没有权限执行对新用户 `{msg.from_user.id}` 的限制\n通行证识别码:`{resign_key}`\nGroup ID:`{msg.chat.id}`",
                                             parse_mode='Markdown')
                 t = Timer(15, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
                 t.start()
@@ -319,7 +319,7 @@ def Starts(bot, config):
             group_k, key = verifyRedis.read_user(str(message.from_user.id))
             if group_k:
                 bot.reply_to(message,
-                             f"通行证ID:`{key}`\n用户识别码`{message.from_user.id}`\n开始验证群组`{group_k}`\n你有175秒的时间回答下面的问题...",
+                             f"通行证ID: `{key}`\n用户识别码: `{message.from_user.id}`\n开始验证群组 `{group_k}` \n你有175秒的时间回答下面的问题...",
                              parse_mode='Markdown')
                 from CaptchaCore import CaptchaWorker
                 paper = CaptchaWorker.Importer().pull(difficulty_min=1, difficulty_limit=7)

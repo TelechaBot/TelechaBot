@@ -34,7 +34,7 @@ class radius(object):
     def create(self):
         lena = (random.randint(5, 20) * 2)
         r = (random.randint(5, 10) * 2)
-        Q = f"一个扇形弧长为{lena}，半径为{r}，求其面积！四舍五入，只答出数字"
+        Q = f"一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
         return Q, round(A)
 
@@ -51,7 +51,7 @@ class find_volume_cone(object):
         lena = (random.randint(1, 28) * 3)
         h = (random.randint(1, 20) * 2)
 
-        Q = f"一个圆锥的底面积为{lena}π，高为{h}，求其体积!(四舍五入，只答出数字部分！)"
+        Q = f"一个圆锥的底面积为{lena}π，高为{h}，求其体积为多少π!(四舍五入，只答出数字部分！)"
         A = (lena * h) / 3
         return Q, round(A)
 
@@ -170,7 +170,7 @@ class biological_gene(object):
 
     @property
     def difficulty(self):
-        return 9
+        return 7
 
     def create(self):
         num1 = (random.randint(7, 21) * 4)
@@ -194,6 +194,7 @@ class Importer(object):
                       {"diff": find_ball_cone().difficulty, "obj": find_ball_cone()},
                       {"diff": gravity_work().difficulty, "obj": gravity_work()},
                       {"diff": binary_first_equation().difficulty, "obj": binary_first_equation()},
+                      {"diff": biological_gene().difficulty, "obj": biological_gene()},
                       ]
 
     def pull(self, difficulty_min=1, difficulty_limit=5):
