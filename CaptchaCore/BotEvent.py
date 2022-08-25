@@ -270,7 +270,7 @@ def New(bot, config):
                 InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
             msgs = bot.send_message(msg.chat.id,
                                     f"{msg.from_user.first_name}正在申请加入 `{msg.chat.title}`\n通行证识别码:`{resign_key}`"
-                                    f"\nGroup ID:`{msg.chat.id}`"
+                                    f"\n群组ID:`{msg.chat.id}`"
                                     f"\n赫免命令`+unban {msg.from_user.id}`",
                                     reply_markup=bot_link,
                                     parse_mode='Markdown')
