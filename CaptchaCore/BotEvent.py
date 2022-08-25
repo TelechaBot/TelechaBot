@@ -380,7 +380,8 @@ def Starts(bot, config):
                         paper = (CaptchaWorker.Importer(s=time.time()).pull(
                             difficulty_min=min_,
                             difficulty_limit=limit_ - 1).create())
-                        bot.reply_to(message, pipe[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
+                        bot.reply_to(message, paper[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
+                        print(paper)
                         bot.register_next_step_handler(message,
                                                        verify_step,
                                                        paper,
