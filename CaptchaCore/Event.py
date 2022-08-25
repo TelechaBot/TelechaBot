@@ -57,6 +57,7 @@ class botWorker(object):
 
     @staticmethod
     def get_difficulty(cls):
+        load_csonfig()
         if _csonfig.get("difficulty_limit") is None:
             _csonfig["difficulty_limit"] = {}
             save_csonfig()
@@ -77,6 +78,7 @@ class botWorker(object):
 
     @staticmethod
     def set_difficulty(group_id, difficulty_limit=None, difficulty_min=None):
+        load_csonfig()
         if _csonfig.get("difficulty_limit") is None:
             _csonfig["difficulty_limit"] = {}
             save_csonfig()
