@@ -5,11 +5,10 @@
 # @Github    ：sudoskys
 # import aiohttp
 from pathlib import Path
-import joblib
 import json
 from CaptchaCore.Event import Tool
 import telebot
-from telebot import custom_filters
+
 
 def load_csonfig():
     global _csonfig
