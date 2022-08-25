@@ -165,41 +165,40 @@ def Admin(bot, config):
                     bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
                                              can_send_media_messages=True,
                                              can_send_other_messages=True)
-
             # 机器人核心：发送通知并自毁消息
             unbanr = bot.reply_to(message, "已手动解封这些小可爱:" + str(status))
             t = Timer(30, botWorker.delmsg, args=[bot, unbanr.chat.id, unbanr.message_id])
             t.start()
-        if "+unbanr" in message.text:
-            def extract_arg(arg):
-                return arg.split()[1:]
-
-            if len(extract_arg(message.text)) == 2:
-                try:
-                    botWorker.unbanUser(bot, extract_arg(message.text)[0], extract_arg(message.text)[1])
-
-                except:
-                    pass
-                else:
-                    sm = bot.reply_to(message, "手动解封了:" + str(extract_arg(message.text)))
-                    t = Timer(30, botWorker.delmsg, args=[bot, sm.chat.id, sm.message_id])
-                    t.start()
+        # if "+unbanr" in message.text:
+        #     def extract_arg(arg):
+        #         return arg.split()[1:]
+        #
+        #     if len(extract_arg(message.text)) == 2:
+        #         try:
+        #             botWorker.unbanUser(bot, extract_arg(message.text)[0], extract_arg(message.text)[1])
+        #         except:
+        #             pass
+        #         else:
+        #             sm = bot.reply_to(message, "手动解封了:" + str(extract_arg(message.text)))
+        #             t = Timer(30, botWorker.delmsg, args=[bot, sm.chat.id, sm.message_id])
+        #             t.start()
 
         if "+ban" in message.text:
             def extract_arg(arg):
                 return arg.split()[1:]
 
             status = extract_arg(message.text)
-            try:
-                if message.reply_to_message.from_user.id:
-                    bot.ban_chat_member(message.chat.id, message.reply_to_message.from_user.id)  # .from_user.id)
-                    bot.reply_to(message.reply_to_message, f'Banned{message.reply_to_message.from_user.id}')
-            except:
-                pass
+            if len(message.text) == 4:
+                try:
+                    if message.reply_to_message.from_user.id:
+                        bot.ban_chat_member(message.chat.id, message.reply_to_message.from_user.id)  # .from_user.id)
+                        bot.reply_to(message.reply_to_message, f'Banned{message.reply_to_message.from_user.id}')
+                except:
+                    pass
             for user in status:
                 try:
                     bot.ban_chat_member(message.chat.id, user)  # )
-                    bot.reply_to(message.reply_to_message, f'Banned{message.reply_to_message.from_user.id}')
+                    bot.reply_to(message.reply_to_message, f'Banned{user}')
                 except Exception as err:
                     pass
 
