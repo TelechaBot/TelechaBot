@@ -249,6 +249,8 @@ def Left(bot, config):
 
 
 def message_del(bot, config):
+    from telebot import types, util
+
     @bot.message_handler(content_types=util.content_type_service)
     def del_msg(message: types.Message):
         try:
@@ -413,5 +415,3 @@ def Starts(bot, config):
         else:
             pass
             # print(0)
-
-
