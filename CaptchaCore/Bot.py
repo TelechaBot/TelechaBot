@@ -57,8 +57,8 @@ class clinetBot(object):
             CaptchaCore.BotEvent.Admin(bot, config)
             # 加载事件
             CaptchaCore.BotEvent.botSelf(bot, config)
-            CaptchaCore.BotEvent.Switch(bot, config)
             CaptchaCore.BotEvent.message_del(bot, config)
+            CaptchaCore.BotEvent.Switch(bot, config)
 
             from BotRedis import JsonRedis
             JsonRedis.timer()

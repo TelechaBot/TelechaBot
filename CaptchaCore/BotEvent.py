@@ -46,8 +46,8 @@ def About(bot, config):
 
 # 主控模块
 def Switch(bot, config):
-    @bot.message_handler(content_types=['text'])
-    def masters(message, items=None):
+    @bot.message_handler(content_types=['text'], chat_types=['private'])
+    def masters(message):
         userID = message.from_user.id
         load_csonfig()
         if str(userID) == config.ClientBot.owner:
@@ -254,7 +254,7 @@ def message_del(bot, config):
 
 # 启动新用户通知
 def New(bot, config):
-    @bot.message_handler(content_types=['new_chat_members'])
+    @bot.message_handler(content_types=['new_chat_members'], is_chat_admin=False, chat_types=['supergroup', 'group'])
     def new_member(msg):
         # if msg.left_chat_member.id != bot.get_me().id:
         load_csonfig()
@@ -289,7 +289,8 @@ def New(bot, config):
                 t.start()
 
         # 验证白名单
-        if msg.chat.type != "private":
+        # if msg.chat.type != "private":
+        if True:
             if _csonfig.get("whiteGroupSwitch"):
                 if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
                         "whiteGroup"):
