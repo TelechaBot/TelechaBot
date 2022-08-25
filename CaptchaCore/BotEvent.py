@@ -343,8 +343,8 @@ def Starts(bot, config):
                             if group_k:
                                 verifyRedis.checker(fail_user=[key])
                                 # bot.kick_chat_member(group, message.from_user.id)
-                                bot.reply_to(message, '回答错误，很抱歉我不能让您进入这个群组...\n5分钟后可以重新进入')
-                                t = Timer(300, botWorker.unbanUser, args=[bot, group_k, message.from_user.id])
+                                bot.reply_to(message, '回答错误，很抱歉我不能让您进入这个群组...\n6分钟后可以重新进入')
+                                t = Timer(360, botWorker.unbanUser, args=[bot, group_k, message.from_user.id])
                                 t.start()
                                 mgs = botWorker.send_ban(message, bot, group_k)
                                 t = Timer(30, botWorker.delmsg, args=[bot, mgs.chat.id, mgs.message_id])
