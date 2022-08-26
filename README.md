@@ -52,12 +52,15 @@ nano Captcha.yaml
 
 ```yaml
 # statu: True
-version: "2.0.5"
-desc: 'a bot'
+version: "2.0.6"
+# /about
+desc: "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
+# 机器人链接，用于跳转
 link: "https://t.me/SmartCapthaBot"
-botToken: '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
-#when you select lock:true,you must use aes to encode all Token! And Dont push your token to github directly.
-ClientBot: { owner: '5477776859' }
+# 申请的token 去botfather那里
+botToken: 'xxxxx:xxxxxxxxxxxxxxxxx'
+# 主人信息
+ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 ```
 
 ### 部署机器人
@@ -70,20 +73,28 @@ nohup python3 main.py > output.log 2>&1 &
 
 **查看进程**
 
-```
+```shell
 ps -aux|grep python3
 ```
 
 **终止进程**
 
-```
+```shell
 kill -9  进程号
 ```
 
 **无缝更新**
 
 ```shell
+curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
+```
+
+```shell
 cd TelechaBot
+```
+
+```shell
+ps -aux|grep python3
 ```
 
 ```shell
@@ -107,7 +118,6 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 | `/cat filepath`           | 查看文件                       | 私聊  | 主人           |
 | `/unban group_id user_id` | 解封指定群组的指定用户                | 私聊  | 主人           |
 | `/ban group_id user_id`   | 为了防止部署者滥权，没做功能             | 私聊  | 主人           |
-
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
 
