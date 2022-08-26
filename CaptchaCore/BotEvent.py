@@ -243,7 +243,7 @@ def member_update(bot, msg, config):
     def verify_user(bot, config, statu):
         # 用户操作
         resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
-        user_ke = str(resign_key) + " " + str(statu)
+        user_ke = str(resign_key) + " " + str(statu) + " " + str(new.user.id)
         user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
         InviteLink = config.link + "?start=" + str(user_key)
         # print(InviteLink)
@@ -304,21 +304,29 @@ def member_update(bot, msg, config):
 def Start(bot, message, config):
     # bot.reply_to(message, "未检索到你的信息。你无需验证")
     if message.chat.type == "private":
+        # 读取用户
         group_k, key = verifyRedis.read_user(str(message.from_user.id))
         code = botWorker.extract_arg(message.text)
+        # 如果有参数，进行解码覆盖
         if len(code) == 1:
+            PassID = code[0]
             param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
-            key = param[0]
-            statu = param[1]
+            if len(param) == 3:
+                key = param[0]
+                statu = param[1]
+                user_id = param[2]
+                if str(user_id) != str(message.from_user.id):
+                    group_k = False
+                if statu in ["member", "left"]:
+                    well_unban = True
+                else:
+                    well_unban = False
         else:
-            statu = "noparam!"
-        if statu in ["member", "left"]:
-            well_unban = True
-        else:
-            well_unban = False
+            PassID = key
+
         if group_k:
             bot.reply_to(message,
-                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{code[0]}`\nAuthID:`{message.from_user.id}`",
+                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{PassID}`\nAuthID:`{message.from_user.id}`",
                          parse_mode='Markdown')
             from CaptchaCore import CaptchaWorker
             load_csonfig()
