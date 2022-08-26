@@ -52,12 +52,15 @@ nano Captcha.yaml
 
 ```yaml
 # statu: True
-version: "2.0.5"
-desc: 'a bot'
+version: "2.0.6"
+# /about
+desc: "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
+# 机器人链接，用于跳转
 link: "https://t.me/SmartCapthaBot"
-botToken: '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
-#when you select lock:true,you must use aes to encode all Token! And Dont push your token to github directly.
-ClientBot: { owner: '5477776859' }
+# 申请的token 去botfather那里
+botToken: 'xxxxx:xxxxxxxxxxxxxxxxx'
+# 主人信息
+ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 ```
 
 ### 部署机器人
@@ -85,6 +88,7 @@ kill -9  进程号
 ```shell
 curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
 ```
+
 ```shell
 cd TelechaBot
 ```
