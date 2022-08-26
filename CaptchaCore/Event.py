@@ -53,7 +53,8 @@ class botWorker(object):
     @staticmethod
     def send_ban(message, bot, groups):
         msgss = bot.send_message(groups,
-                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被踢出群组...加入了黑名单！\n6分钟后可以重新加入")
+                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...加入了黑名单！"
+                                 f"\n在其不在验证或冷却时禁言来永久封禁\n用户6分钟后从黑名单中保释")
         return msgss
 
     @staticmethod
