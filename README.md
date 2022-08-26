@@ -70,20 +70,27 @@ nohup python3 main.py > output.log 2>&1 &
 
 **查看进程**
 
-```
+```shell
 ps -aux|grep python3
 ```
 
 **终止进程**
 
-```
+```shell
 kill -9  进程号
 ```
 
 **无缝更新**
 
 ```shell
+curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
+```
+```shell
 cd TelechaBot
+```
+
+```shell
+ps -aux|grep python3
 ```
 
 ```shell
@@ -107,7 +114,6 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 | `/cat filepath`           | 查看文件                       | 私聊  | 主人           |
 | `/unban group_id user_id` | 解封指定群组的指定用户                | 私聊  | 主人           |
 | `/ban group_id user_id`   | 为了防止部署者滥权，没做功能             | 私聊  | 主人           |
-
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
 
