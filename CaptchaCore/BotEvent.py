@@ -304,11 +304,12 @@ def member_update(bot, msg, config):
 def Start(bot, message, config):
     # bot.reply_to(message, "未检索到你的信息。你无需验证")
     if message.chat.type == "private":
-        # 读取用户 start 参数
-        code = botWorker.extract_arg(message.text)
+        # 读取用户
         group_k, key = verifyRedis.read_user(str(message.from_user.id))
+        code = botWorker.extract_arg(message.text)
         # 如果有参数，进行解码覆盖
         if len(code) == 1:
+            PassID = code[0]
             param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
             if len(param) == 3:
                 key = param[0]
@@ -320,9 +321,12 @@ def Start(bot, message, config):
                     well_unban = True
                 else:
                     well_unban = False
+        else:
+            PassID = key
+
         if group_k:
             bot.reply_to(message,
-                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{key}`\nAuthID:`{message.from_user.id}`",
+                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{PassID}`\nAuthID:`{message.from_user.id}`",
                          parse_mode='Markdown')
             from CaptchaCore import CaptchaWorker
             load_csonfig()
