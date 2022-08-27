@@ -119,6 +119,7 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 | `/cat filepath`           | 查看文件                       | 私聊  | 主人           |
 | `/unban group_id user_id` | 解封指定群组的指定用户                | 私聊  | 主人           |
 | `/ban group_id user_id`   | 为了防止部署者滥权，没做功能             | 私聊  | 主人           |
+| `/about`                  | 关于机器人的信息（读取config中的预设描述）   | 私聊  | 任何人          |
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
 
