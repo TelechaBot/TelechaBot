@@ -18,7 +18,7 @@ import binascii
 
 
 # 构建多少秒的验证对象
-verifyRedis = JsonRedis(175)
+verifyRedis = JsonRedis(200)
 
 
 # 全局加载配置
@@ -59,6 +59,10 @@ def Switch(bot, message, config):
                 _csonfig["whiteGroupSwitch"] = False
                 bot.reply_to(message, "Off:whiteGroup")
                 save_csonfig()
+            if command == "/renew":
+                from StarPuller import Worker
+                Worker().get_index()
+                bot.reply_to(message, "OK..Renew it")
             if "/cat" in command:
                 for item in command.split()[1:]:
                     path = str(pathlib.Path().cwd()) + "/" + item
@@ -137,6 +141,12 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
+    if "/whatmodel" == message.text:
+        tiku = botWorker.get_model(message.chat.id)
+        msgs = bot.reply_to(message, f"本群题库目前为 {tiku} ,每 5000 秒自动与仓库同步。")
+        t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t.start()
+
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             markup = InlineKeyboardMarkup()
@@ -146,11 +156,14 @@ def Admin(bot, message, config):
                 InlineKeyboardButton("科目一", callback_data="科目一"),
                 InlineKeyboardButton("学科题库", callback_data="学科题库"),
                 InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
+                InlineKeyboardButton("宋词300", callback_data="宋词300"),
+                InlineKeyboardButton("论语问答", callback_data="论语问答"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
 
-        bot.reply_to(message, "选择哪一个题库？", reply_markup=gen_markup())
+        tiku = botWorker.get_model(message.chat.id)
+        bot.reply_to(message, f"选择哪一个题库？目前为{tiku}", reply_markup=gen_markup())
 
     if "+diff_limit" in message.text and len(message.text) != len("+diff_limit"):
         status = message.text.split()[1:]
@@ -218,7 +231,7 @@ def botSelf(bot, message, config):
     if new.status == "member" and message.chat.type != "private":
         load_csonfig()
         bot.send_message(message.chat.id,
-                         "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n注意:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
+                         "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
         if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
                 "whiteGroup"):
             pass
@@ -341,14 +354,14 @@ def Start(bot, message, config):
 
         if group_k:
             bot.reply_to(message,
-                         f"开始验证群组 `{group_k}`,你有175秒的时间回答下面的问题...\n\nPassID:`{PassID}`\nAuthID:`{message.from_user.id}`",
+                         f"开始验证群组 `{group_k}`,你有总 200 秒的时间回答下面的问题...\n\nPassID:`{PassID}`\nAuthID:`{message.from_user.id}`",
                          parse_mode='Markdown')
             from CaptchaCore import CaptchaWorker
             load_csonfig()
             min_, limit_ = botWorker.get_difficulty(group_k)
             model = botWorker.get_model(group_k)
             sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model).create()
-            bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
+            bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目，答题后不能重置。")
             print("生成了一道题目:" + str(sth))
 
             def verify_step2(message, pipe2):
@@ -411,7 +424,7 @@ def Start(bot, message, config):
                             t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
                             t.start()
                         else:
-                            bot.reply_to(message, '可惜是错误的回答....你还有一次机会')
+                            bot.reply_to(message, '可惜是错误的回答....你还有一次机会，不能重置')
                             bot.register_next_step_handler(message, verify_step2, pipe)
                     except Exception as e:
                         bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
