@@ -110,6 +110,42 @@ class car_subject_one(object):
         return Q, Answer
 
 
+# songci
+class songci_300(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 5
+
+    def nofind(self):
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        Answer = {"rightKey": round(A)}
+        return Q, Answer
+
+    def create(self):
+
+        if pathlib.Path('data/Songci.json').exists():
+            with open("data/Songci.json", 'r') as tiku_file:
+                samples = json.load(tiku_file)
+            if samples is not None:
+                key_obj = random.sample(samples.keys(), 1)
+                Q = key_obj[0]
+                A = (samples[Q])
+            else:
+                Q, A = self.nofind()
+
+        else:
+            Q, A = self.nofind()
+        Answer = {"rightKey": A}
+        return Q, Answer
+
+
 # 学习强国
 class study_build_up(object):
     def __init__(self, sample):
@@ -347,6 +383,10 @@ class Importer(object):
             {"diff": bili_hard_core(s).difficulty, "obj": bili_hard_core(s)},
         ]
 
+        self.songci_300 = [
+            {"diff": songci_300(s).difficulty, "obj": songci_300(s)},
+        ]
+
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="学科题库"):
 
         verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time())}
@@ -361,6 +401,8 @@ class Importer(object):
                 verify = (choice(verify_papaer))
         elif model_name == "学习强国":
             verify = self.study[0]
+        elif model_name == "宋词300":
+            verify = self.songci_300[0]
         elif model_name == "科目一":
             verify = self.car_subject_one[0]
         elif model_name == "哔哩硬核测试":
