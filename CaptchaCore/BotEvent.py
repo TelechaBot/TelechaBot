@@ -109,8 +109,9 @@ def Banme(bot, message, config):
         if "+banme" == message.text:
             InviteLink = config.link
             # print(InviteLink)
+            key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
             resign_key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
-            user_ke = str(resign_key) + " " + str("left")
+            user_ke = str(resign_key) + " " + str("left") + " " + str(message.from_user.id)
             user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
             InviteLink = config.link + "?start=" + str(user_key)
             bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
@@ -119,14 +120,13 @@ def Banme(bot, message, config):
             mins = (random.randint(1, 10) * 1)
             msgs = bot.reply_to(message,
                                 f" {message.from_user.id} 获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
-                                f"答题可以解锁，不答题会被踢出群组，答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
+                                f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
                                 reply_markup=bot_link,
                                 parse_mode='Markdown')
             t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             t.start()
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
-                key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
                 # verifyRedis.checker(tar=[key])
                 bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                          can_send_media_messages=False,
