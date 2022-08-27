@@ -137,13 +137,13 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
-    if "+select":
+    if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             markup = InlineKeyboardMarkup()
             markup.row_width = 2
             markup.add(
                 InlineKeyboardButton("学习强国", callback_data="学习强国"),
-                # InlineKeyboardButton("科目一", callback_data="科目一"),
+                InlineKeyboardButton("科目一", callback_data="科目一"),
                 InlineKeyboardButton("学科题库", callback_data="学科题库"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
@@ -346,7 +346,7 @@ def Start(bot, message, config):
             load_csonfig()
             min_, limit_ = botWorker.get_difficulty(group_k)
             model = botWorker.get_model(group_k)
-            sth = CaptchaWorker.Importer().pull(min_, limit_, model).create()
+            sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model).create()
             bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
             print("生成了一道题目:" + str(sth))
 
@@ -384,10 +384,12 @@ def Start(bot, message, config):
                     else:
                         tips = f"还可以重置{timea}次."
                     min_, limit_ = botWorker.get_difficulty(group_k)
+                    _model = botWorker.get_model(group_k)
+
                     now = limit_ - 2
-                    paper = (CaptchaWorker.Importer(s=time.time()).pull(
-                        difficulty_min=min_,
-                        difficulty_limit=limit_ - 1).create())
+                    paper = (
+                        CaptchaWorker.Importer(s=time.time()).pull(difficulty_min=min_, difficulty_limit=limit_ - 1,
+                                                                   model_name=_model).create())
                     bot.reply_to(message, paper[0] + f"\n\n输入 /saveme 重新生成题目，目前难度{now},{tips}")
                     print(paper)
                     bot.register_next_step_handler(message,

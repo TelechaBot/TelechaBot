@@ -19,7 +19,7 @@ def run_timer():
 
 def timer():
     from threading import Timer
-    t = Timer(100, run_timer, args=[])
+    t = Timer(1800, run_timer, args=[])
     t.start()
 
 
