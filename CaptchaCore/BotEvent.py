@@ -137,6 +137,20 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
+    if "+select":
+        def gen_markup():
+            markup = InlineKeyboardMarkup()
+            markup.row_width = 2
+            markup.add(
+                InlineKeyboardButton("学习强国", callback_data="学习强国"),
+                # InlineKeyboardButton("科目一", callback_data="科目一"),
+                InlineKeyboardButton("学科题库", callback_data="学科题库"),
+                # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
+            )
+            return markup
+
+        bot.reply_to(message, "选择哪一个题库？", reply_markup=gen_markup())
+
     if "+diff_limit" in message.text and len(message.text) != len("+diff_limit"):
         status = message.text.split()[1:]
         level = "".join(list(filter(str.isdigit, status[0])))
@@ -295,7 +309,7 @@ def member_update(bot, msg, config):
     if new.status in ["left", 'kicked',
                       "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
         # 注销任务
-        if new.status in ["kicked", "left", "restricted"]:
+        if new.status in ["kicked", "left"]:
             print(str(new.user.id) + "离开了" + str(msg.chat.id))
             verifyRedis.remove_user(new.user.id, str(msg.chat.id))
             # bot.ban_chat_member(msg.chat.id, user_id=new.user.id)
@@ -331,7 +345,8 @@ def Start(bot, message, config):
             from CaptchaCore import CaptchaWorker
             load_csonfig()
             min_, limit_ = botWorker.get_difficulty(group_k)
-            sth = CaptchaWorker.Importer().pull(min_, limit_).create()
+            model = botWorker.get_model(group_k)
+            sth = CaptchaWorker.Importer().pull(min_, limit_, model).create()
             bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目")
             print("生成了一道题目:" + str(sth))
 

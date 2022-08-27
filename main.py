@@ -10,5 +10,18 @@ from CaptchaCore.Event import Check
 # 初始化文件系统
 Check().run()
 
+
+def run_timer():
+    from StarPuller import Worker
+    Worker().get_index()
+    timer()
+
+
+def timer():
+    from threading import Timer
+    t = Timer(100, run_timer, args=[])
+    t.start()
+
+
 # pushService = sendBot(config.botToken)
 clinetBot().run()

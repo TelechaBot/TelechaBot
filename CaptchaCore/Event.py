@@ -74,6 +74,30 @@ class botWorker(object):
         return msgss
 
     @staticmethod
+    def get_model(cls):
+        load_csonfig()
+        if _csonfig.get("Model") is None:
+            _csonfig["Model"] = {}
+            save_csonfig()
+        Model = _csonfig.get("Model").get(str(cls))
+        if Model is None:
+            Model = "学科题库"
+        return Model
+
+    @staticmethod
+    def set_model(group_id, model=None):
+        load_csonfig()
+        if _csonfig.get("Model") is None:
+            _csonfig["Model"] = {}
+            save_csonfig()
+        OK = False
+        if not (model is None):
+            _csonfig["Model"][str(group_id)] = model
+            OK = True
+        save_csonfig()
+        return OK
+
+    @staticmethod
     def get_difficulty(cls):
         load_csonfig()
         if _csonfig.get("difficulty_limit") is None:
