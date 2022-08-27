@@ -32,7 +32,7 @@ class bili_hard_core(object):
 
     @property
     def difficulty(self):
-        return 5
+        return 8
 
     def nofind(self):
         lena = (random.randint(5, 20) * 2)
@@ -343,6 +343,9 @@ class Importer(object):
         self.car_subject_one = [
             {"diff": car_subject_one(s).difficulty, "obj": car_subject_one(s)},
         ]
+        self.bili_hard_core = [
+            {"diff": bili_hard_core(s).difficulty, "obj": bili_hard_core(s)},
+        ]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="学科题库"):
 
@@ -360,6 +363,8 @@ class Importer(object):
             verify = self.study[0]
         elif model_name == "科目一":
             verify = self.car_subject_one[0]
+        elif model_name == "哔哩硬核测试":
+            verify = self.bili_hard_core[0]
         return verify.get("obj")
 
 # print(biological_gene().create())

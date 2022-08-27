@@ -145,6 +145,7 @@ def Admin(bot, message, config):
                 InlineKeyboardButton("学习强国", callback_data="学习强国"),
                 InlineKeyboardButton("科目一", callback_data="科目一"),
                 InlineKeyboardButton("学科题库", callback_data="学科题库"),
+                InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
