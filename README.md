@@ -132,6 +132,7 @@ whatmodel - 管理 查看当前模组
 start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
 show - 主控 对主人显示配置
+renew - 主控 更新题库
 onw - 主控 对群组开启白名单
 offw - 主控 对群组关闭白名单
 addwhite - 主控 加入白名单
