@@ -19,10 +19,10 @@ def run_timer():
 
 def timer():
     from threading import Timer
-    t = Timer(1800, run_timer, args=[])
+    t = Timer(5000, run_timer, args=[])
     t.start()
 
 
-run_timer()
+# run_timer()
 # pushService = sendBot(config.botToken)
 clinetBot().run()

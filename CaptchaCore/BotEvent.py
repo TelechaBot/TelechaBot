@@ -59,6 +59,10 @@ def Switch(bot, message, config):
                 _csonfig["whiteGroupSwitch"] = False
                 bot.reply_to(message, "Off:whiteGroup")
                 save_csonfig()
+            if command == "/renew":
+                from StarPuller import Worker
+                Worker().get_index()
+                bot.reply_to(message, "OK..Renew it")
             if "/cat" in command:
                 for item in command.split()[1:]:
                     path = str(pathlib.Path().cwd()) + "/" + item
@@ -137,9 +141,9 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
-    if "/whatmodel" in message.text and len(message.text) == len("+select"):
+    if "/whatmodel" == message.text:
         tiku = botWorker.get_model(message.chat.id)
-        msgs = bot.reply_to(message, f"本群题库目前为 {tiku} ,每 30 分钟自动与仓库同步。")
+        msgs = bot.reply_to(message, f"本群题库目前为 {tiku} ,每 5000 秒自动与仓库同步。")
         t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         t.start()
 
@@ -153,6 +157,7 @@ def Admin(bot, message, config):
                 InlineKeyboardButton("学科题库", callback_data="学科题库"),
                 InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 InlineKeyboardButton("宋词300", callback_data="宋词300"),
+                InlineKeyboardButton("论语问答", callback_data="论语问答"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
