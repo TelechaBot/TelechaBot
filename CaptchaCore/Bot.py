@@ -95,7 +95,7 @@ class clinetBot(object):
                             bot.answer_callback_query(call.id, "Success")
                             msgss = bot.send_message(call.message.chat.id,
                                                      f"Info:群组验证模式已经切换至{call.data}")
-                            t = Timer(4, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
+                            t = Timer(10, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
                             t.start()
                     # if call.data == "学习强国":
                     #     if botWorker.set_model(call.message.chat.id, model='学习强国'):
