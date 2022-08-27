@@ -4,10 +4,14 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
+import random
 from pathlib import Path
 import json
-from CaptchaCore.Event import Tool
+from threading import Timer
+
+from CaptchaCore.Event import Tool, botWorker
 import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def load_csonfig():
@@ -41,6 +45,8 @@ class clinetBot(object):
             from telebot import custom_filters
             from telebot import types, util
             import CaptchaCore.BotEvent
+            with open("data/star_tiku_content.json", encoding="utf-8") as f:
+                star_data = json.load(f)
 
             @bot.chat_member_handler()
             def chat_m(message: types.ChatMemberUpdated):
@@ -76,6 +82,51 @@ class clinetBot(object):
             @bot.message_handler(content_types=util.content_type_service)
             def service_msg(message: types.Message):
                 CaptchaCore.BotEvent.msg_del(bot, message, config)
+
+            # 选择题库回调
+            @bot.callback_query_handler(func=lambda call: True)
+            def callback_query(call):
+                def Del_call():
+                    t = Timer(4, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    t.start()
+
+                # print(call.message.json.get("reply_to_message"))
+                if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
+                    Del_call()
+                    if call.data:
+                        if botWorker.set_model(call.message.chat.id, model=call.data):
+                            bot.answer_callback_query(call.id, "Success")
+                            msgss = bot.send_message(call.message.chat.id,
+                                                     f"Info:群组验证模式已经切换至{call.data}")
+                            t = Timer(4, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
+                            t.start()
+                    # if call.data == "学习强国":
+                    #     if botWorker.set_model(call.message.chat.id, model='学习强国'):
+                    #         info = "Success"
+                    #     else:
+                    #         info = "Failed"
+                    #     bot.answer_callback_query(call.id, info)
+                    # elif call.data == "科目一":
+                    #     if botWorker.set_model(call.message.chat.id, model='科目一'):
+                    #         info = "Success"
+                    #     else:
+                    #         info = "Failed"
+                    #     bot.answer_callback_query(call.id, info)
+                    # elif call.data == "学科题库":
+                    #     if botWorker.set_model(call.message.chat.id, model='学科题库'):
+                    #         info = "Success"
+                    #     else:
+                    #         info = "Failed"
+                    #     bot.answer_callback_query(call.id, info)
+                    # elif call.data == "安全工程师":
+                    #     if botWorker.set_model(call.message.chat.id, model='安全工程师'):
+                    #         info = "Success"
+                    #     else:
+                    #         info = "Failed"
+                    #     bot.answer_callback_query(call.id, info)
+                else:
+                    pass
+                    # print("Not")
 
             from BotRedis import JsonRedis
             JsonRedis.timer()

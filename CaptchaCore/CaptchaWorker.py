@@ -4,9 +4,12 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # @Version    ：1
+import json
 import math
 import random
 import time
+import pathlib
+from random import choice
 
 special_angle = [30, 60, 90, 120, 150, 180]
 
@@ -22,6 +25,81 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 # print(random.randint(0, 9))
 
 # π
+class car_subject_one(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 5
+
+    def nofind(self):
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        return Q, round(A)
+
+    def create(self):
+
+        if pathlib.Path('data/star_tiku_content.json').exists():
+            with open("data/star_tiku_content.json", 'r') as tiku_file:
+                tiku = json.load(tiku_file)
+            samples = tiku.get("Drive")
+            if samples is not None:
+                data_list = samples.get("datas")
+                well_data = [i for i in data_list if
+                             i.get("answer") in ["A", "B", "C", "D"] and (i.get('pic') is None or i.get('pic') == "")]
+                key_obj = choice(well_data)
+                q = key_obj.get("question")
+                a = str(key_obj.get("opt1"))
+                b = str(key_obj.get("opt2"))
+                c = str(key_obj.get("opt3"))
+                d = str(key_obj.get("opt4"))
+                Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
+                A = key_obj.get("answer")
+            else:
+                Q, A = self.nofind()
+
+        else:
+            Q, A = self.nofind()
+        return Q, A
+
+
+# 学习强国
+class study_build_up(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 5
+
+    def nofind(self):
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        return Q, round(A)
+
+    def create(self):
+
+        if pathlib.Path('data/star_tiku_content.json').exists():
+            with open("data/star_tiku_content.json", 'r') as tiku_file:
+                tiku = json.load(tiku_file)
+            samples = tiku.get("XXQG")
+            if samples is not None:
+                key_obj = random.sample(samples.keys(), 1)
+                Q = key_obj[0]
+                A = (samples[Q])
+            else:
+                Q, A = self.nofind()
+
+        else:
+            Q, A = self.nofind()
+        return Q, A
 
 
 class radius(object):
@@ -145,7 +223,7 @@ class parabola(object):
 
     @property
     def difficulty(self):
-        return 8
+        return 6
 
     def create(self):
         p = (random.randint(2, 5) * 2)
@@ -207,16 +285,29 @@ class Importer(object):
                       {"diff": binary_first_equation(s).difficulty, "obj": binary_first_equation(s)},
                       {"diff": biological_gene(s).difficulty, "obj": biological_gene(s)},
                       ]
+        self.study = [
+            {"diff": study_build_up(s).difficulty, "obj": study_build_up(s)},
+        ]
+        self.car_subject_one = [
+            {"diff": car_subject_one(s).difficulty, "obj": car_subject_one(s)},
+        ]
 
-    def pull(self, difficulty_min=1, difficulty_limit=5):
-        from random import choice
-        if difficulty_limit < 1 or difficulty_limit < difficulty_min:
-            if difficulty_limit < 0:
-                difficulty_limit = 9
-            if difficulty_min >= 9:
-                difficulty_min = 1
-        verify_papaer = [i for i in self.items if difficulty_min <= i.get("diff") <= difficulty_limit]
-        verify = (choice(verify_papaer))
+    def pull(self, difficulty_min=1, difficulty_limit=5, model_name="学科题库"):
+
+        verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time())}
+        if model_name == "学科题库":
+            if difficulty_limit < 1 or difficulty_limit < difficulty_min:
+                if difficulty_limit < 0:
+                    difficulty_limit = 9
+                if difficulty_min >= 9:
+                    difficulty_min = 1
+            verify_papaer = [i for i in self.items if difficulty_min <= i.get("diff") <= difficulty_limit]
+            if len(verify_papaer) != 0:
+                verify = (choice(verify_papaer))
+        elif model_name == "学习强国":
+            verify = self.study[0]
+        elif model_name == "科目一":
+            verify = self.car_subject_one[0]
         return verify.get("obj")
 
 # print(biological_gene().create())
