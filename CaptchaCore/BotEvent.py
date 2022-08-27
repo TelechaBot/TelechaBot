@@ -141,7 +141,7 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
-    if "/whatmodel" == message.text:
+    if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = bot.reply_to(message, f"本群题库目前为 {tiku} ,每 5000 秒自动与仓库同步。")
         t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
