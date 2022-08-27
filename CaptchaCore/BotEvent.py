@@ -137,6 +137,12 @@ def Banme(bot, message, config):
 
 # 群组管理员操作命令
 def Admin(bot, message, config):
+    if "/whatmodel" in message.text and len(message.text) == len("+select"):
+        tiku = botWorker.get_model(message.chat.id)
+        msgs = bot.reply_to(message, f"本群题库目前为{tiku}")
+        t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t.start()
+
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             markup = InlineKeyboardMarkup()
@@ -150,7 +156,8 @@ def Admin(bot, message, config):
             )
             return markup
 
-        bot.reply_to(message, "选择哪一个题库？", reply_markup=gen_markup())
+        tiku = botWorker.get_model(message.chat.id)
+        bot.reply_to(message, f"选择哪一个题库？目前为{tiku}", reply_markup=gen_markup())
 
     if "+diff_limit" in message.text and len(message.text) != len("+diff_limit"):
         status = message.text.split()[1:]

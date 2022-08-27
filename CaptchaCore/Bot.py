@@ -84,7 +84,7 @@ class clinetBot(object):
             @bot.callback_query_handler(func=lambda call: True)
             def callback_query(call):
                 def Del_call():
-                    t = Timer(4, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    t = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
                     t.start()
 
                 # print(call.message.json.get("reply_to_message"))
