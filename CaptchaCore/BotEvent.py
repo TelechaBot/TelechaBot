@@ -109,8 +109,9 @@ def Banme(bot, message, config):
         if "+banme" == message.text:
             InviteLink = config.link
             # print(InviteLink)
+            key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
             resign_key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
-            user_ke = str(resign_key) + " " + str("left")
+            user_ke = str(resign_key) + " " + str("left") + " " + str(message.from_user.id)
             user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
             InviteLink = config.link + "?start=" + str(user_key)
             bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
@@ -119,14 +120,13 @@ def Banme(bot, message, config):
             mins = (random.randint(1, 10) * 1)
             msgs = bot.reply_to(message,
                                 f" {message.from_user.id} 获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
-                                f"答题可以解锁，不答题会被踢出群组，答错会被踢出群组，等待12分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
+                                f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟.\n管理员手动解封请使用`+unban {message.from_user.id}`",
                                 reply_markup=bot_link,
                                 parse_mode='Markdown')
             t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             t.start()
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
-                key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
                 # verifyRedis.checker(tar=[key])
                 bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                          can_send_media_messages=False,
@@ -145,6 +145,7 @@ def Admin(bot, message, config):
                 InlineKeyboardButton("学习强国", callback_data="学习强国"),
                 InlineKeyboardButton("科目一", callback_data="科目一"),
                 InlineKeyboardButton("学科题库", callback_data="学科题库"),
+                InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
@@ -355,7 +356,7 @@ def Start(bot, message, config):
                     # group, keys = verifyRedis.read_user(str(message.from_user.id))
                     # chat_id = message.chat.id
                     answer = message.text
-                    if str(answer) == str(pipe2[1]):
+                    if str(answer) == str(pipe2[1].get("rightKey")):
                         botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                         verifyRedis.grant_resign(message.from_user.id, group_k)
                         bot.reply_to(message, "好险！是正确的答案，如果没有被解封请通知群组管理员～")
@@ -402,7 +403,7 @@ def Start(bot, message, config):
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if str(answer) == str(pipe[1]):
+                        if str(answer) == str(pipe[1].get("rightKey")):
                             botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                             verifyRedis.grant_resign(message.from_user.id, group_k)
                             msgs = botWorker.send_ok(message, bot, group_k, well_unban)
