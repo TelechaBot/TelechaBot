@@ -8,6 +8,7 @@ import json
 import requests
 import pathlib
 
+
 class Worker(object):
     def __init__(self, mirror=None, header=None):
         self.star_tiku_content = None
@@ -23,7 +24,7 @@ class Worker(object):
             self.default_index = mirror
         if mirror is not None:
             self.header = header
-        self.get_index()
+        # self.get_index()
 
     def get_index(self):
         global star_tiku_content
@@ -43,9 +44,11 @@ class Worker(object):
             HOME = str(pathlib.Path().cwd()) + "/"
             Dir = HOME + "data/"
             pathlib.Path(Dir).mkdir(exist_ok=True)
-            with open("data/star_tiku_content.json", 'w+', encoding="utf8") as f:
-                star_tiku_content = json.dumps(star_tiku_content, sort_keys=True, indent=4, separators=(',', ':'), ensure_ascii=False)
-                f.write(star_tiku_content)
+            for key, item in star_tiku_content.items():
+                with open(f"data/{key}.json", 'w+', encoding="utf8") as f:
+                    item = json.dumps(item, sort_keys=True, indent=4, separators=(',', ':'),
+                                      ensure_ascii=False)
+                    f.write(item)
             return True
         else:
             return False

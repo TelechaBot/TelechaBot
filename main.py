@@ -23,5 +23,6 @@ def timer():
     t.start()
 
 
+run_timer()
 # pushService = sendBot(config.botToken)
 clinetBot().run()

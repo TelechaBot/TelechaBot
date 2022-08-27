@@ -45,9 +45,6 @@ class clinetBot(object):
             from telebot import custom_filters
             from telebot import types, util
             import CaptchaCore.BotEvent
-            with open("data/star_tiku_content.json", encoding="utf-8") as f:
-                star_data = json.load(f)
-
             @bot.chat_member_handler()
             def chat_m(message: types.ChatMemberUpdated):
                 CaptchaCore.BotEvent.member_update(bot, message, config)

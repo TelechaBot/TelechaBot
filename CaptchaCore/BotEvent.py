@@ -355,7 +355,7 @@ def Start(bot, message, config):
                     # group, keys = verifyRedis.read_user(str(message.from_user.id))
                     # chat_id = message.chat.id
                     answer = message.text
-                    if str(answer) == str(pipe2[1]):
+                    if str(answer) == str(pipe2[1].get("rightKey")):
                         botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                         verifyRedis.grant_resign(message.from_user.id, group_k)
                         bot.reply_to(message, "好险！是正确的答案，如果没有被解封请通知群组管理员～")
@@ -402,7 +402,7 @@ def Start(bot, message, config):
                         answer = message.text
                         # 用户操作
                         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-                        if str(answer) == str(pipe[1]):
+                        if str(answer) == str(pipe[1].get("rightKey")):
                             botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                             verifyRedis.grant_resign(message.from_user.id, group_k)
                             msgs = botWorker.send_ok(message, bot, group_k, well_unban)
