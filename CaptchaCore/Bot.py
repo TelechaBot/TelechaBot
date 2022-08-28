@@ -133,7 +133,7 @@ class clinetBot(object):
             # bot.add_custom_filter(custom_filters.ChatFilter())
             # bot.infinity_polling(allowed_updates=util.update_types)
             import asyncio
-            asyncio.run(bot.polling(allowed_updates=util.update_types))
+            asyncio.run(bot.polling(non_stop=True, allowed_updates=util.update_types))
 
 
 class sendBot(object):
