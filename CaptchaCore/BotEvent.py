@@ -18,10 +18,11 @@ import binascii
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(200)
 
-
 # IO
+global _csonfig
+
+
 def load_csonfig():
-    global _csonfig
     with open("config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
@@ -362,8 +363,10 @@ async def Start(bot, message, config):
             # 拉取题目例子
             from CaptchaCore import CaptchaWorker
             sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model).create()
-            await bot.reply_to(message, sth[0] + "\n\n输入 /saveme 重新生成题目，答题后不能重置。")
-
+            if sth[0].get("picture") is None:
+                await bot.reply_to(message, sth[0].get("question") + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
+            else:
+                await bot.send_photo(message.chat.id, caption=sth[0].get("question"), photo=sth[0].get("picture"))
             # 注册状态
             await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -426,7 +429,10 @@ async def Saveme(bot, message, config):
                 tip = f"必须回答"
             else:
                 tip = f"目前还能生成{times}次"
-            await bot.reply_to(message, paper[0] + f"\n\n输入 /saveme 重新生成题目,{tip}")
+            if paper[0].get("picture") is None:
+                await bot.reply_to(message, paper[0].get("question") + f"\n\n输入 /saveme 重新生成题目,{tip}")
+            else:
+                await bot.send_photo(message.chat.id, caption=paper[0].get("question"), photo=paper[0].get("picture"))
             # await bot.delete_state(message.from_user.id, message.chat.id)
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['QA'] = paper

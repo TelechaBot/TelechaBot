@@ -14,4 +14,5 @@ Tool().console.print("从 2.0.7 开始，bot升级为异步机器人，并引入
 
 # run_timer()
 # pushService = sendBot(config.botToken)
+
 clinetBot().run()

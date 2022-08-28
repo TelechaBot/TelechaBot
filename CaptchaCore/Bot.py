@@ -59,6 +59,7 @@ class clinetBot(object):
 
             from telebot import types, util
             import CaptchaCore.BotEvent
+
             @bot.chat_member_handler()
             async def chat_m(message: types.ChatMemberUpdated):
                 await CaptchaCore.BotEvent.member_update(bot, message, config)
@@ -108,8 +109,8 @@ class clinetBot(object):
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
                 def Del_call():
-                    t = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
-                    t.start()
+                    ts = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    ts.start()
 
                 # print(call.message.json.get("reply_to_message"))
                 if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):

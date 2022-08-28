@@ -39,8 +39,9 @@ class bili_hard_core(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
     def create(self):
         if pathlib.Path('data/Bili.json').exists():
@@ -63,8 +64,9 @@ class bili_hard_core(object):
 
         else:
             Q, A = self.nofind()
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": A}
-        return Q, Answer
+        return Question, Answer
 
 
 class car_subject_one(object):
@@ -81,8 +83,9 @@ class car_subject_one(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
     def create(self):
 
@@ -106,8 +109,9 @@ class car_subject_one(object):
 
         else:
             Q, A = self.nofind()
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": A}
-        return Q, Answer
+        return Question, Answer
 
 
 # songci
@@ -125,8 +129,9 @@ class songci_300(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
     def create(self):
 
@@ -142,8 +147,9 @@ class songci_300(object):
 
         else:
             Q, A = self.nofind()
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": A}
-        return Q, Answer
+        return Question, Answer
 
 
 # lunyun
@@ -161,8 +167,9 @@ class lunyu(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
     def create(self):
 
@@ -178,8 +185,9 @@ class lunyu(object):
 
         else:
             Q, A = self.nofind()
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": A}
-        return Q, Answer
+        return Question, Answer
 
 
 # 学习强国
@@ -197,8 +205,9 @@ class study_build_up(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
     def create(self):
 
@@ -214,8 +223,9 @@ class study_build_up(object):
 
         else:
             Q, A = self.nofind()
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": A}
-        return Q, Answer
+        return Question, Answer
 
 
 class radius(object):
@@ -232,8 +242,9 @@ class radius(object):
         r = (random.randint(5, 10) * 2)
         Q = f"一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class find_volume_cone(object):
@@ -251,8 +262,9 @@ class find_volume_cone(object):
 
         Q = f"一个圆锥的底面积为{lena}π，高为{h}，求其体积为多少π!(四舍五入，只答出数字部分！)"
         A = (lena * h) / 3
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class find_ball_cone(object):
@@ -269,8 +281,9 @@ class find_ball_cone(object):
         r = (random.randint(1, 14) * 3)
         Q = f"一个球的半径为{r}，求其体积是多少π!(四舍五入，只答出数字部分！)"
         A = 4 / 3 * r ** 3
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class gravity_work(object):
@@ -290,8 +303,9 @@ class gravity_work(object):
         high = (random.randint(1, 6) * 1)
         Q = f"经测量，重{g1}N的物体沿斜面运行时，受到的摩擦力为{g2}N,斜面的长和高分别是{long}和{high}，如果物体从斜面顶部自由滑到底端，重力对物体所做的功和克服摩擦力所做的功的和是(四舍五入)？(只答出数字部分！)"
         A = g1 * high + g2 * long
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class binary_first_equation(object):
@@ -333,8 +347,9 @@ class binary_first_equation(object):
         if not iss:
             A = 0
         Q = f"已知二元一次方程 ax²+bx+c=0，其中a为{a}，b为{b}，c为{c}。求其根的和四舍五入的绝对值。如果无解请写0."
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(abs(A))}
-        return Q, Answer
+        return Question, Answer
 
 
 class parabola(object):
@@ -351,8 +366,9 @@ class parabola(object):
         a = p * 4 + 2
         Q = f"长度为{a}的线段 AB 的两个端点A、B都在抛物线y2(2次方)={p}x 上滑动，则线段 AB 的中点 M 到 y 轴的最短距离为?(四舍五入)"
         A = (a - p / 2) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class parabola_2(object):
@@ -369,8 +385,9 @@ class parabola_2(object):
         num2 = (random.randint(7, 21) * 4)
         Q = f"若抛物线x2(2次方)=-2py(p>0)上纵坐标为-{num}的点到焦点的距离为{num2}，则焦点到准线的距离是?四舍五入且取绝对值"
         A = (num2 - num) / 2
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(A)}
-        return Q, Answer
+        return Question, Answer
 
 
 class biological_gene(object):
@@ -393,14 +410,15 @@ class biological_gene(object):
             An = (2 * num1 + num2) / (2 * (num1 + num2 + num3)) * 100
         else:
             An = (num2 + 2 * num3) / (2 * (num1 + num2 + num3)) * 100
+        Question = {"question": Q, "picture": None}
         Answer = {"rightKey": round(An)}
-        return Q, Answer
+        return Question, Answer
 
 
 class Importer(object):
     def __init__(self, s=time.time()):
         self.samples = s
-        import time
+
         self.items = [{"diff": parabola_2(s).difficulty, "obj": parabola_2(s)},
                       {"diff": radius(s).difficulty, "obj": parabola(s)},
                       {"diff": find_volume_cone(s).difficulty, "obj": find_volume_cone(s)},
