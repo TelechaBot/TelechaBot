@@ -87,7 +87,7 @@ class car_subject_one(object):
     def create(self):
 
         if pathlib.Path('data/Drive.json').exists():
-            with open("data/Drive", 'r') as tiku_file:
+            with open("data/Drive.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 data_list = samples.get("datas")

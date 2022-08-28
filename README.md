@@ -17,7 +17,15 @@ TelechaBot 是一个使用 Python 编写的机器人项目，使用可更新小�
 
 ### 环境需求
 
-应当使用 Python 3.7 或更高版本.
+应当使用 Python 3.7 或更高版本，主机需要安装redis！
+
+**安装 Redis **
+
+```shell
+apt-get install redis
+```
+
+使用 ```systemctl start redis.service``` 启动服务，或者使用```nohup redis-server > output.log 2>&1 &```启动，推荐前者。
 
 ### 安装
 
@@ -141,6 +149,8 @@ cat - 主控 查看文件
 ```
 
 ### 关于验证模型
+
+支持多重模型，自定义模型。
 
 作用是抽取并随机生成题目，支持难度梯度过滤
 `some = model_name.Importer().pull(difficulty_limit=5)`

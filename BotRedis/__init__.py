@@ -1,6 +1,9 @@
-import json
-import pathlib
 import time
+import ast
+import redis  # 导入redis 模块
+
+pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 
 # 必须需要一个创建机器人对象的类才能使用KickMember功能！
@@ -28,16 +31,15 @@ class JsonRedis(object):
     @staticmethod
     def load_tasks():
         global _tasks
-        if pathlib.Path("taskRedis.json").exists():
-            with open("taskRedis.json", encoding="utf-8") as f:
-                _tasks = json.load(f)
+        task = r.get('tasks')
+        if task is not None:
+            _tasks = ast.literal_eval(task)
         else:
             _tasks = {}
 
     @staticmethod
     def save_tasks():
-        with open("taskRedis.json", "w", encoding="utf8") as f:
-            json.dump(_tasks, f, indent=4, ensure_ascii=False)
+        r.set('tasks', str(_tasks))
 
     @staticmethod
     def readUser(where, group):
@@ -156,6 +158,8 @@ class JsonRedis(object):
         :param fail_user: 传入这里，则踢出且弹出
         :return:
         """
+        group = False
+        user = False
         if tar is None:
             tar = []
         if fail_user is None:
@@ -190,9 +194,10 @@ class JsonRedis(object):
                 #####################################
                 # 过期验证的操作
                 from CaptchaCore.Bot import clinetBot
-                bot, config = clinetBot().botCreat()
+                bot, config = clinetBot().SyncBotCreat()
                 try:
-                    bot.kick_chat_member(group, user)
+                    if group and user:
+                        bot.kick_chat_member(group, user)
                 except Exception as e:
                     print(e)
                 # print("ban " + str(user) + str(group))

@@ -9,9 +9,12 @@ from pathlib import Path
 import json
 from threading import Timer
 
-from CaptchaCore.Event import Tool, botWorker
+from CaptchaCore.Event import Tool, botWorker, userStates
 import telebot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.async_telebot import AsyncTeleBot
+from telebot.asyncio_storage import StateMemoryStorage
+from telebot.asyncio_handler_backends import State, StatesGroup
+from CaptchaCore.Event import Read, Tool
 
 
 def load_csonfig():
@@ -30,10 +33,16 @@ class clinetBot(object):
         pass
 
     def botCreat(self):
-        from CaptchaCore.Event import Read, Tool
         config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
         if config.get("version"):
-            Tool().console.print("完成初始化:" + config.version, style='blue')
+            Tool().console.print("创建了Bot:" + config.version, style='blue')
+        bot = AsyncTeleBot(config.botToken, state_storage=StateMemoryStorage())
+        return bot, config
+
+    def SyncBotCreat(self):
+        config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
+        if config.get("version"):
+            Tool().console.print("同步Bot定时器执行:" + config.version, style='blue')
         bot = telebot.TeleBot(config.botToken)
         return bot, config
 
@@ -42,47 +51,60 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreat()
-            from telebot import custom_filters
+            # from telebot import asyncio_helper
+            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            # from telebot import custom_filters
+
             from telebot import types, util
             import CaptchaCore.BotEvent
             @bot.chat_member_handler()
-            def chat_m(message: types.ChatMemberUpdated):
-                CaptchaCore.BotEvent.member_update(bot, message, config)
+            async def chat_m(message: types.ChatMemberUpdated):
+                await CaptchaCore.BotEvent.member_update(bot, message, config)
 
+            # 核心
             @bot.message_handler(commands=["start", 'about'])
-            def handle_command(message):
+            async def handle_command(message):
                 if "/start" in message.text:
-                    CaptchaCore.BotEvent.Start(bot, message, config)
+                    await CaptchaCore.BotEvent.Start(bot, message, config)
                 elif "/about" in message.text:
-                    CaptchaCore.BotEvent.About(bot, message, config)
+                    await CaptchaCore.BotEvent.About(bot, message, config)
 
+            @bot.message_handler(state=userStates.answer)
+            async def check_answer(message):
+                await CaptchaCore.BotEvent.Verify(bot, message, config)
+
+            @bot.message_handler(state="*", commands='saveme')
+            async def save_me(message):
+                await CaptchaCore.BotEvent.Saveme(bot, message, config)
+
+            # 事件
             @bot.message_handler(content_types=['text'], chat_types=['private'])
-            def handle_private_msg(message):
-                CaptchaCore.BotEvent.Switch(bot, message, config)
+            async def handle_private_msg(message):
+                await CaptchaCore.BotEvent.Switch(bot, message, config)
 
             @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
-            def group_msg_no_admin(message):
-                CaptchaCore.BotEvent.Banme(bot, message, config)
+            async def group_msg_no_admin(message):
+                await CaptchaCore.BotEvent.Banme(bot, message, config)
 
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
-            def group_msg_no_admin(message):
-                CaptchaCore.BotEvent.Admin(bot, message, config)
+            async def group_msg_no_admin(message):
+                await CaptchaCore.BotEvent.Admin(bot, message, config)
 
             @bot.my_chat_member_handler()
-            def bot_self(message: types.ChatMemberUpdated):
-                CaptchaCore.BotEvent.botSelf(bot, message, config)
+            async def bot_self(message: types.ChatMemberUpdated):
+                await CaptchaCore.BotEvent.botSelf(bot, message, config)
 
             # @bot.message_handler(content_types=['left_chat_member'])
             # def left_chat(message):
             #     CaptchaCore.BotEvent.Left(bot, message, config)
 
             @bot.message_handler(content_types=util.content_type_service)
-            def service_msg(message: types.Message):
-                CaptchaCore.BotEvent.msg_del(bot, message, config)
+            async def service_msg(message: types.Message):
+                await CaptchaCore.BotEvent.msg_del(bot, message, config)
 
             # 选择题库回调
             @bot.callback_query_handler(func=lambda call: True)
-            def callback_query(call):
+            async def callback_query(call):
                 def Del_call():
                     t = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
                     t.start()
@@ -92,44 +114,25 @@ class clinetBot(object):
                     Del_call()
                     if call.data:
                         if botWorker.set_model(call.message.chat.id, model=call.data):
-                            bot.answer_callback_query(call.id, "Success")
-                            msgss = bot.send_message(call.message.chat.id,
-                                                     f"Info:群组验证模式已经切换至{call.data}")
-                            t = Timer(10, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
+                            await bot.answer_callback_query(call.id, "Success")
+                            msgss = await bot.send_message(call.message.chat.id,
+                                                           f"Info:群组验证模式已经切换至{call.data}")
+                            t = Timer(30, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
                             t.start()
-                    # if call.data == "学习强国":
-                    #     if botWorker.set_model(call.message.chat.id, model='学习强国'):
-                    #         info = "Success"
-                    #     else:
-                    #         info = "Failed"
-                    #     bot.answer_callback_query(call.id, info)
-                    # elif call.data == "科目一":
-                    #     if botWorker.set_model(call.message.chat.id, model='科目一'):
-                    #         info = "Success"
-                    #     else:
-                    #         info = "Failed"
-                    #     bot.answer_callback_query(call.id, info)
-                    # elif call.data == "学科题库":
-                    #     if botWorker.set_model(call.message.chat.id, model='学科题库'):
-                    #         info = "Success"
-                    #     else:
-                    #         info = "Failed"
-                    #     bot.answer_callback_query(call.id, info)
-                    # elif call.data == "安全工程师":
-                    #     if botWorker.set_model(call.message.chat.id, model='安全工程师'):
-                    #         info = "Success"
-                    #     else:
-                    #         info = "Failed"
-                    #     bot.answer_callback_query(call.id, info)
                 else:
                     pass
-                    # print("Not")
 
             from BotRedis import JsonRedis
             JsonRedis.timer()
-            bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
-            bot.add_custom_filter(custom_filters.ChatFilter())
-            bot.infinity_polling(allowed_updates=util.update_types)
+            from telebot import asyncio_filters
+            bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
+            bot.add_custom_filter(asyncio_filters.ChatFilter())
+            bot.add_custom_filter(asyncio_filters.StateFilter(bot))
+            # bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
+            # bot.add_custom_filter(custom_filters.ChatFilter())
+            # bot.infinity_polling(allowed_updates=util.update_types)
+            import asyncio
+            asyncio.run(bot.polling(allowed_updates=util.update_types))
 
 
 class sendBot(object):

@@ -11,6 +11,14 @@ import json
 
 from rich.console import Console
 
+from telebot.asyncio_handler_backends import State, StatesGroup
+
+
+class userStates(StatesGroup):
+    answer = State()  # states group should contain states
+    answer2 = State()
+    saveme = State()
+
 
 def load_csonfig():
     global _csonfig
@@ -28,49 +36,51 @@ class botWorker(object):
         pass
 
     @staticmethod
-    def delmsg(bot, chat, message):
+    def delmsg(AsyncBot, chat, message):
+        from CaptchaCore.Bot import clinetBot
+        bot, config = clinetBot().SyncBotCreat()
         bot.delete_message(chat, message)
 
     @staticmethod
-    def un_restrict(message, bot, groups, un_restrict_all=False):
+    async def un_restrict(message, bot, groups, un_restrict_all=False):
         if un_restrict_all:
-            bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True,
-                                     can_pin_messages=True,
-                                     can_change_info=True,
-                                     can_send_polls=True,
-                                     can_invite_users=True,
-                                     can_add_web_page_previews=True,
-                                     )
+            await bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
+                                           can_send_media_messages=True,
+                                           can_send_other_messages=True,
+                                           can_pin_messages=True,
+                                           can_change_info=True,
+                                           can_send_polls=True,
+                                           can_invite_users=True,
+                                           can_add_web_page_previews=True,
+                                           )
         else:
-            bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
-                                     can_send_media_messages=True,
-                                     can_send_other_messages=True,
-                                     can_send_polls=True,
-                                     )
+            await bot.restrict_chat_member(groups, message.from_user.id, can_send_messages=True,
+                                           can_send_media_messages=True,
+                                           can_send_other_messages=True,
+                                           can_send_polls=True,
+                                           )
 
     @staticmethod
-    def send_ban(message, bot, groups):
-        msgss = bot.send_message(groups,
-                                 f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...加入了黑名单！"
-                                 f"\n在其不在验证或冷却时禁言来永久封禁\n用户6分钟后从黑名单中保释")
+    async def send_ban(message, bot, groups):
+        msgss = await bot.send_message(groups,
+                                       f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...加入了黑名单！"
+                                       f"\n在其不在验证或冷却时禁言来永久封禁\n用户6分钟后从黑名单中保释")
         return msgss
 
     @staticmethod
-    def unbanUser(bot, chat, user):
-        msgss = bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
+    async def unbanUser(bot, chat, user):
+        msgss = await bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
         print("执行了移除黑名单:" + str(user))
         return msgss
 
     @staticmethod
-    def send_ok(message, bot, groups, well_unban):
+    async def send_ok(message, bot, groups, well_unban):
         if well_unban:
             info = "完全解封"
         else:
             info = "因为被踢出，只保留基本权限"
-        msgss = bot.send_message(groups,
-                                 f"刚刚{message.from_user.first_name}通过了验证！{info}")
+        msgss = await bot.send_message(groups,
+                                       f"刚刚{message.from_user.first_name}通过了验证！{info}")
         return msgss
 
     @staticmethod

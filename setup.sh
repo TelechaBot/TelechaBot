@@ -60,22 +60,22 @@ data="$(pwd)/TelechaBot/data"
 echo "=============Setup============"
 
 run() {
-#  if [ -f "${dir}/project.info" ]; then
-#    data=$(cat "${dir}/project.info")
-#    declare "$data"
-#    # shellcheck disable=SC2154
-#    echox green "当前版本 ${version}"
-#    now=$version
-#    (curl -s https://raw.fastgit.org/sudoskys/TelechaBot/main/project.info) && declare<(curl -s https://raw.fastgit.org/sudoskys/TelechaBot/main/project.info)
-#    new=$version
-#    if [[ $new ]]; then
-#       if [[ $((new)) -gt $((now)) ]]; then
-#          echox yellow "仓库最新版本为${new}"
-#       fi
-#    else
-#       echox red "远程仓库出现错误或未连接"
-#    fi
-#  fi
+  #  if [ -f "${dir}/project.info" ]; then
+  #    data=$(cat "${dir}/project.info")
+  #    declare "$data"
+  #    # shellcheck disable=SC2154
+  #    echox green "当前版本 ${version}"
+  #    now=$version
+  #    (curl -s https://raw.fastgit.org/sudoskys/TelechaBot/main/project.info) && declare<(curl -s https://raw.fastgit.org/sudoskys/TelechaBot/main/project.info)
+  #    new=$version
+  #    if [[ $new ]]; then
+  #       if [[ $((new)) -gt $((now)) ]]; then
+  #          echox yellow "仓库最新版本为${new}"
+  #       fi
+  #    else
+  #       echox red "远程仓库出现错误或未连接"
+  #    fi
+  #  fi
   if [ ! -d "$dir" ]; then
     echox skyBlue "初始化:No found ${dir}，init, setup..."
     Gitpull
@@ -146,8 +146,7 @@ run() {
   fi
 }
 
-run || {
-  echox skyBlue "command failed"
-}
+run
+
 
 cd "$(pwd)" && rm setup.sh

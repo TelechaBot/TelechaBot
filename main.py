@@ -5,23 +5,12 @@
 # @Github    ：sudoskys
 
 from CaptchaCore.Bot import clinetBot
-from CaptchaCore.Event import Check
+from CaptchaCore.Event import Check, Tool
 
 # 初始化文件系统
 Check().run()
 
-
-def run_timer():
-    from StarPuller import Worker
-    Worker().get_index()
-    timer()
-
-
-def timer():
-    from threading import Timer
-    t = Timer(5000, run_timer, args=[])
-    t.start()
-
+Tool().console.print("从 2.0.7 开始，bot升级为异步机器人，并引入redis！使用 redis 初步接管数据！", style="yellow")
 
 # run_timer()
 # pushService = sendBot(config.botToken)
