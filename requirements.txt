@@ -4,3 +4,4 @@ pathlib
 pyTelegramBotAPI
 rich
 joblib
+redis
