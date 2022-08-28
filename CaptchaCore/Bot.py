@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
+import pathlib
 import random
 from pathlib import Path
 import json
@@ -30,21 +31,21 @@ def save_csonfig():
 
 class clinetBot(object):
     def __init__(self):
-        pass
+        self.config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
 
     def botCreat(self):
-        config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
-        if config.get("version"):
-            Tool().console.print("创建了Bot:" + config.version, style='blue')
-        bot = AsyncTeleBot(config.botToken, state_storage=StateMemoryStorage())
-        return bot, config
+        if pathlib.Path("project.ini").exists():
+            import configparser
+            value = configparser.ConfigParser().read("project.ini")
+            version = value.get('project', 'version')
+            Tool().console.print("创建了Bot:" + version, style='blue')
+        bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
+        return bot, self.config
 
     def SyncBotCreat(self):
-        config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
-        if config.get("version"):
-            Tool().console.print("同步Bot定时器执行:" + config.version, style='blue')
-        bot = telebot.TeleBot(config.botToken)
-        return bot, config
+        print("同步Bot定时器被创建执行")
+        bot = telebot.TeleBot(self.config.botToken)
+        return bot, self.config
 
     def run(self):
         load_csonfig()
@@ -132,7 +133,7 @@ class clinetBot(object):
             # bot.add_custom_filter(custom_filters.ChatFilter())
             # bot.infinity_polling(allowed_updates=util.update_types)
             import asyncio
-            asyncio.run(bot.polling(allowed_updates=util.update_types))
+            asyncio.run(bot.polling(non_stop=True, allowed_updates=util.update_types))
 
 
 class sendBot(object):

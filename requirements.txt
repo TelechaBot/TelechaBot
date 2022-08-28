@@ -5,3 +5,4 @@ rich
 joblib
 redis
 pyyaml==5.4.1
+aiohttp
