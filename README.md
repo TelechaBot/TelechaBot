@@ -19,7 +19,7 @@ TelechaBot 是一个使用 Python 编写的机器人项目，使用可更新小�
 
 应当使用 Python 3.7 或更高版本，主机需要安装redis！
 
-**安装 Redis **
+**安装 Redis**
 
 ```shell
 apt-get install redis
