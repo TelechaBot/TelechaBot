@@ -152,6 +152,8 @@ cat - 主控 查看文件
 
 支持多重模型，自定义模型。
 
+理论可以兼容其他绝大部分机器人的验证方式！
+
 作用是抽取并随机生成题目，支持难度梯度过滤
 `some = model_name.Importer().pull(difficulty_limit=5)`
 
