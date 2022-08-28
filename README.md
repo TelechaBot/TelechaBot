@@ -182,12 +182,8 @@ cat - 主控 查看文件
 
 **自定义题库**
 
-将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank) 的Issue 或者 Pr。
-
-
-
-
-
+将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，处理这个文件返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank) 的Issue 或者
+Pr。
 
 ### 待办
 
