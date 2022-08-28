@@ -1,7 +1,7 @@
 requests
-pyyaml==5.4.1
 pathlib
 pyTelegramBotAPI
 rich
 joblib
 redis
+pyyaml==5.4.1

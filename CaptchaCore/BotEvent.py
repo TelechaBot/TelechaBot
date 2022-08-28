@@ -14,7 +14,6 @@ from threading import Timer
 
 from CaptchaCore.Event import botWorker, userStates
 import binascii
-from telebot.asyncio_handler_backends import State, StatesGroup
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(200)
@@ -39,7 +38,7 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, config.desc)
         else:
-            await bot.reply_to(message, "生物信息验证 Bot，自主Project:https://github.com/sudoskys/")
+            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/sudoskys/")
 
 
 # 主控模块
@@ -169,7 +168,7 @@ async def Admin(bot, message, config):
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_limit=level)
             msgs = await bot.reply_to(message, "调整难度上限为:" + str(level))
-            t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
@@ -181,7 +180,7 @@ async def Admin(bot, message, config):
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_min=level)
             msgs = await bot.reply_to(message, "调整难度下限为:" + str(level))
-            t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
@@ -283,7 +282,7 @@ async def member_update(bot, msg, config):
                                       f"\n赫免命令`+unban {new.user.id}`",
                                       reply_markup=bot_link,
                                       parse_mode='Markdown')
-        t = Timer(45, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         t.start()
         try:
             await bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
@@ -389,7 +388,6 @@ async def Verify(bot, message, config):
             times = data['times']
             answers = message.text
             # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-        print(answers)
         try:
             if str(answers) == str(QA[1].get("rightKey")):
                 await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
@@ -415,7 +413,6 @@ async def Saveme(bot, message, config):
             well_unban = data['BanState']
             times = data['times']
         times = times - 1
-        print(times)
         if times >= 0:
             min_, limit_ = botWorker.get_difficulty(group_k)
             _model = botWorker.get_model(group_k)
@@ -438,37 +435,3 @@ async def Saveme(bot, message, config):
                 data['times'] = times
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
-
-#
-# # 重置器
-# # await bot.register_next_step_handler(message, verify_step, sth, times)
-# # async def verify_step(message, pipe, timea):
-# if message.text == "/saveme" and timea > 0:
-#
-#     if timea <= 0:
-#         tips = "必须回答"
-#     else:
-#         tips = f"还可以重置{timea}次."
-#     now = limit_ - 2
-#
-#     print(paper)
-#     # await bot.register_next_step_handler(message, verify_step, paper,timea)
-# else:
-#     try:
-#         # chat_id = message.chat.id
-#         answer = message.text
-#         # 用户操作
-#         # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-#         if str(answer) == str(sth[1].get("rightKey")):
-#             await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
-#             verifyRedis.grant_resign(message.from_user.id, group_k)
-#             msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-#             await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-#             t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-#             t.start()
-#         else:
-#             await bot.reply_to(message, '可惜是错误的回答....你还有一次机会，不能重置')
-#             # await bot.register_next_step_handler(message, verify_step2, pipe)
-#     except Exception as e:
-#         await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
-#                            parse_mode='Markdown')

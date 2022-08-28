@@ -12,7 +12,6 @@ from threading import Timer
 from CaptchaCore.Event import Tool, botWorker, userStates
 import telebot
 from telebot.async_telebot import AsyncTeleBot
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot.asyncio_handler_backends import State, StatesGroup
 from CaptchaCore.Event import Read, Tool
@@ -43,7 +42,7 @@ class clinetBot(object):
     def SyncBotCreat(self):
         config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
         if config.get("version"):
-            Tool().console.print("定时器执行:" + config.version, style='blue')
+            Tool().console.print("同步Bot定时器执行:" + config.version, style='blue')
         bot = telebot.TeleBot(config.botToken)
         return bot, config
 
@@ -52,8 +51,8 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreat()
-            from telebot import asyncio_helper
-            asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            # from telebot import asyncio_helper
+            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # from telebot import custom_filters
 
             from telebot import types, util
@@ -118,7 +117,7 @@ class clinetBot(object):
                             await bot.answer_callback_query(call.id, "Success")
                             msgss = await bot.send_message(call.message.chat.id,
                                                            f"Info:群组验证模式已经切换至{call.data}")
-                            t = Timer(10, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
+                            t = Timer(30, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
                             t.start()
                 else:
                     pass
