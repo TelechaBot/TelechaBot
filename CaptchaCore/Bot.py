@@ -53,8 +53,8 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
-            # from telebot import asyncio_helper
-            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            from telebot import asyncio_helper
+            asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # from telebot import custom_filters
 
             from telebot import types, util
@@ -72,14 +72,17 @@ class clinetBot(object):
                 elif "/about" in message.text:
                     await CaptchaCore.BotEvent.About(bot, message, config)
 
-            @bot.message_handler(state=userStates.answer)
-            async def check_answer(message):
-                await CaptchaCore.BotEvent.Verify(bot, message, config)
-
             @bot.message_handler(state="*", commands='saveme')
             async def save_me(message):
                 await CaptchaCore.BotEvent.Saveme(bot, message, config)
 
+            @bot.message_handler(state=userStates.answer)
+            async def check_answer(message):
+                await CaptchaCore.BotEvent.Verify(bot, message, config)
+
+            @bot.message_handler(state=userStates.answer2)
+            async def check_answer(message):
+                await CaptchaCore.BotEvent.Verify2(bot, message, config)
             # 事件
             @bot.message_handler(content_types=['text'], chat_types=['private'])
             async def handle_private_msg(message):

@@ -17,7 +17,7 @@ from telebot.asyncio_handler_backends import State, StatesGroup
 class userStates(StatesGroup):
     answer = State()  # states group should contain states
     answer2 = State()
-    saveme = State()
+    is_start = State()
 
 
 def load_csonfig():
@@ -78,10 +78,36 @@ class botWorker(object):
         if well_unban:
             info = "完全解封"
         else:
-            info = "因为被踢出，只保留基本权限"
+            info = "入群前权限被限制状态，给予部分权限"
+        user = botWorker.convert(message.from_user.first_name)
         msgss = await bot.send_message(groups,
-                                       f"刚刚{message.from_user.first_name}通过了验证！{info}")
+                                       f"刚刚 {user} 通过了验证！{info}",
+                                       parse_mode='MarkdownV2')
         return msgss
+
+    @staticmethod
+    def convert(text):
+        text = str(text)
+        # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\'.
+        text.replace("_", "\_")
+        text.replace("*", "\*")
+        text.replace("[", "\[")
+        text.replace("]", "\]")
+        text.replace("(", "\(")
+        text.replace(")", "\)")
+        text.replace("~", "\~")
+        text.replace("`", "\`")
+        text.replace(">", "\>")
+        text.replace("#", "\#")
+        text.replace("+", "\+")
+        text.replace("-", "\-")
+        text.replace("=", "\=")
+        text.replace("|", "\|")
+        text.replace("{", "\{")
+        text.replace("}", "\{")
+        text.replace(".", "\.")
+        text.replace("!", "\!")
+        return text
 
     @staticmethod
     def get_model(cls):
