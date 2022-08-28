@@ -53,12 +53,13 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
-            # from telebot import asyncio_helper
-            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            from telebot import asyncio_helper
+            asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # from telebot import custom_filters
 
             from telebot import types, util
             import CaptchaCore.BotEvent
+
             @bot.chat_member_handler()
             async def chat_m(message: types.ChatMemberUpdated):
                 await CaptchaCore.BotEvent.member_update(bot, message, config)
@@ -71,14 +72,17 @@ class clinetBot(object):
                 elif "/about" in message.text:
                     await CaptchaCore.BotEvent.About(bot, message, config)
 
-            @bot.message_handler(state=userStates.answer)
-            async def check_answer(message):
-                await CaptchaCore.BotEvent.Verify(bot, message, config)
-
             @bot.message_handler(state="*", commands='saveme')
             async def save_me(message):
                 await CaptchaCore.BotEvent.Saveme(bot, message, config)
 
+            @bot.message_handler(state=userStates.answer)
+            async def check_answer(message):
+                await CaptchaCore.BotEvent.Verify(bot, message, config)
+
+            @bot.message_handler(state=userStates.answer2)
+            async def check_answer(message):
+                await CaptchaCore.BotEvent.Verify2(bot, message, config)
             # 事件
             @bot.message_handler(content_types=['text'], chat_types=['private'])
             async def handle_private_msg(message):
@@ -108,8 +112,8 @@ class clinetBot(object):
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
                 def Del_call():
-                    t = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
-                    t.start()
+                    ts = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    ts.start()
 
                 # print(call.message.json.get("reply_to_message"))
                 if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
