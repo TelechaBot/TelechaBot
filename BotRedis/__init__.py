@@ -194,7 +194,7 @@ class JsonRedis(object):
                 #####################################
                 # 过期验证的操作
                 from CaptchaCore.Bot import clinetBot
-                bot, config = clinetBot().SyncBotCreat()
+                bot, config = clinetBot().SyncBotCreate()
                 try:
                     if group and user:
                         bot.kick_chat_member(group, user)

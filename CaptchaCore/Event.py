@@ -38,7 +38,7 @@ class botWorker(object):
     @staticmethod
     def delmsg(AsyncBot, chat, message):
         from CaptchaCore.Bot import clinetBot
-        bot, config = clinetBot().SyncBotCreat()
+        bot, config = clinetBot().SyncBotCreate()
         bot.delete_message(chat, message)
 
     @staticmethod

@@ -33,16 +33,17 @@ class clinetBot(object):
     def __init__(self):
         self.config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
 
-    def botCreat(self):
+    def botCreate(self):
         if pathlib.Path("project.ini").exists():
-            import configparser
-            value = configparser.ConfigParser().read("project.ini")
+            from configparser import ConfigParser
+            value = ConfigParser()
+            value.read("project.ini")
             version = value.get('project', 'version')
-            Tool().console.print("创建了Bot:" + version, style='blue')
+            Tool().console.print("Create Bot,版本:" + version, style='blue')
         bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
         return bot, self.config
 
-    def SyncBotCreat(self):
+    def SyncBotCreate(self):
         print("同步Bot定时器被创建执行")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
@@ -51,7 +52,7 @@ class clinetBot(object):
         load_csonfig()
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
-            bot, config = self.botCreat()
+            bot, config = self.botCreate()
             # from telebot import asyncio_helper
             # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # from telebot import custom_filters
