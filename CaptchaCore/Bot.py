@@ -56,7 +56,7 @@ class clinetBot(object):
             # from telebot import asyncio_helper
             # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # print("正在使用代理！")
-            # from telebot import custom_filters
+
 
             from telebot import types, util
             import CaptchaCore.BotEvent
