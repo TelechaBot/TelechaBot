@@ -86,6 +86,22 @@ class botWorker(object):
         return msgss
 
     @staticmethod
+    def newmember_need(msg):
+        need = True
+        old = msg.old_chat_member
+        new = msg.new_chat_member
+        print(old.status)
+        print(new.status)
+        if msg.old_chat_member.is_member is None and old.status not in ["administrator"] and new.status not in [
+            "administrator"]:
+            need = True
+        if msg.from_user.is_bot:
+            need = False
+        if old.status in ["administrator"] or new.status in ["administrator", "left"]:
+            need = False
+        return need
+
+    @staticmethod
     def convert(text):
         text = str(text)
         # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\'.

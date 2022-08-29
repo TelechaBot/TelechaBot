@@ -152,13 +152,15 @@ async def Admin(bot, message, config):
             markup = InlineKeyboardMarkup()
             markup.row_width = 2
             markup.add(
+                InlineKeyboardButton("数学题库", callback_data="数学题库"),
                 InlineKeyboardButton("学习强国", callback_data="学习强国"),
                 InlineKeyboardButton("科目一", callback_data="科目一"),
-                InlineKeyboardButton("学科题库", callback_data="学科题库"),
                 InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 InlineKeyboardButton("宋词300", callback_data="宋词300"),
                 InlineKeyboardButton("论语问答", callback_data="论语问答"),
-                # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
+                InlineKeyboardButton("化学题库", callback_data="化学题库"),
+                InlineKeyboardButton("生物题库", callback_data="生物题库"),
+                InlineKeyboardButton("物理题库", callback_data="物理题库"),
             )
             return markup
 
@@ -267,8 +269,7 @@ async def member_update(bot, msg, config):
     new = msg.new_chat_member
     load_csonfig()
 
-    # print(msg)
-
+    # print(new)
     async def verify_user(bot, config, statu):
         # 用户操作
         resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
@@ -304,7 +305,8 @@ async def member_update(bot, msg, config):
             t.start()
 
     ######################################
-    if new.status in ["member", "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
+    print(botWorker.newmember_need(msg))
+    if botWorker.newmember_need(msg):
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
             if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
@@ -379,7 +381,7 @@ async def Start(bot, message, config):
 
                 # 拉取题目例子
                 from CaptchaCore import CaptchaWorker
-                sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model).create()
+                sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message, sth[0].get("question") + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
                 else:
@@ -485,7 +487,7 @@ async def Saveme(bot, message, config):
             from CaptchaCore import CaptchaWorker
             paper = (CaptchaWorker.Importer(s=time.time()).pull(difficulty_min=min_,
                                                                 difficulty_limit=limit_ - 1,
-                                                                model_name=_model).create())
+                                                                model_name=_model))
             # print("生成了一道题目:" + str(paper))
             from CaptchaCore import CaptchaWorker
             if times == 0:
