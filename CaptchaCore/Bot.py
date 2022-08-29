@@ -4,18 +4,17 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
-import pathlib
-import random
-from pathlib import Path
+import asyncio
 import json
-from threading import Timer
+import pathlib
+from pathlib import Path
 
-from CaptchaCore.Event import Tool, botWorker, userStates
 import telebot
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
-from telebot.asyncio_handler_backends import State, StatesGroup
+
 from CaptchaCore.Event import Read, Tool
+from CaptchaCore.Event import botWorker, userStates
 
 
 def load_csonfig():
@@ -44,7 +43,7 @@ class clinetBot(object):
         return bot, self.config
 
     def SyncBotCreate(self):
-        print("同步Bot定时器被创建执行")
+        print("同步Bot定时器被创建执行,危险")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
 
@@ -53,10 +52,10 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
+
             # from telebot import asyncio_helper
             # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # print("正在使用代理！")
-
 
             from telebot import types, util
             import CaptchaCore.BotEvent
@@ -114,8 +113,10 @@ class clinetBot(object):
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
                 def Del_call():
-                    ts = Timer(1, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
-                    ts.start()
+                    aioschedule.every(30).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id).tag(
+                        call.message.id * abs(call.message.chat.id))
+                    # ts = Timer(1, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    # ts.start()
 
                 # print(call.message.json.get("reply_to_message"))
                 if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
@@ -125,13 +126,15 @@ class clinetBot(object):
                             await bot.answer_callback_query(call.id, "Success")
                             msgss = await bot.send_message(call.message.chat.id,
                                                            f"Info:群组验证模式已经切换至{call.data}")
-                            t = Timer(30, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
-                            t.start()
+                            aioschedule.every(30).seconds.do(botWorker.delmsg, msgss.chat.id, msgss.id).tag(
+                                msgss.id * abs(msgss.chat.id))
+                            # t = Timer(30, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
+                            # t.start()
                 else:
                     pass
 
-            from BotRedis import JsonRedis
-            JsonRedis.timer()
+            # schedule.every(3).seconds.do()
+            # JsonRedis.timer()
             from telebot import asyncio_filters
             bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
             bot.add_custom_filter(asyncio_filters.ChatFilter())
@@ -139,8 +142,19 @@ class clinetBot(object):
             # bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
             # bot.add_custom_filter(custom_filters.ChatFilter())
             # bot.infinity_polling(allowed_updates=util.update_types)
-            import asyncio
-            asyncio.run(bot.polling(non_stop=True, allowed_updates=util.update_types))
+            from BotRedis import JsonRedis
+            import aioschedule
+            aioschedule.every(3).seconds.do(JsonRedis.checker)
+
+            async def scheduler():
+                while True:
+                    await aioschedule.run_pending()
+                    await asyncio.sleep(1)
+
+            async def main():
+                await asyncio.gather(bot.polling(non_stop=True, allowed_updates=util.update_types), scheduler())
+
+            asyncio.run(main())
 
 
 class sendBot(object):

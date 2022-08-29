@@ -3,14 +3,15 @@
 # @FileName: BotEvent.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import ast
 import json
 import pathlib
 import random
 import time
 
+import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from BotRedis import JsonRedis
-from threading import Timer
 
 from CaptchaCore.Event import botWorker, userStates
 import binascii
@@ -72,6 +73,18 @@ async def Switch(bot, message, config):
                         await bot.send_document(message.chat.id, doc)
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
+
+            if "/redis" in command:
+                import redis
+                pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+                r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+                task = r.get('tasks')
+                task = ast.literal_eval(task)
+                with open('taskRedis.json', 'w') as f:  # 设置文件对象
+                    json.dump(task, f, indent=4, ensure_ascii=False)
+                doc = open('taskRedis.json', 'rb')
+                await bot.send_document(message.chat.id, doc)
+
             if "/unban" in command:
                 def extract_arg(arg):
                     return arg
@@ -126,8 +139,11 @@ async def Banme(bot, message, config):
                                       f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟\n\n管理员手动解封请使用 `+unban {message.from_user.id}` ",
                                       reply_markup=bot_link,
                                       parse_mode='MarkdownV2')
-            t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            t.start()
+            aioschedule.every(60).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                msgs.message_id * abs(msgs.chat.id))
+            # t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            # t.start()
+
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
                 # verifyRedis.checker(tar=[key])
@@ -144,8 +160,10 @@ async def Admin(bot, message, config):
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
-        t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        t.start()
+        # t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        # t.start()
+        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
 
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
@@ -173,24 +191,32 @@ async def Admin(bot, message, config):
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_limit=level)
             msgs = await bot.reply_to(message, "调整难度上限为:" + str(level))
-            t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            t.start()
+            aioschedule.every(20).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                msgs.message_id * abs(msgs.chat.id))
+            # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
-            t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            t.start()
+            aioschedule.every(10).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                msgs.message_id * abs(msgs.chat.id))
+            # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            # t.start()
     if "+diff_min" in message.text and len(message.text) != len("+diff_min"):
         status = message.text.split()[1:]
         level = "".join(list(filter(str.isdigit, status[0])))
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_min=level)
             msgs = await bot.reply_to(message, "调整难度下限为:" + str(level))
-            t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            t.start()
+            aioschedule.every(20).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                msgs.message_id * abs(msgs.chat.id))
+            # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
-            t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            t.start()
+            aioschedule.every(10).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                msgs.message_id * abs(msgs.chat.id))
+            # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+            # t.start()
     if "+unban" in message.text:
         status = message.text.split()[1:]
         for user in status:
@@ -199,15 +225,17 @@ async def Admin(bot, message, config):
             group, key = verifyRedis.read_user(str(userId))
             if group:
                 # 机器人核心：通过用户注册请求
-                verifyRedis.grant_resign(userId)
+                await verifyRedis.grant_resign(userId)
                 # 解封用户
                 await bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
                                                can_send_media_messages=True,
                                                can_send_other_messages=True)
         # 机器人核心：发送通知并自毁消息
         TIPS = await bot.reply_to(message, "手动解禁:从欧几里得家里解救了" + str(status))
-        t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
-        t.start()
+        aioschedule.every(30).seconds.do(botWorker.delmsg, TIPS.chat.id, TIPS.message_id).tag(
+            TIPS.message_id * abs(TIPS.chat.id))
+        # t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
+        # t.start()
     if "+ban" in message.text:
         status = message.text.split()[1:]
         if len(message.text) == 4:
@@ -290,8 +318,10 @@ async def member_update(bot, msg, config):
                                       info,
                                       reply_markup=bot_link,
                                       parse_mode='MarkdownV2')
-        t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        t.start()
+        aioschedule.every(60).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
+        # t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+        # t.start()
         try:
             await bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
                                            can_send_media_messages=False,
@@ -301,8 +331,10 @@ async def member_update(bot, msg, config):
             no_power = await bot.send_message(msg.chat.id,
                                               f"对不起，没有权限执行对新用户 `{new.user.id}` 的限制\nPassID: `{user_key}` \nGroupID:`{msg.chat.id}`",
                                               parse_mode='HTML')
-            t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
-            t.start()
+            aioschedule.every(6).seconds.do(botWorker.delmsg, no_power.chat.id, no_power.message_id).tag(
+                no_power.message_id * abs(no_power.chat.id))
+            # t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
+            # t.start()
 
     ###################################
     # print(botWorker.newmember_need(msg))
@@ -332,7 +364,7 @@ async def member_update(bot, msg, config):
         # 注销任务
         if new.status in ["kicked", "left"]:
             print(str(new.user.id) + "离开了" + str(msg.chat.id))
-            verifyRedis.remove_user(new.user.id, str(msg.chat.id))
+            await verifyRedis.remove_user(new.user.id, str(msg.chat.id))
             try:
                 await bot.delete_state(new.user.id, msg.chat.id)
             except Exception as e:
@@ -424,19 +456,25 @@ async def Verify2(bot, message, config):
             # print(QA[1].get("rightKey"))
             if str(answers) == str(QA[1].get("rightKey")):
                 await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
-                verifyRedis.grant_resign(message.from_user.id, group_k)
+                await verifyRedis.grant_resign(message.from_user.id, group_k)
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                t.start()
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                # t.start()
                 # 删除
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
-                verifyRedis.checker(fail_user=[key])
+                await verifyRedis.checker(fail_user=[key])
                 await bot.reply_to(message, '可惜是错误的回答....你6分钟后才能再次进入群组')
                 msgs = await botWorker.send_ban(message, bot, group_k)
-                t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                t.start()
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
+                    message.from_user.id * abs(msgs.chat.id))
+                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                # t.start()
                 # 删除
                 await bot.delete_state(message.from_user.id, message.chat.id)
                 # await bot.register_next_step_handler(message, verify_step2, pipe)
@@ -460,11 +498,13 @@ async def Verify(bot, message, config):
             # print(QA[1].get("rightKey"))
             if str(answers) == str(QA[1].get("rightKey")):
                 await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
-                verifyRedis.grant_resign(message.from_user.id, group_k)
+                await verifyRedis.grant_resign(message.from_user.id, group_k)
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                t.start()
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
+                # t.start()
                 # 删除
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
