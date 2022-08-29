@@ -152,12 +152,15 @@ async def Admin(bot, message, config):
             markup = InlineKeyboardMarkup()
             markup.row_width = 2
             markup.add(
+                InlineKeyboardButton("数学题库", callback_data="数学题库"),
                 InlineKeyboardButton("学习强国", callback_data="学习强国"),
                 InlineKeyboardButton("科目一", callback_data="科目一"),
-                InlineKeyboardButton("学科题库", callback_data="学科题库"),
                 InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 InlineKeyboardButton("宋词300", callback_data="宋词300"),
                 InlineKeyboardButton("论语问答", callback_data="论语问答"),
+                InlineKeyboardButton("化学题库", callback_data="化学题库"),
+                InlineKeyboardButton("生物题库", callback_data="生物题库"),
+                InlineKeyboardButton("物理题库", callback_data="物理题库"),
                 # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
