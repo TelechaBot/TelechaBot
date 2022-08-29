@@ -72,6 +72,18 @@ async def Switch(bot, message, config):
                         await bot.send_document(message.chat.id, doc)
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
+
+            if "/redis" in command:
+                for item in command.split()[1:]:
+                    import redis
+                    pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+                    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+                    task = r.get('tasks')
+                    with open('tmp.log', 'w') as f:  # 设置文件对象
+                        f.write(task)
+                    doc = open('tmp.log', 'rb')
+                    await bot.send_document(message.chat.id, doc)
+
             if "/unban" in command:
                 def extract_arg(arg):
                     return arg
