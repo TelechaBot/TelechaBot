@@ -305,7 +305,7 @@ async def member_update(bot, msg, config):
             t.start()
 
     ######################################
-    print(botWorker.newmember_need(msg))
+    # print(botWorker.newmember_need(msg))
     if botWorker.newmember_need(msg):
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
