@@ -28,6 +28,47 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 # print(choice(l)) # 随机抽取一个
 
 # print(random.randint(0, 9))
+# 学习强国
+class Chemical_verification(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 8
+
+    @staticmethod
+    def nofind():
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
+        Answer = {"rightKey": round(A)}
+        return Question, Answer
+
+    @staticmethod
+    def create():
+        Pic = None
+        if pathlib.Path('data/PubChems.json').exists():
+            with open("data/PubChems.json", 'r') as tiku_file:
+                samples = json.load(tiku_file)
+            if samples is not None:
+                key_obj = random.sample(samples.keys(), 1)
+                Q = key_obj[0]
+                An = (samples[Q])
+                A = An.get("Answer")
+                Pic = An.get("Pic")
+            else:
+                Q, A = study_build_up.nofind()
+
+        else:
+            Q, A = study_build_up.nofind()
+        Question = {"question": Q, "picture": Pic}
+        Answer = {"rightKey": A}
+        return Question, Answer
+
 
 class Tool_CaptchaCore(object):
     def __init__(self):
@@ -641,6 +682,15 @@ class Combustion_Calculations(object):
 
 # --------------------------------
 
+def Chemistry_Pic(s):
+    Chemistry_Pic = [
+        {"diff": Chemical_verification(s).difficulty,
+         "obj": Chemical_verification(s).create()},
+
+    ]
+    return Chemistry_Pic
+
+
 def Chemistry(s):
     Chemistry = [
         {"diff": Combustion_Calculations(s).difficulty,
@@ -769,7 +819,8 @@ class Importer(object):
                 # verify = (random.sample(verify_papaer, 1)[0])
             else:
                 verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time()).create()}
-
+        elif model_name == "图形化学":
+            verify = Chemistry_Pic(self.samples)[0]
         elif model_name == "学习强国":
             verify = study(self.samples)[0]
         elif model_name == "宋词300":
