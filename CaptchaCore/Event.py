@@ -75,6 +75,7 @@ class botWorker(object):
     async def unbanUser(bot, chat, user):
         msgss = await bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
         print("执行了移除黑名单:" + str(user))
+        aioschedule.clear(user * abs(chat))
         return msgss
 
     @staticmethod
