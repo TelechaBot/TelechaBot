@@ -53,9 +53,9 @@ class clinetBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
-            # from telebot import asyncio_helper
-            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
-            # print("正在使用代理！")
+            from telebot import asyncio_helper
+            asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            print("正在使用代理！")
             # from telebot import custom_filters
 
             from telebot import types, util
@@ -84,6 +84,7 @@ class clinetBot(object):
             @bot.message_handler(state=userStates.answer2)
             async def check_answer(message):
                 await CaptchaCore.BotEvent.Verify2(bot, message, config)
+
             # 事件
             @bot.message_handler(content_types=['text'], chat_types=['private'])
             async def handle_private_msg(message):
@@ -113,7 +114,7 @@ class clinetBot(object):
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
                 def Del_call():
-                    ts = Timer(3, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
+                    ts = Timer(1, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
                     ts.start()
 
                 # print(call.message.json.get("reply_to_message"))
