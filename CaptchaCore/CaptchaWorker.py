@@ -732,6 +732,8 @@ class Importer(object):
         return difficulty_min, difficulty_limit
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
+        difficulty_min = int(difficulty_min)
+        difficulty_limit = int(difficulty_limit)
         verify = {"diff": binary_first_equation(time.time()).difficulty,
                   "obj": binary_first_equation(time.time()).create()}
         difficulty_min, difficulty_limit = Importer.reset(difficulty_min, difficulty_limit)
