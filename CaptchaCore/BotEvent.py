@@ -383,7 +383,8 @@ async def Start(bot, message, config):
                 from CaptchaCore import CaptchaWorker
                 sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
-                    await bot.reply_to(message, sth[0].get("question") + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
+                    await bot.reply_to(message,
+                                       botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
                 else:
                     await bot.send_photo(message.chat.id, caption=sth[0].get("question"),
                                          photo=sth[0].get("picture"))
@@ -495,7 +496,8 @@ async def Saveme(bot, message, config):
             else:
                 tip = f"目前还能生成{times}次"
             if paper[0].get("picture") is None:
-                await bot.reply_to(message, paper[0].get("question") + f"\n\n输入 /saveme 重新生成题目,{tip}")
+                await bot.reply_to(message,
+                                   botWorker.convert(paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}")
             else:
                 await bot.send_photo(message.chat.id, caption=paper[0].get("question"), photo=paper[0].get("picture"))
             # await bot.delete_state(message.from_user.id, message.chat.id)

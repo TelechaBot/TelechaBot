@@ -90,8 +90,6 @@ class botWorker(object):
         need = True
         old = msg.old_chat_member
         new = msg.new_chat_member
-        print(old.status)
-        print(new.status)
         if msg.old_chat_member.is_member is None and old.status not in ["administrator"] and new.status not in [
             "administrator"]:
             need = True
@@ -102,8 +100,8 @@ class botWorker(object):
         return need
 
     @staticmethod
-    def convert(text):
-        text = str(text)
+    def convert(texts):
+        text = str(texts)
         # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\'.
         text.replace("_", "\_")
         text.replace("*", "\*")
