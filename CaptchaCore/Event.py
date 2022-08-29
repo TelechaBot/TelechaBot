@@ -5,6 +5,8 @@
 # @Github    ：sudoskys
 import pathlib
 from pathlib import Path
+
+import aioschedule
 import yaml
 import time
 import json
@@ -36,10 +38,12 @@ class botWorker(object):
         pass
 
     @staticmethod
-    def delmsg(AsyncBot, chat, message):
+    async def delmsg(chat, message):
         from CaptchaCore.Bot import clinetBot
-        bot, config = clinetBot().SyncBotCreate()
-        bot.delete_message(chat, message)
+        bot, config = clinetBot().botCreate()
+        # print(chat, message)
+        await bot.delete_message(chat, message)
+        aioschedule.clear(message * abs(chat))
 
     @staticmethod
     async def un_restrict(message, bot, groups, un_restrict_all=False):

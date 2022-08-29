@@ -114,7 +114,7 @@ class JsonRedis(object):
         else:
             return False, False
 
-    def remove_user(self, userId, groupId):
+    async def remove_user(self, userId, groupId):
         """
         人员被移除或者退群，弹出对目标群组的验证任务
         :param userId:
@@ -126,9 +126,9 @@ class JsonRedis(object):
             if len(User) != 0:
                 for key, i in _tasks["Time_group"].items():
                     if i == str(groupId):
-                        JsonRedis.checker(tar=[key])
+                        await JsonRedis.checker(tar=[key])
 
-    def grant_resign(self, userId, groupId=None):
+    async def grant_resign(self, userId, groupId=None):
         """
         提升用户并取消过期队列,解禁需要另外语句
         :param userId:
@@ -142,22 +142,23 @@ class JsonRedis(object):
                     for key, i in _tasks["Time_group"].items():
                         if i == str(groupId):
                             # JsonRedis().remove_user(userId, groupId)
-                            return JsonRedis.checker(tar=[key])
+                            await JsonRedis.checker(tar=[key])
                             # JsonRedis.saveUser("super", str(userId), str(groupId))
                 else:
                     key = _tasks["User_group"].get(str(userId))[0]
                     # groupId = _tasks["Time_group"].get(key)
                     # JsonRedis.saveUser("super", str(userId), str(groupId))
-                    return JsonRedis.checker(tar=[key])
+                    await JsonRedis.checker(tar=[key])
 
     @staticmethod
-    def checker(tar=None, fail_user=None):
+    async def checker(tar=None, fail_user=None):
         """
         检查器，调用就会检查一次，弹出传入的键值，
         :param tar: 传入这里，则不踢出而弹出
         :param fail_user: 传入这里，则踢出且弹出
         :return:
         """
+        # print("定时器执行")
         group = False
         user = False
         if tar is None:
@@ -194,19 +195,19 @@ class JsonRedis(object):
                 #####################################
                 # 过期验证的操作
                 from CaptchaCore.Bot import clinetBot
-                bot, config = clinetBot().SyncBotCreate()
+                bot, config = clinetBot().botCreate()
                 try:
                     if group and user:
-                        bot.kick_chat_member(group, user)
-                        bot.delete_state(user, group)
+                        await bot.kick_chat_member(group, user)
+                        await bot.delete_state(user, group)
                 except Exception as e:
                     print(e)
                 # print("ban " + str(user) + str(group))
         JsonRedis.save_tasks()  # 同步配置队列
 
     @staticmethod
-    def run_timer():
-        JsonRedis.checker()
+    async def run_timer():
+        await JsonRedis.checker()
         JsonRedis.timer()
 
     @staticmethod

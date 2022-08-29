@@ -3,6 +3,7 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import time
 
 from CaptchaCore.Bot import clinetBot
 from CaptchaCore.Event import Check, Tool
