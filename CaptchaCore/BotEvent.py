@@ -418,7 +418,7 @@ async def Start(bot, message, config):
 
                 # 拉取题目例子
                 from CaptchaCore import CaptchaWorker
-                sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model)
+                sth = CaptchaWorker.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message,
                                        botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
