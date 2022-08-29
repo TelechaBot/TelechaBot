@@ -333,6 +333,10 @@ async def member_update(bot, msg, config):
         if new.status in ["kicked", "left"]:
             print(str(new.user.id) + "离开了" + str(msg.chat.id))
             verifyRedis.remove_user(new.user.id, str(msg.chat.id))
+            try:
+                await bot.delete_state(new.user.id, msg.chat.id)
+            except Exception as e:
+                pass
             # bot.ban_chat_member(msg.chat.id, user_id=new.user.id)
 
 
