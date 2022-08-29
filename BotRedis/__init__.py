@@ -198,6 +198,7 @@ class JsonRedis(object):
                 try:
                     if group and user:
                         bot.kick_chat_member(group, user)
+                        bot.delete_state(user, group)
                 except Exception as e:
                     print(e)
                 # print("ban " + str(user) + str(group))
