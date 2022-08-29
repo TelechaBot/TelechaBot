@@ -304,7 +304,7 @@ async def member_update(bot, msg, config):
             t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
             t.start()
 
-    ######################################
+    ###################################
     # print(botWorker.newmember_need(msg))
     if botWorker.newmember_need(msg):
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
