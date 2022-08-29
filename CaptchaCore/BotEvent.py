@@ -175,6 +175,7 @@ async def Admin(bot, message, config):
                 InlineKeyboardButton("科目一", callback_data="科目一"),
                 InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
                 InlineKeyboardButton("宋词300", callback_data="宋词300"),
+                InlineKeyboardButton("图形化学", callback_data="图形化学"),
                 InlineKeyboardButton("论语问答", callback_data="论语问答"),
                 InlineKeyboardButton("化学题库", callback_data="化学题库"),
                 InlineKeyboardButton("生物题库", callback_data="生物题库"),
