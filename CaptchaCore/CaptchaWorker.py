@@ -56,8 +56,9 @@ class Chemical_verification(object):
                 samples = json.load(tiku_file)
             if samples is not None:
                 key_obj = random.sample(samples.keys(), 1)
-                Q = key_obj[0]
-                An = (samples[Q])
+                Qn = key_obj[0]
+                Q = Qn + "\n\n输入大写选项字母"
+                An = (samples[Qn])
                 A = An.get("Answer")
                 Pic = An.get("Pic")
             else:

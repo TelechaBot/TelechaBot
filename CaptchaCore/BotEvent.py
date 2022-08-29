@@ -423,7 +423,9 @@ async def Start(bot, message, config):
                     await bot.reply_to(message,
                                        botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
                 else:
-                    await bot.send_photo(message.chat.id, caption=sth[0].get("question"),
+                    await bot.send_photo(message.chat.id,
+                                         caption=botWorker.convert(
+                                             sth[0].get("question")) + "\n\n输入 /saveme 重新生成题目，答题后不能重置。",
                                          photo=sth[0].get("picture"))
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
@@ -544,7 +546,9 @@ async def Saveme(bot, message, config):
                 await bot.reply_to(message,
                                    botWorker.convert(paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}")
             else:
-                await bot.send_photo(message.chat.id, caption=paper[0].get("question"), photo=paper[0].get("picture"))
+                await bot.send_photo(message.chat.id, caption=botWorker.convert(
+                    paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}",
+                                     photo=paper[0].get("picture"))
             # await bot.delete_state(message.from_user.id, message.chat.id)
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['QA'] = paper
