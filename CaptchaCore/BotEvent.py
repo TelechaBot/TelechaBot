@@ -161,7 +161,6 @@ async def Admin(bot, message, config):
                 InlineKeyboardButton("化学题库", callback_data="化学题库"),
                 InlineKeyboardButton("生物题库", callback_data="生物题库"),
                 InlineKeyboardButton("物理题库", callback_data="物理题库"),
-                # InlineKeyboardButton("安全工程师", callback_data="安全工程师"),
             )
             return markup
 
@@ -270,8 +269,7 @@ async def member_update(bot, msg, config):
     new = msg.new_chat_member
     load_csonfig()
 
-    # print(msg)
-
+    # print(new)
     async def verify_user(bot, config, statu):
         # 用户操作
         resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
@@ -307,7 +305,8 @@ async def member_update(bot, msg, config):
             t.start()
 
     ######################################
-    if new.status in ["member", "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
+    print(botWorker.newmember_need(msg))
+    if botWorker.newmember_need(msg):
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
             if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
