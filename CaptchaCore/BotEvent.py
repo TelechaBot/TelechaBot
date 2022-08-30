@@ -309,10 +309,16 @@ async def member_update(bot, msg, config):
                f"\nPassID:`{botWorker.convert(user_key)}`" \
                f"\n群组ID:`{botWorker.convert(msg.chat.id)}`" \
                f"\n赫免命令`+unban {new.user.id}`"
-        msgss = await bot.send_message(msg.chat.id,
-                                       info,
-                                       reply_markup=bot_link,
-                                       parse_mode='MarkdownV2')
+        try:
+            msgss = await bot.send_message(msg.chat.id,
+                                           info,
+                                           reply_markup=bot_link,
+                                           parse_mode='MarkdownV2')
+        except Exception as e:
+            msgss = await bot.send_message(msg.chat.id,
+                                           info,
+                                           reply_markup=bot_link,
+                                           parse_mode='MarkdownV2')
         aioschedule.every(60).seconds.do(botWorker.delmsg, msgss.chat.id, msgss.message_id).tag(
             msgss.message_id * abs(msgss.chat.id))
         # t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
