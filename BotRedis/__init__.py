@@ -198,7 +198,7 @@ class JsonRedis(object):
                 bot, config = clinetBot().botCreate()
                 try:
                     if group and user:
-                        await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 360)
+                        await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
                         await bot.delete_state(user, group)
                 except Exception as e:
                     print(e)
