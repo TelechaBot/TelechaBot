@@ -822,17 +822,17 @@ class Importer(object):
             else:
                 verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time()).create()}
         elif model_name == "图形化学":
-            verify = Chemistry_Pic(self.samples)[0]
+            verify = Chemistry_Pic(time.time())[0]
         elif model_name == "学习强国":
-            verify = study(self.samples)[0]
+            verify = study(time.time())[0]
         elif model_name == "宋词300":
-            verify = Songci(self.samples)[0]
+            verify = Songci(time.time())[0]
         elif model_name == "论语问答":
-            verify = Lunyu(self.samples)[0]
+            verify = Lunyu(time.time())[0]
         elif model_name == "科目一":
-            verify = car_subject(self.samples)[0]
+            verify = car_subject(time.time())[0]
         elif model_name == "哔哩硬核测试":
-            verify = bili(self.samples)[0]
+            verify = bili(time.time())[0]
         return verify.get("obj")
 
 # print(chemical_formula.create())
