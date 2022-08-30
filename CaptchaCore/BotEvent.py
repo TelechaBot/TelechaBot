@@ -303,9 +303,9 @@ async def member_update(bot, msg, config):
         bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
         bot_link.add(
             InlineKeyboardButton("点这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        user = botWorker.convert(msg.from_user.first_name)
+        user = botWorker.convert(new.user.first_name)
         group_name = botWorker.convert(msg.chat.title)
-        info = f"[{user}](tg://openmessage?user_id={msg.from_user.id}) 正在申请加入 `{group_name}`" \
+        info = f"[{user}](tg://openmessage?user_id={new.user.id}) 正在申请加入 `{group_name}`" \
                f"\nPassID:`{botWorker.convert(user_key)}`" \
                f"\n群组ID:`{botWorker.convert(msg.chat.id)}`" \
                f"\n赫免命令`+unban {new.user.id}`"
