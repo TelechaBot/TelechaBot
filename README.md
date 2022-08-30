@@ -134,6 +134,17 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
 
+群组管理(+开头)
+
+``````
++ban 回复或+ID
++banme 嗯?
++diff_min 设定最小难度
++select 选择题库
++diff_limit 设定最大难度
++unban 解禁+ID
+``````
+
 **模板**
 
 ```md
