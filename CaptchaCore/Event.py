@@ -97,10 +97,10 @@ class botWorker(object):
         old = msg.old_chat_member
         new = msg.new_chat_member
         info = None
-        if msg.old_chat_member.is_member is None:
-            need = True
-        if new.status in ["member"] and old.status not in ["member"]:
-            need = True
+        # if msg.old_chat_member.is_member is None:
+        #     need = True
+        # if new.status in ["member"] and old.status not in ["member"]:
+        #     need = True
         # 机器人
         if old.user.is_bot:
             need = False
@@ -114,9 +114,15 @@ class botWorker(object):
         if msg.from_user.is_bot:
             need = False
         # 被踢出的
-        if new.status in ["kicked", "creator"]:
+        if new.status in ["kicked", 'left']:
             need = False
-        # 管理提权
+        # 被禁言的
+        if new.status in ["restricted"] and old.status in ["member", 'restricted'] and msg.old_chat_member.is_member:
+            need = False
+        # 成员变动
+        if msg.old_chat_member.is_member:
+            need = False
+        # 管理变动处理
         if old.status in ["administrator", "creator"] or new.status in ["administrator", "left", "creator"]:
             need = False
         return need, info
