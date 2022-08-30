@@ -3,6 +3,7 @@
 # @FileName: Event.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import ast
 import pathlib
 from pathlib import Path
 
@@ -95,19 +96,36 @@ class botWorker(object):
         need = True
         old = msg.old_chat_member
         new = msg.new_chat_member
-        if msg.old_chat_member.is_member is None and old.status not in ["administrator"] and new.status not in [
-            "administrator"]:
+        info = None
+        if msg.old_chat_member.is_member is None:
             need = True
+        if new.status in ["member"] and old.status not in ["member"]:
+            need = True
+        # 机器人
+        if old.user.is_bot:
+            need = False
+        if new.user.is_bot:
+            # print(new.status)
+            need = False
+            if new.status in ["member"] and old.status not in ["member"]:
+                userName = botWorker.convert(msg.from_user.first_name)
+                botName = botWorker.convert(new.user.username)
+                info = {"text": f"{userName}向群组添加了同类 {botName}", "id": str(new.user.id), "group": str(msg.chat.id)}
         if msg.from_user.is_bot:
             need = False
-        if old.status in ["administrator"] or new.status in ["administrator", "left"]:
+        # 被踢出的
+        if new.status in ["kicked", "creator"]:
             need = False
-        return need
+        # 管理提权
+        if old.status in ["administrator", "creator"] or new.status in ["administrator", "left", "creator"]:
+            need = False
+        return need, info
 
     @staticmethod
     def convert(texts):
         text = str(texts)
-        # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\'.
+        # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{',
+        # '}', '.', '!' must be escaped with the preceding character '\'.
         text.replace("_", "\_")
         text.replace("*", "\*")
         text.replace("[", "\[")

@@ -7,6 +7,7 @@
 import asyncio
 import json
 import pathlib
+import time
 from pathlib import Path
 
 import telebot
@@ -53,9 +54,9 @@ class clinetBot(object):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
 
-            # from telebot import asyncio_helper
-            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
-            # print("正在使用代理！")
+            from telebot import asyncio_helper
+            asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
+            print("正在使用代理！")
 
             from telebot import types, util
             import CaptchaCore.BotEvent
@@ -101,10 +102,6 @@ class clinetBot(object):
             async def bot_self(message: types.ChatMemberUpdated):
                 await CaptchaCore.BotEvent.botSelf(bot, message, config)
 
-            # @bot.message_handler(content_types=['left_chat_member'])
-            # def left_chat(message):
-            #     CaptchaCore.BotEvent.Left(bot, message, config)
-
             @bot.message_handler(content_types=util.content_type_service)
             async def service_msg(message: types.Message):
                 await CaptchaCore.BotEvent.msg_del(bot, message, config)
@@ -115,33 +112,31 @@ class clinetBot(object):
                 def Del_call():
                     aioschedule.every(30).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id).tag(
                         call.message.id * abs(call.message.chat.id))
-                    # ts = Timer(1, botWorker.delmsg, args=[bot, call.message.chat.id, call.message.id])
-                    # ts.start()
 
-                # print(call.message.json.get("reply_to_message"))
-                if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
-                    Del_call()
-                    if call.data:
+                from CaptchaCore.CaptchaWorker import Importer
+                if call.data in Importer.getMethod():
+                    if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
+                        Del_call()
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success")
                             msgss = await bot.send_message(call.message.chat.id,
                                                            f"Info:群组验证模式已经切换至{call.data}")
                             aioschedule.every(30).seconds.do(botWorker.delmsg, msgss.chat.id, msgss.id).tag(
                                 msgss.id * abs(msgss.chat.id))
-                            # t = Timer(30, botWorker.delmsg, args=[bot, msgss.chat.id, msgss.id])
-                            # t.start()
-                else:
-                    pass
 
-            # schedule.every(3).seconds.do()
-            # JsonRedis.timer()
+                else:
+                    # print(call.message.from_user)
+                    Del_call()
+                    listP = call.data.split('+')
+                    listKey = listP[0]
+                    if listKey in ["Ban", "Pass"]:
+                        pass
+                        # if listKey[0] == "Ban":
+
             from telebot import asyncio_filters
             bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
             bot.add_custom_filter(asyncio_filters.ChatFilter())
             bot.add_custom_filter(asyncio_filters.StateFilter(bot))
-            # bot.add_custom_filter(custom_filters.IsAdminFilter(bot))
-            # bot.add_custom_filter(custom_filters.ChatFilter())
-            # bot.infinity_polling(allowed_updates=util.update_types)
             from BotRedis import JsonRedis
             import aioschedule
             aioschedule.every(3).seconds.do(JsonRedis.checker)
@@ -158,9 +153,9 @@ class clinetBot(object):
 
 
 class sendBot(object):
-    # robotPush(token,groupID).postAudio(fileroad,info,name):
+
     def __init__(self, token):
-        self.BOT = telebot.TeleBot(token, parse_mode="HTML")  # You can set parse_mode by default. HTML or MARKDOWN
+        self.BOT = telebot.TeleBot(token, parse_mode="HTML")
 
     def sendMessage(self, objectID, msg):
         self.BOT.send_message(objectID, str(msg))

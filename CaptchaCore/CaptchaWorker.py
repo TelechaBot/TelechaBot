@@ -3,12 +3,7 @@
 # @FileName: CaptchaWorker.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-# -*- coding: utf-8 -*-
-# @Time    : 8/24/22 12:57 AM
-# @FileName: main.py
-# @Software: PyCharm
-# @Github    ：sudoskys
-# @Version    ：1
+
 import json
 import math
 import random
@@ -28,6 +23,8 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 # print(choice(l)) # 随机抽取一个
 
 # print(random.randint(0, 9))
+
+
 # 学习强国
 class Chemical_verification(object):
     def __init__(self, sample):
@@ -781,6 +778,10 @@ class Importer(object):
             if difficulty_min >= 9:
                 difficulty_min = 1
         return difficulty_min, difficulty_limit
+
+    @staticmethod
+    def getMethod():
+        return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一", "哔哩硬核测试"]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
         difficulty_min = int(difficulty_min)

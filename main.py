@@ -3,8 +3,6 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import time
-
 from CaptchaCore.Bot import clinetBot
 from CaptchaCore.Event import Check, Tool
 
@@ -16,7 +14,6 @@ Check().run()
 
 Tool().console.print("从 2.0.7 开始，bot升级为异步机器人，并引入redis！使用 redis 初步接管数据！", style="yellow")
 
-# run_timer()
 # pushService = sendBot(config.botToken)
 
 clinetBot().run()
