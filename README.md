@@ -73,7 +73,7 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 
 ### 部署机器人
 
-先去 Botfather 那里打开隐私模式。
+先去 Botfather 那里打开隐私模式来让 Bot 不漏消息，然后设定命令。
 
 **后台运行**
 
