@@ -128,6 +128,7 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 | `/cat filepath`           | 查看文件                       | 私聊  | 主人           |
 | `/unban group_id user_id` | 解封指定群组的指定用户                | 私聊  | 主人           |
 | `/ban group_id user_id`   | 为了防止部署者滥权，没做功能             | 私聊  | 主人           |
+| `/redis`                  | 查看队列顺便备份 redis 键表          | 私聊  | 主人           |
 | `/renew`                  | 从网络更新题库                    | 私聊  | 主人           |
 | `/about`                  | 关于机器人的信息（读取config中的预设描述）   | 私聊  | 任何人          |
 
@@ -184,6 +185,8 @@ cat - 主控 查看文件
 
 将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，处理这个文件返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank) 的Issue 或者
 Pr。
+
+调试需要启动 redis-server
 
 ### 待办
 

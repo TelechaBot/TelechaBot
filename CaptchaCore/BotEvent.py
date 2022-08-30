@@ -11,10 +11,13 @@ import time
 
 import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telebot.util import quick_markup
+
 from BotRedis import JsonRedis
 
 from CaptchaCore.Event import botWorker, userStates
 import binascii
+from telebot import types, util
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(200)
@@ -168,20 +171,11 @@ async def Admin(bot, message, config):
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             markup = InlineKeyboardMarkup()
-            markup.row_width = 2
-            markup.add(
-                InlineKeyboardButton("数学题库", callback_data="数学题库"),
-                InlineKeyboardButton("学习强国", callback_data="学习强国"),
-                InlineKeyboardButton("科目一", callback_data="科目一"),
-                InlineKeyboardButton("哔哩硬核测试", callback_data="哔哩硬核测试"),
-                InlineKeyboardButton("宋词300", callback_data="宋词300"),
-                InlineKeyboardButton("图形化学", callback_data="图形化学"),
-                InlineKeyboardButton("论语问答", callback_data="论语问答"),
-                InlineKeyboardButton("化学题库", callback_data="化学题库"),
-                InlineKeyboardButton("生物题库", callback_data="生物题库"),
-                InlineKeyboardButton("物理题库", callback_data="物理题库"),
-            )
-            return markup
+            from CaptchaCore.CaptchaWorker import Importer
+            Get = {}
+            for i in Importer.getMethod():
+                Get.update({i: {'callback_data': i}})
+            return quick_markup(Get, row_width=2)
 
         ti_ku = botWorker.get_model(message.chat.id)
         await bot.reply_to(message, f"选择哪一个题库？目前为{ti_ku}", reply_markup=gen_markup())
@@ -337,9 +331,27 @@ async def member_update(bot, msg, config):
             # t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
             # t.start()
 
-    ###################################
-    # print(botWorker.newmember_need(msg))
-    if botWorker.newmember_need(msg):
+    iss, info = botWorker.newmember_need(msg)
+    if info is not None:
+        # ID = info.get("id")
+        # Group = info.get("group")
+        # await bot.restrict_chat_member(Group, ID, can_send_messages=False,
+        #                                can_send_media_messages=False,
+        #                                can_send_other_messages=False)
+        # 在回调函数中我们无法对返回的数据做管理员校验处理，所以禁用了此功能
+        # def bot_verify():
+        #     markup = InlineKeyboardMarkup()
+        #     markup.row_width = 1
+        #     markup.add(
+        #         InlineKeyboardButton("通过同类", callback_data=f"Pass+{Group}+{ID}"),
+        #         InlineKeyboardButton("踢出同类", callback_data=f"Ban+{Group}+{ID}"),
+        #     )
+        #     return markup
+
+        msgs = await bot.send_message(msg.chat.id, botWorker.convert(info.get("text")))  # , reply_markup=bot_verify())
+        aioschedule.every(8).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
+    if iss:
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
             if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
@@ -418,7 +430,7 @@ async def Start(bot, message, config):
 
                 # 拉取题目例子
                 from CaptchaCore import CaptchaWorker
-                sth = CaptchaWorker.Importer().pull(min_, limit_, model_name=model)
+                sth = CaptchaWorker.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message,
                                        botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
@@ -474,8 +486,8 @@ async def Verify2(bot, message, config):
                 msgs = await botWorker.send_ban(message, bot, group_k)
                 aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                     msgs.message_id * abs(msgs.chat.id))
-                aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
-                    message.from_user.id * abs(msgs.chat.id))
+                # aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
+                #    message.from_user.id * abs(msgs.chat.id))
                 # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
                 # t.start()
                 # 删除
