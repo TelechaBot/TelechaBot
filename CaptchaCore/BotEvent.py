@@ -315,6 +315,7 @@ async def member_update(bot, msg, config):
                                            reply_markup=bot_link,
                                            parse_mode='MarkdownV2')
         except Exception as e:
+            print(e)
             msgss = await bot.send_message(msg.chat.id,
                                            info,
                                            reply_markup=bot_link,
