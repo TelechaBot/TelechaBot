@@ -73,6 +73,8 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 
 ### 部署机器人
 
+先去 Botfather 那里打开隐私模式。
+
 **后台运行**
 
 ```shell
