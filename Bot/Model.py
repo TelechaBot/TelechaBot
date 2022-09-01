@@ -9,6 +9,7 @@ import pathlib
 import random
 import time
 
+
 import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
@@ -20,6 +21,8 @@ import binascii
 from utils import ChatSystem
 
 # 构建多少秒的验证对象
+
+
 verifyRedis = JsonRedis(200)
 
 
@@ -67,6 +70,9 @@ async def Switch(bot, message, config):
                 from StarPuller import Worker
                 Worker().get_index()
                 await bot.reply_to(message, "OK..Renew it")
+            if command == "/upantispam":
+                from utils.ChatSystem import UserUtils
+                await UserUtils.renewAnti(message)
             if "/cat" in command:
                 for item in command.split()[1:]:
                     path = str(pathlib.Path().cwd()) + "/" + item
@@ -317,7 +323,7 @@ async def NewRequest(bot, msg, config):
         ChatSystem.ChatUtils().addGroup(str(msg.chat.id))
         checkObj = str(msg.from_user.first_name) + str(msg.from_user.last_name)
         AntiSpamSystem = ChatSystem.UserUtils()
-        IsSpam = AntiSpamSystem.checkUser(userId=str(msg.from_user.id), info=checkObj, _csonfig=load_csonfig())
+        IsSpam = await AntiSpamSystem.checkUser(userId=str(msg.from_user.id), info=checkObj, _csonfig=load_csonfig())
         if not IsSpam:
             resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
             user = botWorker.convert(msg.from_user.id)
