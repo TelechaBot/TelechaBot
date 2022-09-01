@@ -9,7 +9,6 @@ import pathlib
 import random
 import time
 
-
 import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
@@ -141,26 +140,24 @@ async def Switch(bot, message, config):
 async def Banme(bot, message, config):
     if len(message.text) == 6:
         if "+banme" == message.text:
-            resign_key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
-            user_ke = str(resign_key) + " " + str("left") + " " + str(message.from_user.id)
-            user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
-            InviteLink = config.link + "?start=" + str(user_key)
-            bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-            bot_link.add(
-                InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
-            mins = (random.randint(1, 10) * 1)
+            # resign_key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
+            # user_ke = str(resign_key) + " " + str("left") + " " + str(message.from_user.id)
+            # user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
+            # InviteLink = config.link + "?start=" + str(user_key)
+            # bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
+            # bot_link.add(
+            #    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
+            mins = (random.randint(1, 15) * 1)
             user = botWorker.convert(message.from_user.first_name)
             msgs = await bot.reply_to(message,
                                       f"[{user}](tg://openmessage?user_id={message.from_user.id}) "
-                                      f"获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
-                                      f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟\n\n管理员手动解封请使用 `+unban {message.from_user.id}` ",
-                                      reply_markup=bot_link,
+                                      f"获得了 {mins} 分钟封锁"
+                                      # f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟\n\n"
+                                      f"管理员手动解封请使用 `+unban {message.from_user.id}` ",
+                                      # reply_markup=bot_link,
                                       parse_mode='MarkdownV2')
             aioschedule.every(60).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                 msgs.message_id * abs(msgs.chat.id))
-            # t = Timer(60, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            # t.start()
-
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
                 # verifyRedis.checker(tar=[key])
