@@ -77,7 +77,7 @@ async def Switch(bot, message, config):
 
             if "/redis" in command:
                 import redis
-                pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+                # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
                 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
                 task = r.get('tasks')
                 task = ast.literal_eval(task)
@@ -136,7 +136,8 @@ async def Banme(bot, message, config):
             mins = (random.randint(1, 10) * 1)
             user = botWorker.convert(message.from_user.first_name)
             msgs = await bot.reply_to(message,
-                                      f"[{user}](tg://openmessage?user_id={message.from_user.id}) 获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
+                                      f"[{user}](tg://openmessage?user_id={message.from_user.id}) "
+                                      f"获得了 {mins} 分钟封锁，俄罗斯转盘模式已经开启, "
                                       f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟\n\n管理员手动解封请使用 `+unban {message.from_user.id}` ",
                                       reply_markup=bot_link,
                                       parse_mode='MarkdownV2')
@@ -168,10 +169,9 @@ async def Admin(bot, message, config):
 
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
-            markup = InlineKeyboardMarkup()
-            from CaptchaCore.__init__ import Importer
+            import CaptchaCore
             Get = {}
-            for i in Importer.getMethod():
+            for i in CaptchaCore.Importer.getMethod():
                 Get.update({i: {'callback_data': i}})
             return quick_markup(Get, row_width=2)
 
@@ -286,7 +286,15 @@ async def msg_del(bot, message, config):
 async def NewRequest(bot, msg, config):
     load_csonfig()
     resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
-
+    user = botWorker.convert(msg.from_user.id)
+    group_name = botWorker.convert(msg.chat.title)
+    info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！" \
+           f"\nPassID:`{botWorker.convert(resign_key)}`" \
+           f"\n群组ID:`{botWorker.convert(msg.chat.id)}`" \
+           f"\n您的标识符是:`{botWorker.convert(user)}`" \
+           f"\n按下 /start 开始验证`"
+    await bot.send_message(msg.chat.id, info,
+                           parse_mode='MarkdownV2')
     # await bot.send_message(msg.chat.id, 'I accepted a new user!')
     # await bot.approve_chat_join_request(msg.chat.id, msg.from_user.id)
 
@@ -344,8 +352,8 @@ async def member_update(bot, msg, config):
             # t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
             # t.start()
 
-    iss, info = botWorker.newmember_need(msg)
-    if info is not None:
+    iss, info_ = botWorker.new_member_checker(msg)
+    if info_ is not None:
         # ID = info.get("id")
         # Group = info.get("group")
         # await bot.restrict_chat_member(Group, ID, can_send_messages=False,
@@ -361,7 +369,7 @@ async def member_update(bot, msg, config):
         #     )
         #     return markup
 
-        msgs = await bot.send_message(msg.chat.id, botWorker.convert(info.get("text")))  # , reply_markup=bot_verify())
+        msgs = await bot.send_message(msg.chat.id, botWorker.convert(info_.get("text")))  # , reply_markup=bot_verify())
         aioschedule.every(8).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
             msgs.message_id * abs(msgs.chat.id))
     if iss:
@@ -478,7 +486,7 @@ async def Verify2(bot, message, config):
             well_unban = data['BanState']
             times = data['times']
             key = data['key']
-        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
+        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 verifyRedis 来决定用户去留！
         answers = message.text
         try:
             # print(QA[1].get("rightKey"))

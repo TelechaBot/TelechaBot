@@ -10,11 +10,12 @@ import pathlib
 from pathlib import Path
 
 import telebot
+import Bot.Model
+import CaptchaCore
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot import types, util
-import Bot.Model
-from utils.BotTool import Read, Tool
+from utils.BotTool import ReadYaml, Tool
 from utils.BotTool import botWorker, userStates
 
 
@@ -31,9 +32,9 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
-class clinetBot(object):
+class clientBot(object):
     def __init__(self):
-        self.config = Read(str(Path.cwd()) + "/Captcha.yaml").get()
+        self.config = ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
 
     def botCreate(self):
         if pathlib.Path("project.ini").exists():
@@ -118,17 +119,17 @@ class clinetBot(object):
             # 题库回调
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
-                from CaptchaCore.__init__ import Importer
-                if call.data in Importer.getMethod():
+                # from CaptchaCore.__init__ import Importer
+                if call.data in CaptchaCore.Importer.getMethod():
                     aioschedule.every(5).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id) \
                         .tag(call.message.id * abs(call.message.chat.id))
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success")
-                            msgss = await bot.send_message(call.message.chat.id,
-                                                           f"Info:群组验证模式已经切换至{call.data}")
-                            aioschedule.every(30).seconds.do(botWorker.delmsg, msgss.chat.id, msgss.id).tag(
-                                msgss.id * abs(msgss.chat.id))
+                            msgs = await bot.send_message(call.message.chat.id,
+                                                          f"Info:群组验证模式已经切换至{call.data}")
+                            aioschedule.every(30).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.id).tag(
+                                msgs.id * abs(msgs.chat.id))
 
                 else:
                     # 如果不是题库定义的方法，那就向下执行
@@ -189,6 +190,6 @@ class sendBot(object):
             audio = open(files, 'rb')
             self.BOT.send_audio(objectID, audio, source, name, name)
             # '#音乐提取 #AUTOrunning '+str(source)+"   "+name
-            # print("============ALready upload this flac============")
+            # print("============Already upload this flac============")
             audio.close()
             return files

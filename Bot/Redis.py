@@ -194,8 +194,8 @@ class JsonRedis(object):
                 # if True:  # not (group in user_something):
                 #####################################
                 # 过期验证的操作
-                from Bot.Controller import clinetBot
-                bot, config = clinetBot().botCreate()
+                from Bot.Controller import clientBot
+                bot, config = clientBot().botCreate()
                 try:
                     if group and user:
                         await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)

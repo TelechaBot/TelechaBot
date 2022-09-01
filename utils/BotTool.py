@@ -39,8 +39,8 @@ class botWorker(object):
 
     @staticmethod
     async def delmsg(chat, message):
-        from Bot.Controller import clinetBot
-        bot, config = clinetBot().botCreate()
+        from Bot.Controller import clientBot
+        bot, config = clientBot().botCreate()
         # print(chat, message)
         await bot.delete_message(chat, message)
         aioschedule.clear(message * abs(chat))
@@ -91,7 +91,7 @@ class botWorker(object):
         return msgss
 
     @staticmethod
-    def newmember_need(msg):
+    def new_member_checker(msg):
         need = True
         old = msg.old_chat_member
         new = msg.new_chat_member
@@ -231,10 +231,12 @@ class yamler(object):
         if self.debug:
             print(log)
 
-    def rm(self, top):
+    @staticmethod
+    def rm(top):
         Path(top).unlink()
 
-    def read(self, path):
+    @staticmethod
+    def read(path):
         if Path(path).exists():
             with open(path, 'r', encoding='utf-8') as f:
                 result = yaml.full_load(f.read())
@@ -242,7 +244,8 @@ class yamler(object):
         else:
             raise Exception("Config dont exists in" + path)
 
-    def save(self, path, Data):
+    @staticmethod
+    def save(path, Data):
         with open(path, 'w+', encoding='utf-8') as f:
             yaml.dump(data=Data, stream=f, allow_unicode=True)
 
@@ -266,9 +269,9 @@ class Tool(object):
         return d
 
 
-class Read(object):
+class ReadYaml(object):
     def __init__(self, paths):
-        data = yamler().read(paths)
+        data = yamler.read(paths)
         self.config = Tool().dictToObj(data)
 
     def get(self):
@@ -304,9 +307,9 @@ class Check(object):
                             fs.write(context)
 
     # 禁用此函数
-    def initConfig(self, path):
-        with open(path, "w") as file:
-            file.write("{}")
+    # def initConfig(self, path):
+    #     with open(path, "w") as file:
+    #         file.write("{}")
 
     def run(self):
         self.mk(self.dir, "{}", mkdir=True)
