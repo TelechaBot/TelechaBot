@@ -13,7 +13,6 @@ import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
-import CaptchaCore
 from Bot.Redis import JsonRedis
 
 from utils.BotTool import botWorker, userStates
@@ -218,7 +217,7 @@ async def Admin(bot, message, config):
             group, key = verifyRedis.read_user(str(userId))
             if group:
                 # 机器人核心：通过用户注册请求
-                await verifyRedis.grant_resign(userId)
+                await verifyRedis.grant_resign(userId, groupId=group)
                 # 解封用户
                 await bot.restrict_chat_member(message.chat.id, userId, can_send_messages=True,
                                                can_send_media_messages=True,
@@ -285,20 +284,23 @@ async def msg_del(bot, message, config):
 
 async def NewRequest(bot, msg, config):
     load_csonfig()
-    resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
-    user = botWorker.convert(msg.from_user.id)
-    group_name = botWorker.convert(msg.chat.title)
-    info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！" \
-           f"\nPassID:`{botWorker.convert(resign_key)}`" \
-           f"\n群组ID:`{botWorker.convert(msg.chat.id)}`" \
-           f"\n您的标识符是:`{botWorker.convert(user)}`" \
-           f"\n按下 /start 开始验证`"
-    await bot.send_message(msg.chat.id, info,
-                           parse_mode='MarkdownV2')
-    # await bot.send_message(msg.chat.id, 'I accepted a new user!')
-    # await bot.approve_chat_join_request(msg.chat.id, msg.from_user.id)
+    checkOK = await botWorker.checkGroup(bot, msg, config)
+    if checkOK:
+        resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
+        user = botWorker.convert(msg.from_user.id)
+        group_name = botWorker.convert(msg.chat.title)
+        info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！" \
+               f"\nPassID:`{resign_key}`" \
+               f"\n群组ID:`{msg.chat.id}`" \
+               f"\n您的标识符是:`{user}`" \
+               f"\n按下 \/start 开始验证"
+        await bot.send_message(msg.from_user.id, botWorker.convert(info),
+                               parse_mode='MarkdownV2')
+        # await bot.send_message(msg.chat.id, 'I accepted a new user!')
+        # await bot.approve_chat_join_request(msg.chat.id, msg.from_user.id)
 
 
+# 此函数已经不再使用！
 # 启动新用户通知
 async def member_update(bot, msg, config):
     # if msg.left_chat_member.id != bot.get_me().id:
@@ -306,7 +308,6 @@ async def member_update(bot, msg, config):
     new = msg.new_chat_member
     load_csonfig()
 
-    # print(new)
     async def verify_user(bot, config, statu):
         # 用户操作
         resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
@@ -406,6 +407,110 @@ async def member_update(bot, msg, config):
             # bot.ban_chat_member(msg.chat.id, user_id=new.user.id)
 
 
+async def Verify2(bot, message, config):
+    if message.chat.type == "private":
+        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            QA = data["QA"]
+            group_k = data['Group']
+            well_unban = data['BanState']
+            times = data['times']
+            key = data['key']
+        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 verifyRedis 来决定用户去留！
+        answers = message.text
+        try:
+            if str(answers) == str(QA[1].get("rightKey")):
+                # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
+                verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
+                await bot.reply_to(message, f"申请已经通过.\n{verify_info}")
+                # 通知群组
+                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                # 取消状态
+                await bot.delete_state(message.from_user.id, message.chat.id)
+            else:
+                await verifyRedis.checker(fail_user=[key])
+                await bot.reply_to(message, '可惜是错误的回答....你6分钟后才能再次进入群组')
+                # 通知群组
+                msgs = await botWorker.send_ban(message, bot, group_k)
+                aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
+                    message.from_user.id * abs(msgs.chat.id))
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                # 取消状态
+                await bot.delete_state(message.from_user.id, message.chat.id)
+        except Exception as e:
+            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{botWorker.convert(e)}`',
+                               parse_mode='MarkdownV2')
+
+
+async def Verify(bot, message, config):
+    if message.chat.type == "private":
+        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            QA = data["QA"]
+            group_k = data['Group']
+            well_unban = data['BanState']
+            times = data['times']
+            key = data['key']
+        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
+        answers = message.text
+        try:
+            if str(answers) == str(QA[1].get("rightKey")):
+                verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
+                await bot.reply_to(message, f"申请已经通过.\n{verify_info}")
+                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
+                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                    msgs.message_id * abs(msgs.chat.id))
+                # 删除状态
+                await bot.delete_state(message.from_user.id, message.chat.id)
+            else:
+                await bot.reply_to(message, '可惜是错误的回答....你还有一次机会，不能重置')
+                await bot.set_state(message.from_user.id, userStates.answer2, message.chat.id)
+                # await bot.register_next_step_handler(message, verify_step2, pipe)
+        except Exception as e:
+            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{botWorker.convert(e)}`',
+                               parse_mode='MarkdownV2')
+
+
+async def Saveme(bot, message, config):
+    if message.chat.type == "private":
+        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            group_k = data['Group']
+            QA = data["QA"]
+            group_k = data['Group']
+            well_unban = data['BanState']
+            times = data['times']
+        times = times - 1
+        if times >= 0:
+            min_, limit_ = botWorker.get_difficulty(group_k)
+            _model = botWorker.get_model(group_k)
+            # from CaptchaCore import __init__
+            import CaptchaCore
+            paper = (CaptchaCore.Importer(s=time.time()).pull(difficulty_min=min_,
+                                                              difficulty_limit=limit_ - 1,
+                                                              model_name=_model))
+            import CaptchaCore
+            if times == 0:
+                tip = f"必须回答"
+            else:
+                tip = f"目前还能生成{times}次"
+            if paper[0].get("picture") is None:
+                await bot.reply_to(message,
+                                   botWorker.convert(paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}")
+            else:
+                await bot.send_photo(message.chat.id, caption=botWorker.convert(
+                    paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}",
+                                     photo=paper[0].get("picture"))
+            # await bot.delete_state(message.from_user.id, message.chat.id)
+            async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['QA'] = paper
+                data['Group'] = group_k
+                data['BanState'] = well_unban
+                data['times'] = times
+                # 注册状态
+                await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
+
+
 async def Start(bot, message, config):
     if message.chat.type == "private":
         try:
@@ -450,8 +555,8 @@ async def Start(bot, message, config):
                 model = botWorker.get_model(group_k)
 
                 # 拉取题目例子
-                from CaptchaCore import __init__
-                sth = __init__.Importer(s=time.time()).pull(min_, limit_, model_name=model)
+                import CaptchaCore
+                sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message,
                                        botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
@@ -476,120 +581,3 @@ async def Start(bot, message, config):
     else:
         pass
     # print(0)
-
-
-async def Verify2(bot, message, config):
-    if message.chat.type == "private":
-        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            QA = data["QA"]
-            group_k = data['Group']
-            well_unban = data['BanState']
-            times = data['times']
-            key = data['key']
-        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 verifyRedis 来决定用户去留！
-        answers = message.text
-        try:
-            # print(QA[1].get("rightKey"))
-            if str(answers) == str(QA[1].get("rightKey")):
-                await bot.approve_chat_join_request(group_k, message.from_user.id)
-                # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
-                await verifyRedis.grant_resign(message.from_user.id, group_k)
-                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                await bot.reply_to(message, "通过，申请已经通过")
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
-                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                # t.start()
-                # 删除
-                await bot.delete_state(message.from_user.id, message.chat.id)
-            else:
-                await bot.approve_chat_join_request(group_k, message.from_user.id)
-                await verifyRedis.checker(fail_user=[key])
-                await bot.reply_to(message, '可惜是错误的回答....你6分钟后才能再次进入群组')
-                msgs = await botWorker.send_ban(message, bot, group_k)
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
-                aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
-                    message.from_user.id * abs(msgs.chat.id))
-                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                # t.start()
-                # 删除
-                await bot.delete_state(message.from_user.id, message.chat.id)
-                # await bot.register_next_step_handler(message, verify_step2, pipe)
-        except Exception as e:
-            e = botWorker.convert(e)
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
-                               parse_mode='MarkdownV2')
-
-
-async def Verify(bot, message, config):
-    if message.chat.type == "private":
-        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            QA = data["QA"]
-            group_k = data['Group']
-            well_unban = data['BanState']
-            times = data['times']
-            key = data['key']
-        # 条件，你需要在这里写调用验证的模块和相关逻辑，调用 veridyRedis 来决定用户去留！
-        answers = message.text
-        try:
-            # print(QA[1].get("rightKey"))
-            if str(answers) == str(QA[1].get("rightKey")):
-                await bot.approve_chat_join_request(group_k, message.from_user.id)
-                # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
-                await verifyRedis.grant_resign(message.from_user.id, group_k)
-                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
-                # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-                # t.start()
-                # 删除
-                await bot.delete_state(message.from_user.id, message.chat.id)
-            else:
-                await bot.reply_to(message, '可惜是错误的回答....你还有一次机会，不能重置')
-                await bot.set_state(message.from_user.id, userStates.answer2, message.chat.id)
-                # await bot.register_next_step_handler(message, verify_step2, pipe)
-        except Exception as e:
-            e = botWorker.convert(e)
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{e}`',
-                               parse_mode='MarkdownV2')
-
-
-async def Saveme(bot, message, config):
-    if message.chat.type == "private":
-        async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            group_k = data['Group']
-            QA = data["QA"]
-            group_k = data['Group']
-            well_unban = data['BanState']
-            times = data['times']
-        times = times - 1
-        if times >= 0:
-            min_, limit_ = botWorker.get_difficulty(group_k)
-            _model = botWorker.get_model(group_k)
-            from CaptchaCore import __init__
-            paper = (CaptchaCore.Importer(s=time.time()).pull(difficulty_min=min_,
-                                                              difficulty_limit=limit_ - 1,
-                                                              model_name=_model))
-            # print("生成了一道题目:" + str(paper))
-            from CaptchaCore import __init__
-            if times == 0:
-                tip = f"必须回答"
-            else:
-                tip = f"目前还能生成{times}次"
-            if paper[0].get("picture") is None:
-                await bot.reply_to(message,
-                                   botWorker.convert(paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}")
-            else:
-                await bot.send_photo(message.chat.id, caption=botWorker.convert(
-                    paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}",
-                                     photo=paper[0].get("picture"))
-            # await bot.delete_state(message.from_user.id, message.chat.id)
-            async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                data['QA'] = paper
-                data['Group'] = group_k
-                data['BanState'] = well_unban
-                data['times'] = times
-                # 注册状态
-                await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)

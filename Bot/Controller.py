@@ -26,12 +26,6 @@ def load_csonfig():
         _csonfig = json.load(f)
 
 
-# IO
-def save_csonfig():
-    with open("config.json", "w", encoding="utf8") as f:
-        json.dump(_csonfig, f, indent=4, ensure_ascii=False)
-
-
 class clientBot(object):
     def __init__(self):
         self.config = ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
@@ -42,12 +36,12 @@ class clientBot(object):
             value = ConfigParser()
             value.read("project.ini")
             version = value.get('project', 'version')
-            Tool().console.print("Create Bot,版本:" + version, style='blue')
+            Tool().console.print("Create Async Bot Obj,版本:" + version, style='blue')
         bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
         return bot, self.config
 
     def SyncBotCreate(self):
-        print("同步Bot定时器被创建执行")
+        print("Create NoAsync Bot Obj")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
 
@@ -57,20 +51,17 @@ class clientBot(object):
         if _csonfig.get("statu"):
             Tool().console.print("Bot Running", style='blue')
             bot, config = self.botCreate()
-
-            # from telebot import asyncio_helper
-            # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
-            # print("正在使用代理！")
+            if config.get("Proxy"):
+                if config.Proxy.status:
+                    from telebot import asyncio_helper
+                    asyncio_helper.proxy = config.Proxy.url  # 'http://127.0.0.1:7890'  # url
+                    print("正在使用隧道！")
 
             # 捕获加群请求
             @bot.chat_join_request_handler()
-            async def make_some(message: telebot.types.ChatJoinRequest):
+            async def new_request(message: telebot.types.ChatJoinRequest):
                 await Bot.Model.NewRequest(bot, message, config)
 
-            # 替换机制，我们采用批准加入请求的事件
-            # @bot.chat_member_handler()
-            # async def chat_m(message: types.ChatMemberUpdated):
-            #     await CaptchaCore.BotEvent.member_update(bot, message, config)
             @bot.message_handler(commands=["start", 'about'])
             async def handle_command(message):
                 if "/start" in message.text:
@@ -155,41 +146,3 @@ class clientBot(object):
                 await asyncio.gather(bot.polling(non_stop=True, allowed_updates=util.update_types), scheduler())
 
             asyncio.run(main())
-
-
-class sendBot(object):
-
-    def __init__(self, token):
-        self.BOT = telebot.TeleBot(token, parse_mode="HTML")
-
-    def sendMessage(self, objectID, msg):
-        self.BOT.send_message(objectID, str(msg))
-
-    def replyMessage(self, objectID, msg, reply_id):
-        self.BOT.send_message(objectID, str(msg), reply_to_message_id=reply_id)
-
-    def postDoc(self, objectID, files):
-        if Path(str(files)).exists():
-            doc = open(files, 'rb')
-            self.BOT.send_document(objectID, doc)
-            doc.close()
-            return files
-
-    def postVideo(self, objectID, files, source, name):
-        if Path(str(files)).exists():
-            video = open(files, 'rb')
-            self.BOT.send_video(objectID, video, source, name, name)
-            # '#音乐MV #AUTOrunning '+str(source)+"   "+name
-            # 显示要求为MP4--https://mlog.club/article/5018822
-            # print("============Already upload this video============")
-            video.close()
-            return files
-
-    def postAudio(self, objectID, files, source, name):
-        if Path(str(files)).exists():
-            audio = open(files, 'rb')
-            self.BOT.send_audio(objectID, audio, source, name, name)
-            # '#音乐提取 #AUTOrunning '+str(source)+"   "+name
-            # print("============Already upload this flac============")
-            audio.close()
-            return files
