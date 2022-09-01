@@ -322,7 +322,7 @@ async def NewRequest(bot, msg, config):
             resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
             user = botWorker.convert(msg.from_user.id)
             group_name = botWorker.convert(msg.chat.title)
-            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！如果期间您被管理员拒绝,机器人并不会向您发送通知" \
+            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人并不会自动放行，请手动解禁" \
                    f"\nPassID:`{resign_key}`" \
                    f"\n群组ID:`{msg.chat.id}`" \
                    f"\n您的标识符是:`{user}`" \
@@ -331,6 +331,7 @@ async def NewRequest(bot, msg, config):
                                    parse_mode='MarkdownV2')
         else:
             AntiSpamSystem.addSpamUser(groupId=str(msg.chat.id), userId=str(msg.from_user.id))
+            await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
             # await verifyRedis.checker(fail_user=[msg.from_user.id])
             info = "当前群组开启了 Spam 过滤，您的身份不符合设定或数据库记录仍未消除，请等待 Spam 键值对过期，大约几天，为你带来了烦扰很抱歉！"
             await bot.send_message(msg.from_user.id, botWorker.convert(info),
@@ -458,7 +459,7 @@ async def Verify2(bot, message, config):
             if str(answers) == str(QA[1].get("rightKey")):
                 # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
-                await bot.reply_to(message, f"申请已经通过.\n{verify_info}")
+                await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID{verify_info}")
                 # 通知群组
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
