@@ -331,6 +331,7 @@ async def NewRequest(bot, msg, config):
                                    parse_mode='MarkdownV2')
         else:
             AntiSpamSystem.addSpamUser(groupId=str(msg.chat.id), userId=str(msg.from_user.id))
+            await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
             # await verifyRedis.checker(fail_user=[msg.from_user.id])
             info = "当前群组开启了 Spam 过滤，您的身份不符合设定或数据库记录仍未消除，请等待 Spam 键值对过期，大约几天，为你带来了烦扰很抱歉！"
             await bot.send_message(msg.from_user.id, botWorker.convert(info),
