@@ -495,7 +495,7 @@ async def Verify(bot, message, config):
         try:
             if str(answers) == str(QA[1].get("rightKey")):
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
-                await bot.reply_to(message, f"申请已经通过.\n{verify_info}")
+                await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID{verify_info}")
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                     msgs.message_id * abs(msgs.chat.id))

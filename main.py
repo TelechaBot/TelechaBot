@@ -12,7 +12,7 @@ Check().run()
 # from StarPuller import Worker
 # Worker().get_index()
 
-Tool().console.print("News: 2.0.9 需要安装Redis,并且给予机器人邀请权限，不需要封禁权限", style="yellow")
+Tool().console.print("News: 2.0.9 需要安装Redis,并且给予机器人邀请权限，可选封禁权限", style="yellow")
 
 # pushService = sendBot(config.botToken)
 

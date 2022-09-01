@@ -66,7 +66,7 @@ class botWorker(object):
     @staticmethod
     async def send_ban(message, bot, groups):
         msgss = await bot.send_message(groups,
-                                       f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...！"
+                                       f"刚刚{message.from_user.id}没有通过验证，已经被扭送璃月警察局...！"
                                        f"\n用户6分钟后自动从黑名单中保释")
         return msgss
 
@@ -83,9 +83,9 @@ class botWorker(object):
         #     info = "完全解封"
         # else:
         #     info = "给予普通权限"
-        user = botWorker.convert(message.from_user.first_name)
+        user = botWorker.convert(message.from_user.id)
         msgss = await bot.send_message(groups,
-                                       f"刚刚 {user} 通过了验证！",
+                                       f"刚刚{user}通过了验证！",
                                        parse_mode='MarkdownV2')
         return msgss
 
@@ -158,7 +158,7 @@ class botWorker(object):
             save_csonfig()
         Model = _csonfig.get("Model").get(str(cls))
         if Model is None:
-            Model = "学科题库"
+            Model = "数学题库"
         return Model
 
     @staticmethod
