@@ -51,7 +51,8 @@ dependenceInit() {
     exit 1
   )
   pip3 install --upgrade pip
-  pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt || echox yellow "===pip install failed,please check it===== \n if you are in python3.10 please edit the requirements.txt,uninstall or skip the yaml library"
+  # pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+  while read -r requirement; do pip3 install "${requirement}" -i https://pypi.tuna.tsinghua.edu.cn/simple; done <requirements.txt || echox yellow "===pip install failed,please check it===== \n if you are in python3.10 please edit the requirements.txt,uninstall or skip the yaml library"
   echox yellow "========Down=========="
 }
 dataBack="$(pwd)/tmp"

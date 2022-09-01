@@ -83,6 +83,10 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 
 ```shell
 nohup python3 main.py > output.log 2>&1 &
+
+
+cat output.log
+
 ```
 
 **查看进程**
