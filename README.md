@@ -50,8 +50,12 @@ curl -LO https://raw.fastgit.org/TelechaBot/TelechaBot/main/setup.sh && sh setup
 
 ```bash
 cd TelechaBot
+
 sudo apt install nano
-nano Captcha.yaml
+
+cp Captcha_exp.yaml Captcha.yaml
+ 
+nano Captcha.yaml 
 ```
 
 #### 配置文件说明
