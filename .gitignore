@@ -6,7 +6,7 @@ luac.out
 Captcha.yaml
 venv
 
-Data/*
+
 *.user
 
 # luarocks build files
