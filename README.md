@@ -73,6 +73,8 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 
 ### 部署机器人
 
+先去 Botfather 获取你自己的 Token
+
 **后台运行**
 
 ```shell
@@ -133,6 +135,17 @@ kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
 | `/about`                  | 关于机器人的信息（读取config中的预设描述）   | 私聊  | 任何人          |
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
+
+群组管理(+开头)
+
+``````
++ban 回复或+ID
++banme 嗯?
++diff_min 设定最小难度
++select 选择题库
++diff_limit 设定最大难度
++unban 解禁+ID
+``````
 
 **模板**
 
@@ -202,3 +215,4 @@ Pr。
 - [x] 异步实现
 - [x] 初步使用Redis接管数据
 - [ ] 使用Redis重构队列逻辑
+- [ ] 重构设计模式
