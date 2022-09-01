@@ -197,8 +197,8 @@ class JsonRedis(object):
                     try:
                         if group and user:
                             await bot.decline_chat_join_request(chat_id=group, user_id=user)
-                            await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
                             await bot.delete_state(user, group)
+                            await bot.ban_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))

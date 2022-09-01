@@ -112,7 +112,8 @@ class UserUtils(object):
             spam = True
         if _csonfig.get("antiSpam") and info:
             aList = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放", "集团", "财神"]
-            bList = ["合作", "微信", "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费"]
+            bList = ["合作", "微信", "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费", "免费免", "咨询我", "接洽我", "问询我",
+                     "免费翻墙", "免翻墙"]
             for i in aList + bList:
                 if i in info:
                     spam = True
