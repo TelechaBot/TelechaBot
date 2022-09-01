@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/22/22 7:48 PM
-# @FileName: Event.py
+# @FileName: Model.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import ast
 import pathlib
 from pathlib import Path
 
@@ -40,9 +39,8 @@ class botWorker(object):
 
     @staticmethod
     async def delmsg(chat, message):
-        from CaptchaCore.Bot import clinetBot
-        bot, config = clinetBot().botCreate()
-        # print(chat, message)
+        from Bot.Controller import clientBot
+        bot, config = clientBot().botCreate()
         await bot.delete_message(chat, message)
         aioschedule.clear(message * abs(chat))
 
@@ -68,8 +66,8 @@ class botWorker(object):
     @staticmethod
     async def send_ban(message, bot, groups):
         msgss = await bot.send_message(groups,
-                                       f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...加入了黑名单！"
-                                       f"\n在其不在验证或冷却时禁言来永久封禁\n用户6分钟后从黑名单中保释")
+                                       f"刚刚{message.from_user.first_name}没有通过验证，已经被扭送璃月警察局...！"
+                                       f"\n用户6分钟后自动从黑名单中保释")
         return msgss
 
     @staticmethod
@@ -81,18 +79,18 @@ class botWorker(object):
 
     @staticmethod
     async def send_ok(message, bot, groups, well_unban):
-        if well_unban:
-            info = "完全解封"
-        else:
-            info = "入群前权限被限制状态，给予部分权限"
+        # if well_unban:
+        #     info = "完全解封"
+        # else:
+        #     info = "给予普通权限"
         user = botWorker.convert(message.from_user.first_name)
         msgss = await bot.send_message(groups,
-                                       f"刚刚 {user} 通过了验证！{info}",
+                                       f"刚刚 {user} 通过了验证！",
                                        parse_mode='MarkdownV2')
         return msgss
 
     @staticmethod
-    def newmember_need(msg):
+    def new_member_checker(msg):
         need = True
         old = msg.old_chat_member
         new = msg.new_chat_member
@@ -164,6 +162,32 @@ class botWorker(object):
         return Model
 
     @staticmethod
+    def AntiSpam(group_id, isOn: bool):
+        load_csonfig()
+        if _csonfig.get("antiSpam") is None:
+            _csonfig["antiSpam"] = {}
+            save_csonfig()
+        OK = False
+        if not (isOn is None):
+            _csonfig["antiSpam"][str(group_id)] = isOn
+            OK = True
+        save_csonfig()
+        return OK
+
+    @staticmethod
+    def casSystem(group_id, isOn: bool):
+        load_csonfig()
+        if _csonfig.get("casSystem") is None:
+            _csonfig["casSystem"] = {}
+            save_csonfig()
+        OK = False
+        if not (isOn is None):
+            _csonfig["casSystem"][str(group_id)] = isOn
+            OK = True
+        save_csonfig()
+        return OK
+
+    @staticmethod
     def set_model(group_id, model=None):
         load_csonfig()
         if _csonfig.get("Model") is None:
@@ -221,6 +245,29 @@ class botWorker(object):
     def extract_arg(arg):
         return arg.split()[1:]
 
+    @staticmethod
+    async def checkGroup(bot, msg, config):
+        load_csonfig()
+        if _csonfig.get("whiteGroupSwitch"):
+            if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
+                    "whiteGroup"):
+                return True
+            else:
+                if hasattr(config.ClientBot, "contact_details"):
+                    contact = botWorker.convert(config.ClientBot.contact_details)
+                else:
+                    contact = "There is no reserved contact information."
+                await bot.send_message(msg.chat.id,
+                                       f"Bot开启了白名单模式，有人将我添加到此群组，但该群组不在我的白名单中...."
+                                       f"请向所有者申请权限...."
+                                       f"\nContact details:{contact}"
+                                       f'添加白名单命令:`/addwhite {msg.chat.id}`',
+                                       parse_mode='HTML')
+                await bot.leave_chat(msg.chat.id)
+                return False
+        else:
+            return True
+
 
 class yamler(object):
     # sudoskys@github
@@ -232,10 +279,12 @@ class yamler(object):
         if self.debug:
             print(log)
 
-    def rm(self, top):
+    @staticmethod
+    def rm(top):
         Path(top).unlink()
 
-    def read(self, path):
+    @staticmethod
+    def read(path):
         if Path(path).exists():
             with open(path, 'r', encoding='utf-8') as f:
                 result = yaml.full_load(f.read())
@@ -243,7 +292,8 @@ class yamler(object):
         else:
             raise Exception("Config dont exists in" + path)
 
-    def save(self, path, Data):
+    @staticmethod
+    def save(path, Data):
         with open(path, 'w+', encoding='utf-8') as f:
             yaml.dump(data=Data, stream=f, allow_unicode=True)
 
@@ -267,9 +317,9 @@ class Tool(object):
         return d
 
 
-class Read(object):
+class ReadYaml(object):
     def __init__(self, paths):
-        data = yamler().read(paths)
+        data = yamler.read(paths)
         self.config = Tool().dictToObj(data)
 
     def get(self):
@@ -283,11 +333,11 @@ class Check(object):
             "/Captcha.yaml",
         ]
         self.dir = [
-            # "/data",
+            # "/Data",
         ]
         self.inits = [
-            "/data/whitelist.user",
-            "/data/blacklist.user",
+            "/Data/whitelist.user",
+            "/Data/blacklist.user",
         ]
         self.RootDir = str(pathlib.Path().cwd())
 
@@ -305,9 +355,9 @@ class Check(object):
                             fs.write(context)
 
     # 禁用此函数
-    def initConfig(self, path):
-        with open(path, "w") as file:
-            file.write("{}")
+    # def initConfig(self, path):
+    #     with open(path, "w") as file:
+    #         file.write("{}")
 
     def run(self):
         self.mk(self.dir, "{}", mkdir=True)

@@ -4,10 +4,9 @@ luac.out
 
 .idea
 Captcha.yaml
-Captcha.yaml
 venv
 
-./data/*
+Data/*
 *.user
 
 # luarocks build files
@@ -50,4 +49,4 @@ venv
 
 /.idea/misc.xml
 /life.pkl
-/data/list.json
+/Data/list.json

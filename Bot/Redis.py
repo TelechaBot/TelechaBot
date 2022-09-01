@@ -81,7 +81,8 @@ class JsonRedis(object):
             _tasks[where][str(group)].append(key)
         JsonRedis.save_tasks()
 
-    def resign_user(self, userId, groupId):
+    @staticmethod
+    def resign_user(userId, groupId):
         """
         注册队列
         :param userId:
@@ -96,7 +97,8 @@ class JsonRedis(object):
         JsonRedis.saveUser("User_group", str(userId), key)
         return key
 
-    def read_user(self, userId):
+    @staticmethod
+    def read_user(userId):
         """
         读取用户的注册键
         :param userId:
@@ -114,7 +116,8 @@ class JsonRedis(object):
         else:
             return False, False
 
-    async def remove_user(self, userId, groupId):
+    @staticmethod
+    async def remove_user(userId, groupId):
         """
         人员被移除或者退群，弹出对目标群组的验证任务
         :param userId:
@@ -126,9 +129,10 @@ class JsonRedis(object):
             if len(User) != 0:
                 for key, i in _tasks["Time_group"].items():
                     if i == str(groupId):
-                        await JsonRedis.checker(tar=[key])
+                        await JsonRedis.checker(dismiss=[key])
 
-    async def grant_resign(self, userId, groupId=None):
+    @staticmethod
+    async def grant_resign(userId, groupId):
         """
         提升用户并取消过期队列,解禁需要另外语句
         :param userId:
@@ -138,72 +142,67 @@ class JsonRedis(object):
         User = _tasks["User_group"].get(str(userId))
         if User:
             if len(User) != 0:
-                if groupId:
-                    for key, i in _tasks["Time_group"].items():
-                        if i == str(groupId):
-                            # JsonRedis().remove_user(userId, groupId)
-                            await JsonRedis.checker(tar=[key])
-                            # JsonRedis.saveUser("super", str(userId), str(groupId))
-                else:
-                    key = _tasks["User_group"].get(str(userId))[0]
-                    # groupId = _tasks["Time_group"].get(key)
-                    # JsonRedis.saveUser("super", str(userId), str(groupId))
-                    await JsonRedis.checker(tar=[key])
+                for key, i in _tasks["Time_group"].items():
+                    if i == str(groupId):
+                        await JsonRedis.checker(tar=[key])
+                        return key
+                    else:
+                        return "没有相关记录"
+            return "错误:你没有在等待队列中"
+        # JsonRedis().remove_user(userId, groupId)
+        # JsonRedis.saveUser("super", str(userId), str(groupId))
+        # else:
+        #     key = _tasks["User_group"].get(str(userId))[0]
+        #     # groupId = _tasks["Time_group"].get(key)
+        #     # JsonRedis.saveUser("super", str(userId), str(groupId))
+        #     await JsonRedis.checker(tar=[key])
 
     @staticmethod
-    async def checker(tar=None, fail_user=None):
+    async def checker(tar=None, fail_user=None, dismiss=None):
         """
         检查器，调用就会检查一次，弹出传入的键值，
+        :param dismiss: 传入这里，弹出且不做操作
         :param tar: 传入这里，则不踢出而弹出
         :param fail_user: 传入这里，则踢出且弹出
         :return:
         """
-        # print("定时器执行")
         group = False
         user = False
+        if dismiss is None:
+            dismiss = []
         if tar is None:
             tar = []
         if fail_user is None:
             fail_user = []
-            # 豁免名单
-        ban = []
-        ban = ban + tar
-        ban = ban + fail_user
+        dealList = [] + fail_user + tar + dismiss
         # 插队key和检查过期Key
         JsonRedis.load_tasks()
         for key, item in _tasks["Time_id"].items():
             if abs(int(time.time()) - int(key)) > int(_tasks["interval"]):
-                ban.append(key)
-            else:
-                pass
-                # 用户未过期
-                # print("No")
-        # 将过期和没有通过的插队key处弹出
-        for key in ban:
+                dealList.append(key)
+
+        for key in dealList:
             try:
                 user = _tasks["Time_id"].pop(str(key))
                 group = _tasks["Time_group"].pop(str(key))
                 _tasks["User_group"].get(str(user)).remove(str(key))
             except Exception as e:
                 print(e)
-            # 赫免的key
-            if not (key in tar):
-                # user_something = _tasks["super"].get(str(user))
-                # if user_something is None:
-                #     user_something = []
-                # if True:  # not (group in user_something):
-                #####################################
-                # 过期验证的操作
-                from CaptchaCore.Bot import clinetBot
-                bot, config = clinetBot().botCreate()
-                try:
-                    if group and user:
-                        await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
-                        await bot.delete_state(user, group)
-                except Exception as e:
-                    print(e)
-                # print("ban " + str(user) + str(group))
-        JsonRedis.save_tasks()  # 同步配置队列
+            if key not in dismiss:
+                from Bot.Controller import clientBot
+                bot, config = clientBot().botCreate()
+                if key in tar:
+                    await bot.approve_chat_join_request(chat_id=group, user_id=user)
+                else:
+                    try:
+                        if group and user:
+                            await bot.decline_chat_join_request(chat_id=group, user_id=user)
+                            await bot.kick_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
+                            await bot.delete_state(user, group)
+                    except Exception as e:
+                        print(e)
+                    # print("ban " + str(user) + str(group))
+        JsonRedis.save_tasks()
 
     @staticmethod
     async def run_timer():
