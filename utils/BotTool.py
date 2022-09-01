@@ -162,6 +162,32 @@ class botWorker(object):
         return Model
 
     @staticmethod
+    def AntiSpam(group_id, isOn: bool):
+        load_csonfig()
+        if _csonfig.get("antiSpam") is None:
+            _csonfig["antiSpam"] = {}
+            save_csonfig()
+        OK = False
+        if not (isOn is None):
+            _csonfig["antiSpam"][str(group_id)] = isOn
+            OK = True
+        save_csonfig()
+        return OK
+
+    @staticmethod
+    def casSystem(group_id, isOn: bool):
+        load_csonfig()
+        if _csonfig.get("casSystem") is None:
+            _csonfig["casSystem"] = {}
+            save_csonfig()
+        OK = False
+        if not (isOn is None):
+            _csonfig["casSystem"][str(group_id)] = isOn
+            OK = True
+        save_csonfig()
+        return OK
+
+    @staticmethod
     def set_model(group_id, model=None):
         load_csonfig()
         if _csonfig.get("Model") is None:

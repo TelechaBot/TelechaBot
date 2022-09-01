@@ -17,6 +17,7 @@ from Bot.Redis import JsonRedis
 
 from utils.BotTool import botWorker, userStates
 import binascii
+from utils import ChatSystem
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(200)
@@ -27,6 +28,7 @@ def load_csonfig():
     global _csonfig
     with open("config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
+        return _csonfig
 
 
 # IO
@@ -74,6 +76,15 @@ async def Switch(bot, message, config):
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
 
+            if "/groupuser" in command:
+                import redis
+                # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+                task = ChatSystem.ChatUtils().getGroupItem()
+                with open('tmp.log', 'w') as f:  # 设置文件对象
+                    f.write(str(task))
+                doc = open('tmp.log', 'rb')
+
+                await bot.send_document(message.chat.id, doc)
             if "/redis" in command:
                 import redis
                 # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
@@ -84,7 +95,6 @@ async def Switch(bot, message, config):
                     json.dump(task, f, indent=4, ensure_ascii=False)
                 doc = open('taskRedis.json', 'rb')
                 await bot.send_document(message.chat.id, doc)
-
             if "/unban" in command:
                 def extract_arg(arg):
                     return arg
@@ -161,11 +171,28 @@ async def Admin(bot, message, config):
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
-        # t = Timer(12, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        # t.start()
         aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
             msgs.message_id * abs(msgs.chat.id))
-
+    if "/onantispam" == message.text or ("/onantispam" in message.text and "@" in message.text):
+        botWorker.AntiSpam(message.chat.id, True)
+        msgs = await bot.reply_to(message, f"启动了AntiSpam反诈系统")
+        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
+    if "/offantispam" == message.text or ("/offantispam" in message.text and "@" in message.text):
+        botWorker.AntiSpam(message.chat.id, False)
+        msgs = await bot.reply_to(message, f"关闭了AntiSpam反诈系统")
+        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
+    if "+oncasspam" == message.text or ("+oncasspam" in message.text and "@" in message.text):
+        botWorker.casSystem(message.chat.id, True)
+        msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
+        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
+    if "+offcasspam" == message.text or ("+offcasspam" in message.text and "@" in message.text):
+        botWorker.casSystem(message.chat.id, False)
+        msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
+        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+            msgs.message_id * abs(msgs.chat.id))
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             import CaptchaCore
@@ -254,7 +281,7 @@ async def botSelf(bot, message, config):
     if new.status == "member" and message.chat.type != "private":
         load_csonfig()
         await bot.send_message(message.chat.id,
-                               "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息和禁用用户的权限才能正常行动")
+                               "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息和邀请用户的权限才能正常行动")
         if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
                 "whiteGroup"):
             pass
@@ -284,20 +311,30 @@ async def msg_del(bot, message, config):
 
 async def NewRequest(bot, msg, config):
     load_csonfig()
+    # print(msg)
     checkOK = await botWorker.checkGroup(bot, msg, config)
     if checkOK:
-        resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
-        user = botWorker.convert(msg.from_user.id)
-        group_name = botWorker.convert(msg.chat.title)
-        info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！" \
-               f"\nPassID:`{resign_key}`" \
-               f"\n群组ID:`{msg.chat.id}`" \
-               f"\n您的标识符是:`{user}`" \
-               f"\n按下 \/start 开始验证"
-        await bot.send_message(msg.from_user.id, botWorker.convert(info),
-                               parse_mode='MarkdownV2')
-        # await bot.send_message(msg.chat.id, 'I accepted a new user!')
-        # await bot.approve_chat_join_request(msg.chat.id, msg.from_user.id)
+        ChatSystem.ChatUtils().addGroup(str(msg.chat.id))
+        checkObj = str(msg.from_user.first_name) + str(msg.from_user.last_name)
+        AntiSpamSystem = ChatSystem.UserUtils()
+        IsSpam = AntiSpamSystem.checkUser(userId=str(msg.from_user.id), info=checkObj, _csonfig=load_csonfig())
+        if not IsSpam:
+            resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
+            user = botWorker.convert(msg.from_user.id)
+            group_name = botWorker.convert(msg.chat.title)
+            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间！如果期间您被管理员拒绝,机器人并不会向您发送通知" \
+                   f"\nPassID:`{resign_key}`" \
+                   f"\n群组ID:`{msg.chat.id}`" \
+                   f"\n您的标识符是:`{user}`" \
+                   f"\n按下 \/start 开始验证"
+            await bot.send_message(msg.from_user.id, botWorker.convert(info),
+                                   parse_mode='MarkdownV2')
+        else:
+            AntiSpamSystem.addSpamUser(groupId=str(msg.chat.id), userId=str(msg.from_user.id))
+            await verifyRedis.checker(fail_user=[msg.from_user.id])
+            info = "当前群组开启了 Spam 过滤，您的身份不符合设定或数据库记录仍未消除，请等待 Spam 键值对过期，大约几天，为你带来了烦扰很抱歉！"
+            await bot.send_message(msg.from_user.id, botWorker.convert(info),
+                                   parse_mode='MarkdownV2')
 
 
 # 此函数已经不再使用！
