@@ -1,6 +1,7 @@
 import time
 import ast
 import redis  # 导入redis 模块
+import datetime
 
 pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -198,7 +199,9 @@ class JsonRedis(object):
                         if group and user:
                             await bot.decline_chat_join_request(chat_id=group, user_id=user)
                             await bot.delete_state(user, group)
-                            await bot.ban_chat_member(chat_id=group, user_id=user, until_date=int(time.time()) + 380)
+                            await bot.ban_chat_member(chat_id=group, user_id=user,
+                                                      until_date=datetime.datetime.timestamp(
+                                                          datetime.datetime.now() + datetime.timedelta(minutes=6)))
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))
