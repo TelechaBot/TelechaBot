@@ -3,8 +3,8 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from CaptchaCore.Bot import clinetBot
-from CaptchaCore.Event import Check, Tool
+from Bot.Controller import clinetBot
+from utils.BotTool import Check, Tool
 
 # 初始化文件系统
 Check().run()
@@ -12,7 +12,7 @@ Check().run()
 # from StarPuller import Worker
 # Worker().get_index()
 
-Tool().console.print("从 2.0.7 开始，bot升级为异步机器人，并引入redis！使用 redis 初步接管数据！", style="yellow")
+Tool().console.print("News:2.0.9需要安装Redis,并且给予机器人邀请权限，不需要封禁权限", style="yellow")
 
 # pushService = sendBot(config.botToken)
 

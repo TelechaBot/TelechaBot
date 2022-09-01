@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/22/22 9:28 PM
-# @FileName: BotEvent.py
+# @FileName: Model.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 import ast
@@ -13,19 +13,17 @@ import aioschedule
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
-from BotRedis import JsonRedis
+import CaptchaCore
+from Bot.Redis import JsonRedis
 
-from CaptchaCore.Event import botWorker, userStates
+from utils.BotTool import botWorker, userStates
 import binascii
-from telebot import types, util
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis(200)
 
 
 # IO
-
-
 def load_csonfig():
     global _csonfig
     with open("config.json", encoding="utf-8") as f:
@@ -44,7 +42,7 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, config.desc)
         else:
-            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/sudoskys/")
+            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
 # 主控模块
@@ -171,7 +169,7 @@ async def Admin(bot, message, config):
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             markup = InlineKeyboardMarkup()
-            from CaptchaCore.CaptchaWorker import Importer
+            from CaptchaCore.__init__ import Importer
             Get = {}
             for i in Importer.getMethod():
                 Get.update({i: {'callback_data': i}})
@@ -285,6 +283,14 @@ async def msg_del(bot, message, config):
     # print(cmu.new_chat_member)  # ChatMember : The bot's new status
 
 
+async def NewRequest(bot, msg, config):
+    load_csonfig()
+    resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
+
+    # await bot.send_message(msg.chat.id, 'I accepted a new user!')
+    # await bot.approve_chat_join_request(msg.chat.id, msg.from_user.id)
+
+
 # 启动新用户通知
 async def member_update(bot, msg, config):
     # if msg.left_chat_member.id != bot.get_me().id:
@@ -396,7 +402,7 @@ async def Start(bot, message, config):
     if message.chat.type == "private":
         try:
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                # print(data)
+                # print(Data)
                 if data is None:
                     New = True
                 else:
@@ -436,8 +442,8 @@ async def Start(bot, message, config):
                 model = botWorker.get_model(group_k)
 
                 # 拉取题目例子
-                from CaptchaCore import CaptchaWorker
-                sth = CaptchaWorker.Importer(s=time.time()).pull(min_, limit_, model_name=model)
+                from CaptchaCore import __init__
+                sth = __init__.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message,
                                        botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
@@ -477,10 +483,11 @@ async def Verify2(bot, message, config):
         try:
             # print(QA[1].get("rightKey"))
             if str(answers) == str(QA[1].get("rightKey")):
-                await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
+                await bot.approve_chat_join_request(group_k, message.from_user.id)
+                # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                 await verifyRedis.grant_resign(message.from_user.id, group_k)
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
+                await bot.reply_to(message, "通过，申请已经通过")
                 aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                     msgs.message_id * abs(msgs.chat.id))
                 # t = Timer(25, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
@@ -488,6 +495,7 @@ async def Verify2(bot, message, config):
                 # 删除
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
+                await bot.approve_chat_join_request(group_k, message.from_user.id)
                 await verifyRedis.checker(fail_user=[key])
                 await bot.reply_to(message, '可惜是错误的回答....你6分钟后才能再次进入群组')
                 msgs = await botWorker.send_ban(message, bot, group_k)
@@ -519,7 +527,8 @@ async def Verify(bot, message, config):
         try:
             # print(QA[1].get("rightKey"))
             if str(answers) == str(QA[1].get("rightKey")):
-                await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
+                await bot.approve_chat_join_request(group_k, message.from_user.id)
+                # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                 await verifyRedis.grant_resign(message.from_user.id, group_k)
                 msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 await bot.reply_to(message, "通过，是正确的答案！如果没有解封请通知管理员～")
@@ -551,12 +560,12 @@ async def Saveme(bot, message, config):
         if times >= 0:
             min_, limit_ = botWorker.get_difficulty(group_k)
             _model = botWorker.get_model(group_k)
-            from CaptchaCore import CaptchaWorker
-            paper = (CaptchaWorker.Importer(s=time.time()).pull(difficulty_min=min_,
-                                                                difficulty_limit=limit_ - 1,
-                                                                model_name=_model))
+            from CaptchaCore import __init__
+            paper = (CaptchaCore.Importer(s=time.time()).pull(difficulty_min=min_,
+                                                              difficulty_limit=limit_ - 1,
+                                                              model_name=_model))
             # print("生成了一道题目:" + str(paper))
-            from CaptchaCore import CaptchaWorker
+            from CaptchaCore import __init__
             if times == 0:
                 tip = f"必须回答"
             else:

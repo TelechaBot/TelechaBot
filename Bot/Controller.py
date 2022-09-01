@@ -1,29 +1,31 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/22/22 7:40 PM
-# @FileName: Bot.py
+# @FileName: Controller.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
 import asyncio
 import json
 import pathlib
-import time
 from pathlib import Path
 
 import telebot
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
+from telebot import types, util
+import Bot.Model
+from utils.BotTool import Read, Tool
+from utils.BotTool import botWorker, userStates
 
-from CaptchaCore.Event import Read, Tool
-from CaptchaCore.Event import botWorker, userStates
 
-
+# IO
 def load_csonfig():
     global _csonfig
     with open("config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
+# IO
 def save_csonfig():
     with open("config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
@@ -44,10 +46,11 @@ class clinetBot(object):
         return bot, self.config
 
     def SyncBotCreate(self):
-        print("同步Bot定时器被创建执行,危险")
+        print("同步Bot定时器被创建执行")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
 
+    # 入口的控制器
     def run(self):
         load_csonfig()
         if _csonfig.get("statu"):
@@ -58,65 +61,68 @@ class clinetBot(object):
             # asyncio_helper.proxy = 'http://127.0.0.1:7890'  # url
             # print("正在使用代理！")
 
-            from telebot import types, util
-            import CaptchaCore.BotEvent
+            # 捕获加群请求
+            @bot.chat_join_request_handler()
+            async def make_some(message: telebot.types.ChatJoinRequest):
+                await Bot.Model.NewRequest(bot, message, config)
 
-            @bot.chat_member_handler()
-            async def chat_m(message: types.ChatMemberUpdated):
-                await CaptchaCore.BotEvent.member_update(bot, message, config)
-
-            # 核心
+            # 替换机制，我们采用批准加入请求的事件
+            # @bot.chat_member_handler()
+            # async def chat_m(message: types.ChatMemberUpdated):
+            #     await CaptchaCore.BotEvent.member_update(bot, message, config)
             @bot.message_handler(commands=["start", 'about'])
             async def handle_command(message):
                 if "/start" in message.text:
-                    await CaptchaCore.BotEvent.Start(bot, message, config)
+                    await Bot.Model.Start(bot, message, config)
                 elif "/about" in message.text:
-                    await CaptchaCore.BotEvent.About(bot, message, config)
+                    await Bot.Model.About(bot, message, config)
 
+            # 验证
             @bot.message_handler(state="*", commands='saveme')
             async def save_me(message):
-                await CaptchaCore.BotEvent.Saveme(bot, message, config)
+                await Bot.Model.Saveme(bot, message, config)
 
             @bot.message_handler(state=userStates.answer)
             async def check_answer(message):
-                await CaptchaCore.BotEvent.Verify(bot, message, config)
+                await Bot.Model.Verify(bot, message, config)
 
             @bot.message_handler(state=userStates.answer2)
             async def check_answer(message):
-                await CaptchaCore.BotEvent.Verify2(bot, message, config)
+                await Bot.Model.Verify2(bot, message, config)
 
-            # 事件
+            # 私聊事件捕获
             @bot.message_handler(content_types=['text'], chat_types=['private'])
             async def handle_private_msg(message):
-                await CaptchaCore.BotEvent.Switch(bot, message, config)
+                await Bot.Model.Switch(bot, message, config)
 
+            # 非管理命令捕获
             @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
             async def group_msg_no_admin(message):
-                await CaptchaCore.BotEvent.Banme(bot, message, config)
+                await Bot.Model.Banme(bot, message, config)
 
+            # 管理命令捕获
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
-            async def group_msg_no_admin(message):
-                await CaptchaCore.BotEvent.Admin(bot, message, config)
+            async def group_msg_admin(message):
+                await Bot.Model.Admin(bot, message, config)
 
+            # 加群提示
             @bot.my_chat_member_handler()
             async def bot_self(message: types.ChatMemberUpdated):
-                await CaptchaCore.BotEvent.botSelf(bot, message, config)
+                await Bot.Model.botSelf(bot, message, config)
 
+            # 服务消息删除
             @bot.message_handler(content_types=util.content_type_service)
             async def service_msg(message: types.Message):
-                await CaptchaCore.BotEvent.msg_del(bot, message, config)
+                await Bot.Model.msg_del(bot, message, config)
 
-            # 选择题库回调
+            # 题库回调
             @bot.callback_query_handler(func=lambda call: True)
             async def callback_query(call):
-                def Del_call():
-                    aioschedule.every(30).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id).tag(
-                        call.message.id * abs(call.message.chat.id))
-
-                from CaptchaCore.CaptchaWorker import Importer
+                from CaptchaCore.__init__ import Importer
                 if call.data in Importer.getMethod():
+                    aioschedule.every(5).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id) \
+                        .tag(call.message.id * abs(call.message.chat.id))
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
-                        Del_call()
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success")
                             msgss = await bot.send_message(call.message.chat.id,
@@ -125,19 +131,17 @@ class clinetBot(object):
                                 msgss.id * abs(msgss.chat.id))
 
                 else:
-                    # print(call.message.from_user)
-                    Del_call()
+                    # 如果不是题库定义的方法，那就向下执行
                     listP = call.data.split('+')
                     listKey = listP[0]
                     if listKey in ["Ban", "Pass"]:
                         pass
-                        # if listKey[0] == "Ban":
 
             from telebot import asyncio_filters
             bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
             bot.add_custom_filter(asyncio_filters.ChatFilter())
             bot.add_custom_filter(asyncio_filters.StateFilter(bot))
-            from BotRedis import JsonRedis
+            from Bot.Redis import JsonRedis
             import aioschedule
             aioschedule.every(3).seconds.do(JsonRedis.checker)
 

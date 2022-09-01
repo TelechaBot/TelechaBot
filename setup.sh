@@ -57,13 +57,13 @@ dependenceInit() {
 }
 dataBack="$(pwd)/tmp"
 dir="$(pwd)/TelechaBot"
-data="$(pwd)/TelechaBot/data"
+Data="$(pwd)/TelechaBot/data"
 echo "=============Setup============"
 
 run() {
   #  if [ -f "${dir}/project.info" ]; then
-  #    data=$(cat "${dir}/project.info")
-  #    declare "$data"
+  #    Data=$(cat "${dir}/project.info")
+  #    declare "$Data"
   #    # shellcheck disable=SC2154
   #    echox green "当前版本 ${version}"
   #    now=$version

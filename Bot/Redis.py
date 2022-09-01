@@ -194,7 +194,7 @@ class JsonRedis(object):
                 # if True:  # not (group in user_something):
                 #####################################
                 # 过期验证的操作
-                from CaptchaCore.Bot import clinetBot
+                from Bot.Controller import clinetBot
                 bot, config = clinetBot().botCreate()
                 try:
                     if group and user:

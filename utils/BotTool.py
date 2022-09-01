@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/22/22 7:48 PM
-# @FileName: Event.py
+# @FileName: Model.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import ast
 import pathlib
 from pathlib import Path
 
@@ -40,7 +39,7 @@ class botWorker(object):
 
     @staticmethod
     async def delmsg(chat, message):
-        from CaptchaCore.Bot import clinetBot
+        from Bot.Controller import clinetBot
         bot, config = clinetBot().botCreate()
         # print(chat, message)
         await bot.delete_message(chat, message)
@@ -283,11 +282,11 @@ class Check(object):
             "/Captcha.yaml",
         ]
         self.dir = [
-            # "/data",
+            # "/Data",
         ]
         self.inits = [
-            "/data/whitelist.user",
-            "/data/blacklist.user",
+            "/Data/whitelist.user",
+            "/Data/blacklist.user",
         ]
         self.RootDir = str(pathlib.Path().cwd())
 

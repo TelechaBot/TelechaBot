@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/29/22 9:23 AM
-# @FileName: CaptchaWorker.py
+# @FileName: Redis.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 
@@ -48,8 +48,8 @@ class Chemical_verification(object):
     @staticmethod
     def create():
         Pic = None
-        if pathlib.Path('data/PubChems.json').exists():
-            with open("data/PubChems.json", 'r') as tiku_file:
+        if pathlib.Path('Data/PubChems.json').exists():
+            with open("Data/PubChems.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 key_obj = random.sample(samples.keys(), 1)
@@ -149,8 +149,8 @@ class bili_hard_core(object):
 
     @staticmethod
     def create():
-        if pathlib.Path('data/Bili.json').exists():
-            with open("data/Bili.json", 'r') as tiku_file:
+        if pathlib.Path('Data/Bili.json').exists():
+            with open("Data/Bili.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 data_list = samples.get("datas")
@@ -235,8 +235,8 @@ class car_subject_one(object):
 
     @staticmethod
     def create():
-        if pathlib.Path('data/Drive.json').exists():
-            with open("data/Drive.json", 'r') as tiku_file:
+        if pathlib.Path('Data/Drive.json').exists():
+            with open("Data/Drive.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 data_list = samples.get("datas")
@@ -283,8 +283,8 @@ class songci_300(object):
 
     @staticmethod
     def create():
-        if pathlib.Path('data/Songci.json').exists():
-            with open("data/Songci.json", 'r') as tiku_file:
+        if pathlib.Path('Data/Songci.json').exists():
+            with open("Data/Songci.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 key_obj = random.sample(samples.keys(), 1)
@@ -322,8 +322,8 @@ class lunyu(object):
 
     @staticmethod
     def create():
-        if pathlib.Path('data/Lunyu.json').exists():
-            with open("data/Lunyu.json", 'r') as tiku_file:
+        if pathlib.Path('Data/Lunyu.json').exists():
+            with open("Data/Lunyu.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 key_obj = random.sample(samples.keys(), 1)
@@ -361,8 +361,8 @@ class study_build_up(object):
 
     @staticmethod
     def create():
-        if pathlib.Path('data/XXQG.json').exists():
-            with open("data/XXQG.json", 'r') as tiku_file:
+        if pathlib.Path('Data/XXQG.json').exists():
+            with open("Data/XXQG.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
             if samples is not None:
                 key_obj = random.sample(samples.keys(), 1)

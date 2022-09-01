@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 8/26/22 5:28 PM
-# @FileName: __init__.py.py
+# @FileName: Redis.py.py
 # @Software: PyCharm
 # @Github    ：sudoskys
 import json
@@ -42,10 +42,10 @@ class Worker(object):
                     star_tiku_content[key] = cont
             self.star_tiku_content = star_tiku_content
             HOME = str(pathlib.Path().cwd()) + "/"
-            Dir = HOME + "data/"
+            Dir = HOME + "Data/"
             pathlib.Path(Dir).mkdir(exist_ok=True)
             for key, item in star_tiku_content.items():
-                with open(f"data/{key}.json", 'w+', encoding="utf8") as f:
+                with open(f"Data/{key}.json", 'w+', encoding="utf8") as f:
                     item = json.dumps(item, sort_keys=True, indent=4, separators=(',', ':'),
                                       ensure_ascii=False)
                     f.write(item)
