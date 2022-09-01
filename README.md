@@ -77,7 +77,9 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 
 ### 部署机器人
 
-先去 Botfather 获取你自己的 Token
+先去 Botfather 获取你自己的 Token，然后将群组调整至只有管理可以批准的状态。
+
+机器人自 2.0.9 开始转换验证方式为批准模式，自动识别并反 Spam
 
 **后台运行**
 
