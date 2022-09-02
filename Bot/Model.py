@@ -284,7 +284,8 @@ async def botSelf(bot, message, config):
     if new.status == "member" and message.chat.type != "private":
         load_csonfig()
         await bot.send_message(message.chat.id,
-                               "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息和邀请用户的权限才能正常行动")
+                               "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息,封禁用户和邀请用户的权限才能正常行动\n"
+                               "请开启新人入群审批，我会自动审批")
         if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
                 "whiteGroup"):
             pass
@@ -325,7 +326,7 @@ async def NewRequest(bot, msg, config):
             resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
             user = botWorker.convert(msg.from_user.id)
             group_name = botWorker.convert(msg.chat.title)
-            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人并不会自动放行，请手动解禁" \
+            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
                    f"\nPassID:`{resign_key}`" \
                    f"\n群组ID:`{msg.chat.id}`" \
                    f"\n您的标识符是:`{user}`" \
