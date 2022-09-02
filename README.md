@@ -166,16 +166,22 @@ Spam需要过半天多，按情况调整。
 **模板**
 
 ```md
-whatmodel - 管理 查看当前模组
 start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
-show - 主控 对主人显示配置
-renew - 主控 更新题库
-onw - 主控 对群组开启白名单
-offw - 主控 对群组关闭白名单
-addwhite - 主控 加入白名单
-removewhite - 主控 踢出白名单
-cat - 主控 查看文件
+whatmodel - 管理 查看当前模组
+onantispam - 管理 开启spam反诈
+offantispam - 管理 关闭spam反诈
+renew - 主人 更新题库
+upantispam - 主人 更新反诈数据
+unban - 主人 群组ID+用户ID
+onw - 主人 对群组开启白名单
+offw - 主人 对群组关闭白名单
+show - 主人 对主人显示配置
+addwhite - 主人 加入白名单
+removewhite - 主人 踢出白名单
+cat - 主人 查看文件
+redis - 主人 查看目前队列
+groupuser - 主人 查看使用者
 ```
 
 ### 关于验证模型
