@@ -84,12 +84,12 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 **后台运行**
 
 ```shell
+
 # 长时间运行
 nohup python3 main.py > /dev/null 2>&1 & 
+
 # 临时
 nohup python3 main.py > output.log 2>&1 &
-
-
 cat output.log
 
 ```
