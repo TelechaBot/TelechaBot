@@ -84,6 +84,9 @@ ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
 **后台运行**
 
 ```shell
+# 长时间运行
+nohup python3 main.py > /dev/null 2>&1 & 
+# 临时
 nohup python3 main.py > output.log 2>&1 &
 
 
@@ -118,7 +121,7 @@ ps -aux|grep python3
 ```
 
 ```shell
-kill -9 进程号 && nohup python3 main.py > output.log 2>&1 &
+kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 & 
 ```
 
 ### 使用
