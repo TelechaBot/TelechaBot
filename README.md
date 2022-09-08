@@ -1,4 +1,4 @@
-![a](https://s1.328888.xyz/2022/08/24/wlGew.png)
+![a](https://raw.githubusercontent.com/TelechaBot/.github/main/profile/cover.png)
 
 ------------------------------------
 <p align="center">
