@@ -472,7 +472,7 @@ async def Verify2(bot, message, config):
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
                 await verifyRedis.checker(fail_user=[key])
-                await bot.reply_to(message, '可惜是错误的回答....你6分钟后才能再次进入群组')
+                await bot.reply_to(message, '可惜是错误的回答....你12分钟后才能再次进入群组')
                 # 通知群组
                 msgs = await botWorker.send_ban(message, bot, group_k)
                 aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
