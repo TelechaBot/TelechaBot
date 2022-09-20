@@ -201,7 +201,7 @@ class JsonRedis(object):
                             await bot.delete_state(user, group)
                             await bot.ban_chat_member(chat_id=group, user_id=user,
                                                       until_date=datetime.datetime.timestamp(
-                                                          datetime.datetime.now() + datetime.timedelta(minutes=6)))
+                                                          datetime.datetime.now() + datetime.timedelta(minutes=12)))
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))
