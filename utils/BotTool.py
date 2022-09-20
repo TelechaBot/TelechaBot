@@ -67,7 +67,7 @@ class botWorker(object):
     async def send_ban(message, bot, groups):
         msgss = await bot.send_message(groups,
                                        f"刚刚{message.from_user.id}没有通过验证，已经被扭送璃月警察局...！"
-                                       f"\n用户6分钟后自动从黑名单中保释")
+                                       f"\n用户12分钟后自动从黑名单中保释")
         return msgss
 
     @staticmethod
