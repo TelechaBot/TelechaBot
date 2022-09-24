@@ -183,15 +183,15 @@ whatmodel - 管理 查看当前模组
 onantispam - 管理 开启spam反诈
 offantispam - 管理 关闭spam反诈
 renew - 主人 更新题库
-upantispam - 主人 更新反诈数据
-unban - 主人 群组ID+用户ID
-onw - 主人 对群组开启白名单
+upantispam - 主人 更新反诈数据 
+unban - 主人 群组ID+用户ID arg:id
+onw - 主人 对群组开启白名单 
 offw - 主人 对群组关闭白名单
 show - 主人 对主人显示配置
-addwhite - 主人 群组加入白名单
-removewhite - 主人 群组踢出白名单
-cat - 主人 查看文件
-redis - 主人 查看目前队列
+addwhite - 主人 群组加入白名单 arg:id
+removewhite - 主人 群组踢出白名单 arg:id
+cat - 主人 查看文件 arg:path
+redis - 主人 查看目前队列 
 groupuser - 主人 查看使用者
 ```
 

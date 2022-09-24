@@ -613,7 +613,7 @@ async def Start(bot, message, config):
                     data['QA'] = sth
                     data['Group'] = group_k
                     data['BanState'] = well_unban
-                    data['times'] = 3
+                    data['times'] = 2
                     data['key'] = key
                 # print("生成了一道题目:" + str(sth))
             else:
