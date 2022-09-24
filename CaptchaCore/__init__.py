@@ -54,7 +54,7 @@ class Idiom_verification(object):
                 Pic = item.get("pic")
                 Tips = item.get("confound")
                 Exp = item.get("explain")
-                Q = f"成语的词汇在以下词组内\n{Tips}\n释义为:{Exp}\n\n猜猜看吧～"
+                Q = f"成语的词汇在以下词组内\n{Tips}\n\n释义为{Exp}\n\n猜猜看吧～"
                 A = item.get("answer")
                 Question = {"question": Q, "picture": Pic}
                 Answer = {"rightKey": A}
