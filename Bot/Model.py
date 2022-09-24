@@ -472,7 +472,7 @@ async def Verify2(bot, message, config):
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
                 await verifyRedis.checker(fail_user=[key])
-                await bot.reply_to(message, '可惜是错误的回答....你12分钟后才能再次进入群组')
+                await bot.reply_to(message, '回答错误!')
                 # 通知群组
                 msgs = await botWorker.send_ban(message, bot, group_k)
                 aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
@@ -482,7 +482,7 @@ async def Verify2(bot, message, config):
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
         except Exception as e:
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{botWorker.convert(e)}`',
+            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
 
 
@@ -510,7 +510,7 @@ async def Verify(bot, message, config):
                 await bot.set_state(message.from_user.id, userStates.answer2, message.chat.id)
                 # await bot.register_next_step_handler(message, verify_step2, pipe)
         except Exception as e:
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,谢谢你！\n 日志:`{botWorker.convert(e)}`',
+            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
 
 

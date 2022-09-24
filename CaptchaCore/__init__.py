@@ -24,8 +24,48 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 # print(random.randint(0, 9))
 
+# 成语验证
+class Idiom_verification(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
 
-# 学习强国
+    @property
+    def difficulty(self):
+        return 8
+
+    @staticmethod
+    def nofind():
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        Question = {"question": Q, "picture": None}
+        Answer = {"rightKey": round(A)}
+        return Question, Answer
+
+    @staticmethod
+    def create():
+        if pathlib.Path('Data/Idiom.json').exists():
+            with open("Data/Idiom.json", 'r') as tiku_file:
+                samples = json.load(tiku_file)
+            if samples is not None:
+                item = random.choice(samples)
+                Pic = item.get("pic")
+                Tips = item.get("confound")
+                Exp = item.get("explain")
+                Q = f"成语的词汇在以下词组内\n{Tips}\n释义为:{Exp}\n\n猜猜看吧～"
+                A = item.get("answer")
+                Question = {"question": Q, "picture": Pic}
+                Answer = {"rightKey": A}
+            else:
+                Question, Answer = Idiom_verification.nofind()
+        else:
+            Question, Answer = Idiom_verification.nofind()
+        return Question, Answer
+
+
+# 化学图形验证
 class Chemical_verification(object):
     def __init__(self, sample):
         self.id = sample
@@ -58,18 +98,20 @@ class Chemical_verification(object):
                 An = (samples[Qn])
                 A = An.get("Answer")
                 Pic = An.get("Pic")
+                Question = {"question": Q, "picture": Pic}
+                Answer = {"rightKey": A}
             else:
-                Q, A = study_build_up.nofind()
-
+                Question, Answer = Chemical_verification.nofind()
         else:
-            Q, A = study_build_up.nofind()
-        Question = {"question": Q, "picture": Pic}
-        Answer = {"rightKey": A}
+            Question, Answer = Chemical_verification.nofind()
         return Question, Answer
 
 
 class Tool_CaptchaCore(object):
     def __init__(self):
+        """
+        意义不明的工具类
+        """
         pass
 
     @staticmethod
@@ -164,13 +206,12 @@ class bili_hard_core(object):
                 d = str(key_obj.get("opt4"))
                 Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
                 A = key_obj.get("answer")
+                Question = {"question": Q, "picture": None}
+                Answer = {"rightKey": A}
             else:
-                Q, A = bili_hard_core.nofind()
-
+                Question, Answer = bili_hard_core.nofind()
         else:
-            Q, A = bili_hard_core.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = bili_hard_core.nofind()
         return Question, Answer
 
 
@@ -207,10 +248,10 @@ class chemical_formula(object):
         if samples:
             Q = f"现在有 {inputs}={output} 这个没有配平的化学方程式，不考虑是否合理的情况下，前面的{tip_key}的系数为{tip}请问方程式后半段的 {key} 的系数是多少？(答出数字)"
             A = samples.get(key)
+            Question = {"question": Q, "picture": None}
+            Answer = {"rightKey": A}
         else:
-            Q, A = chemical_formula.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = chemical_formula.nofind()
         return Question, Answer
 
 
@@ -251,13 +292,12 @@ class car_subject_one(object):
                 d = str(key_obj.get("opt4"))
                 Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
                 A = key_obj.get("answer")
+                Question = {"question": Q, "picture": None}
+                Answer = {"rightKey": A}
             else:
-                Q, A = car_subject_one.nofind()
-
+                Question, Answer = car_subject_one.nofind()
         else:
-            Q, A = car_subject_one.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = car_subject_one.nofind()
         return Question, Answer
 
 
@@ -290,13 +330,13 @@ class songci_300(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
+                Question = {"question": Q, "picture": None}
+                Answer = {"rightKey": A}
             else:
-                Q, A = songci_300.nofind()
+                Question, Answer = songci_300.nofind()
 
         else:
-            Q, A = songci_300.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = songci_300.nofind()
         return Question, Answer
 
 
@@ -329,13 +369,13 @@ class lunyu(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
+                Question = {"question": Q, "picture": None}
+                Answer = {"rightKey": A}
             else:
-                Q, A = lunyu.nofind()
+                Question, Answer = lunyu.nofind()
 
         else:
-            Q, A = lunyu.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = lunyu.nofind()
         return Question, Answer
 
 
@@ -368,13 +408,12 @@ class study_build_up(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
+                Question = {"question": Q, "picture": None}
+                Answer = {"rightKey": A}
             else:
-                Q, A = study_build_up.nofind()
-
+                Question, Answer = study_build_up.nofind()
         else:
-            Q, A = study_build_up.nofind()
-        Question = {"question": Q, "picture": None}
-        Answer = {"rightKey": A}
+            Question, Answer = study_build_up.nofind()
         return Question, Answer
 
 
@@ -679,6 +718,14 @@ class Combustion_Calculations(object):
 
 
 # --------------------------------
+def Idiom_Pic(s):
+    Idiom_Pic = [
+        {"diff": Idiom_verification(s).difficulty,
+         "obj": Idiom_verification(s).create()},
+
+    ]
+    return Idiom_Pic
+
 
 def Chemistry_Pic(s):
     Chemistry_Pic = [
@@ -781,7 +828,7 @@ class Importer(object):
 
     @staticmethod
     def getMethod():
-        return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一", "哔哩硬核测试"]
+        return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一", "哔哩硬核测试", "图形成语"]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
         difficulty_min = int(difficulty_min)
@@ -823,6 +870,8 @@ class Importer(object):
                 verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time()).create()}
         elif model_name == "图形化学":
             verify = Chemistry_Pic(time.time())[0]
+        elif model_name == "图形成语":
+            verify = Idiom_Pic(time.time())[0]
         elif model_name == "学习强国":
             verify = study(time.time())[0]
         elif model_name == "宋词300":

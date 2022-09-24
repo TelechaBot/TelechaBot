@@ -202,11 +202,12 @@ class JsonRedis(object):
                 else:
                     try:
                         if group and user:
-                            await bot.decline_chat_join_request(chat_id=group, user_id=user)
                             await bot.delete_state(user, group)
+                            await bot.decline_chat_join_request(chat_id=group, user_id=user)
                             await bot.ban_chat_member(chat_id=group, user_id=user,
                                                       until_date=datetime.datetime.timestamp(
                                                           datetime.datetime.now() + datetime.timedelta(minutes=12)))
+                            await bot.send_message(user, f"验证失败，此群组会话验证需要冷却 12 分钟")
                     except Exception as e:
                         print(e)
                     # print("ban " + str(user) + str(group))
