@@ -57,7 +57,7 @@ dependenceInit() {
 }
 dataBack="$(pwd)/tmp"
 dir="$(pwd)/TelechaBot"
-Data="$(pwd)/TelechaBot/data"
+data="$(pwd)/TelechaBot/Data"
 echo "=============Setup============"
 
 run() {
@@ -134,9 +134,9 @@ run() {
         echox green "恢复配置文件：Reuse the taskRedis.json from ${dataBack}...."
         cp -f "${dataBack}/taskRedis.json" "$dir" #文件夹目录 文件夹上级
       fi
-      if [ -d "${dataBack}/data" ]; then
+      if [ -d "${dataBack}/Data" ]; then
         echox green "恢复数据库：Reuse the run data from ${dataBack}...."
-        cp -rf "${dataBack}/data" "$dir" #文件夹目录 文件夹上级
+        cp -rf "${dataBack}/Data" "$dir" #文件夹目录 文件夹上级
       fi
       dependenceInit || exit 1
       ;;
