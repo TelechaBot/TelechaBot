@@ -6,7 +6,6 @@
 # import aiohttp
 import asyncio
 import json
-import pathlib
 from pathlib import Path
 
 import telebot
