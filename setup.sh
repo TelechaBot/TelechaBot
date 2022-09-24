@@ -52,7 +52,7 @@ dependenceInit() {
   )
   pip3 install --upgrade pip
   # pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
-  while read -r requirement; do pip3 install "${requirement}" -i https://pypi.tuna.tsinghua.edu.cn/simple; done <requirements.txt || echox yellow "===pip install failed,please check it===== \n if you are in python3.10 please edit the requirements.txt,uninstall or skip the yaml library"
+  while read -r requirement; do pip3 install "${requirement}" -i https://pypi.tuna.tsinghua.edu.cn/simple; done <requirements.txt || echox yellow "===pip install failed,please check it====="
   echox yellow "========Down=========="
 }
 dataBack="$(pwd)/tmp"
@@ -88,9 +88,9 @@ run() {
       mkdir "$dataBack"
     fi
     # 备份配置文件
-    if [ -f "${dir}/Captcha.yaml" ]; then
-      echox skyBlue "备份配置文件：backup ${dir}/Captcha.yaml to ${dataBack} ...."
-      cp -f "${dir}/Captcha.yaml" "$dataBack"
+    if [ -f "${dir}/Captcha.toml" ]; then
+      echox skyBlue "备份配置文件：backup ${dir}/Captcha.toml to ${dataBack} ...."
+      cp -f "${dir}/Captcha.toml" "$dataBack"
     fi
     # 备份配置文件
     if [ -f "${dir}/taskRedis.json" ]; then
@@ -122,9 +122,9 @@ run() {
     [yY][eE][sS] | [yY])
       rm -rf "${dir}"
       Gitpull
-      if [ -f "${dataBack}/Captcha.yaml" ]; then
-        echox green "恢复配置文件：Reuse the Captcha.yaml from ${dataBack}...."
-        cp -f "${dataBack}/Captcha.yaml" "$dir" #文件夹目录 文件夹上级
+      if [ -f "${dataBack}/Captcha.toml" ]; then
+        echox green "恢复配置文件：Reuse the Captcha.toml from ${dataBack}...."
+        cp -f "${dataBack}/Captcha.toml" "$dir" #文件夹目录 文件夹上级
       fi
       if [ -f "${dataBack}/config.json" ]; then
         echox green "恢复配置文件：Reuse the config.json from ${dataBack}...."

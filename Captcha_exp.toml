@@ -1,0 +1,13 @@
+# Sample
+desc = "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
+link = "https://t.me/SmartCapthaBot"
+botToken = '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
+
+[ClientBot]
+owner = '5477776859'
+contact_details = "判定为非白名单群组后的联系方式"
+
+[Proxy]
+# or true
+status = false
+url = "http://127.0.0.1:7890" 

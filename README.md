@@ -46,33 +46,35 @@ curl -LO https://raw.fastgit.org/TelechaBot/TelechaBot/main/setup.sh && sh setup
 
 安装后不需要手动创建``taskRedis.json``，如果有此文件且``taskRedis.json`` 没有内容，需要手动填入`{}`，否则解析库报错。
 
-**编辑Captcha.yaml**
+**编辑Captcha.toml**
 
 ```bash
 cd TelechaBot
 
 sudo apt install nano
 
-cp Captcha_exp.yaml Captcha.yaml
+cp Captcha_exp.toml Captcha.toml
  
-nano Captcha.yaml 
+nano Captcha.toml 
 ```
 
 #### 配置文件说明
 
-*USE Captcha.yaml*
+*USE Captcha.toml*
 
-```yaml
-# statu: True
-version: "2.0.6"
-# /about
-desc: "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
-# 机器人链接，用于跳转
-link: "https://t.me/SmartCapthaBot"
-# 申请的token 去botfather那里
-botToken: 'xxxxx:xxxxxxxxxxxxxxxxx'
-# 主人信息
-ClientBot: { owner: 'xxxxid',contact_details: "httpxxxxxthaBot" }
+```toml
+# Sample
+desc = "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
+link = "https://t.me/SmartCapthaBot"
+botToken = '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
+
+[ClientBot]
+owner = '5477776859'
+contact_details = "判定为非白名单群组后的联系方式"
+
+[Proxy]
+status = false
+url = "http://127.0.0.1:7890" 
 ```
 
 ### 部署机器人
@@ -186,8 +188,8 @@ unban - 主人 群组ID+用户ID
 onw - 主人 对群组开启白名单
 offw - 主人 对群组关闭白名单
 show - 主人 对主人显示配置
-addwhite - 主人 加入白名单
-removewhite - 主人 踢出白名单
+addwhite - 主人 群组加入白名单
+removewhite - 主人 群组踢出白名单
 cat - 主人 查看文件
 redis - 主人 查看目前队列
 groupuser - 主人 查看使用者

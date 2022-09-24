@@ -7,6 +7,7 @@ import pathlib
 from pathlib import Path
 
 import aioschedule
+import rtoml
 import yaml
 import time
 import json
@@ -305,6 +306,9 @@ class Dict(dict):
 
 class Tool(object):
     def __init__(self):
+        """
+        基本工具类
+        """
         self.console = Console(color_system='256', style=None)
         self.now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
@@ -317,12 +321,25 @@ class Tool(object):
         return d
 
 
-class ReadYaml(object):
-    def __init__(self, paths):
-        data = yamler.read(paths)
-        self.config = Tool().dictToObj(data)
+class ReadConfig(object):
+    def __init__(self, config=None):
+        """
+        read some further config!
+
+        param paths: the file path
+        """
+        self.config = config
 
     def get(self):
+        return self.config
+
+    def parseFile(self, paths):
+        data = rtoml.load(open(paths, 'r'))
+        self.config = Tool().dictToObj(data)
+        return self.config
+
+    def parseDict(self, data):
+        self.config = Tool().dictToObj(data)
         return self.config
 
 
@@ -330,7 +347,7 @@ class Check(object):
     def __init__(self):
         self.file = [
             "/config.json",
-            "/Captcha.yaml",
+            "/Captcha.toml",
         ]
         self.dir = [
             # "/Data",

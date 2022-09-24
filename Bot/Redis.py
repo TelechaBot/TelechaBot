@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Time    : 8/22/22 9:28 PM
+# @FileName: Redis.py
+# @Software: PyCharm
+# @Github    ：sudoskys
 import time
 import ast
 import redis  # 导入redis 模块

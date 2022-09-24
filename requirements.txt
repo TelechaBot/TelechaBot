@@ -2,9 +2,8 @@ requests
 pathlib
 pyTelegramBotAPI
 rich
-joblib
 redis
-pyyaml==5.4.1
+rtoml
 aiohttp
 chempy
 Pillow

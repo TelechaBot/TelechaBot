@@ -15,7 +15,7 @@ import CaptchaCore
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot import types, util
-from utils.BotTool import ReadYaml, Tool
+from utils.BotTool import Tool
 from utils.BotTool import botWorker, userStates
 
 
@@ -28,15 +28,17 @@ def load_csonfig():
 
 class clientBot(object):
     def __init__(self):
-        self.config = ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
+        from utils.BotTool import ReadConfig
+        self.config = ReadConfig().parseFile(str(Path.cwd()) + "/Captcha.toml")
+        # ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
 
     def botCreate(self):
-        if pathlib.Path("project.ini").exists():
-            from configparser import ConfigParser
-            value = ConfigParser()
-            value.read("project.ini")
-            version = value.get('project', 'version')
-            Tool().console.print("Create Async Bot Obj,版本:" + version, style='blue')
+        # if pathlib.Path("project.ini").exists():
+        #     from configparser import ConfigParser
+        #     value = ConfigParser()
+        #     value.read("project.ini")
+        #     version = value.get('project', 'version')
+        #     Tool().console.print("Create Async Bot Obj,版本:" + version, style='blue')
         bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
         return bot, self.config
 

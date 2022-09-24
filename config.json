@@ -1,21 +1,21 @@
 {
-  "statu": true,
-  "whiteGroupSwitch": false,
-  "Model": {
-    "-1001561314417": "学习强国"
-  },
-  "difficulty_limit": {},
-  "difficulty_min": {},
-  "whiteGroup": [
-    -1001662266151,
-    1001561314417
-  ],
-  "antiSpam": {
-    "1000": true,
-    "2000": true,
-    "-1001561314417": true
-  },
-  "casSystem": {
-    "1000": true
-  }
+    "statu": true,
+    "whiteGroupSwitch": false,
+    "Model": {
+        "-1001561314417": "科目一"
+    },
+    "difficulty_limit": {},
+    "difficulty_min": {},
+    "whiteGroup": [
+        -1001662266151,
+        1001561314417
+    ],
+    "antiSpam": {
+        "1000": true,
+        "2000": true,
+        "-1001561314417": true
+    },
+    "casSystem": {
+        "1000": true
+    }
 }
