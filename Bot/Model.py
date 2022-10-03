@@ -2,8 +2,8 @@
 # @Time    : 8/22/22 9:28 PM
 # @FileName: Model.py
 # @Software: PyCharm
-# @Github    ：sudoskys
-import ast
+# @Github  :sudoskys
+
 import json
 import pathlib
 import random
