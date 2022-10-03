@@ -22,7 +22,7 @@ from utils import ChatSystem
 # 构建多少秒的验证对象
 
 
-verifyRedis = JsonRedis(200)
+verifyRedis = JsonRedis()
 
 
 # IO
@@ -45,7 +45,8 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, config.desc)
         else:
-            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
+            await bot.reply_to(message,
+                               "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
 # 主控模块
@@ -160,7 +161,7 @@ async def Banme(bot, message, config):
                 msgs.message_id * abs(msgs.chat.id))
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
-                # verifyRedis.checker(tar=[key])
+                # verifyRedis.checker(unban=[key])
                 await bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
                                                can_send_media_messages=False,
                                                can_send_other_messages=False, until_date=message.date + mins * 60)
@@ -243,8 +244,8 @@ async def Admin(bot, message, config):
         status = message.text.split()[1:]
         for user in status:
             await bot.unban_chat_member(message.chat.id, user_id=user, only_if_banned=True)
-            userId = "".join(list(filter(str.isdigit, user)))
-            group, key = verifyRedis.read_user(str(userId))
+            userId = int("".join(list(filter(str.isdigit, user))))
+            group, key = verifyRedis.read_user(userId)
             if group:
                 # 机器人核心：通过用户注册请求
                 await verifyRedis.grant_resign(userId, groupId=group)
@@ -253,7 +254,7 @@ async def Admin(bot, message, config):
                                                can_send_media_messages=True,
                                                can_send_other_messages=True)
         # 机器人核心：发送通知并自毁消息
-        TIPS = await bot.reply_to(message, "手动解禁:从欧几里得家里解救了" + str(status))
+        TIPS = await bot.reply_to(message, f"手动解禁:从欧几里得家里解救了{status}")
         aioschedule.every(30).seconds.do(botWorker.delmsg, TIPS.chat.id, TIPS.message_id).tag(
             TIPS.message_id * abs(TIPS.chat.id))
         # t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
@@ -318,18 +319,18 @@ async def NewRequest(bot, msg, config):
     # print(msg)
     checkOK = await botWorker.checkGroup(bot, msg, config)
     if checkOK:
-        ChatSystem.ChatUtils().addGroup(str(msg.chat.id))
+        ChatSystem.ChatUtils().addGroup(msg.chat.id)
         checkObj = str(msg.from_user.first_name) + str(msg.from_user.last_name)
         AntiSpamSystem = ChatSystem.UserUtils()
-        IsSpam = await AntiSpamSystem.checkUser(userId=str(msg.from_user.id), info=checkObj, _csonfig=load_csonfig())
+        IsSpam = await AntiSpamSystem.checkUser(userId=msg.from_user.id, info=checkObj, _csonfig=load_csonfig())
         if not IsSpam:
-            resign_key = verifyRedis.resign_user(str(msg.from_user.id), str(msg.chat.id))
+            resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
             user = botWorker.convert(msg.from_user.id)
             group_name = botWorker.convert(msg.chat.title)
             info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
                    f"\nPassID:`{resign_key}`" \
-                   f"\n群组ID:`{msg.chat.id}`" \
-                   f"\n您的标识符是:`{user}`" \
+                   f"\nChatID:`{msg.chat.id}`" \
+                   f"\nAuthID:`{user}`" \
                    f"\n按下 \/start 开始验证"
             await bot.send_message(msg.from_user.id, botWorker.convert(info),
                                    parse_mode='MarkdownV2')
@@ -352,7 +353,7 @@ async def member_update(bot, msg, config):
 
     async def verify_user(bot, config, statu):
         # 用户操作
-        resign_key = verifyRedis.resign_user(str(new.user.id), str(msg.chat.id))
+        resign_key = verifyRedis.resign_user(new.user.id, msg.chat.id)
         user_ke = str(resign_key) + " " + str(statu) + " " + str(new.user.id)
         user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
         InviteLink = config.link + "?start=" + str(user_key)
@@ -441,7 +442,7 @@ async def member_update(bot, msg, config):
         # 注销任务
         if new.status in ["kicked", "left"]:
             print(str(new.user.id) + "离开了" + str(msg.chat.id))
-            await verifyRedis.remove_user(new.user.id, str(msg.chat.id))
+            await verifyRedis.remove_user(new.user.id, msg.chat.id)
             try:
                 await bot.delete_state(new.user.id, msg.chat.id)
             except Exception as e:
@@ -471,7 +472,8 @@ async def Verify2(bot, message, config):
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
-                await verifyRedis.checker(fail_user=[key])
+                _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
+                await verifyRedis.checker(ban=[_keys])
                 await bot.reply_to(message, '回答错误!')
                 # 通知群组
                 msgs = await botWorker.send_ban(message, bot, group_k)
@@ -482,7 +484,8 @@ async def Verify2(bot, message, config):
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
         except Exception as e:
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
+            await bot.reply_to(message,
+                               f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
 
 
@@ -510,7 +513,8 @@ async def Verify(bot, message, config):
                 await bot.set_state(message.from_user.id, userStates.answer2, message.chat.id)
                 # await bot.register_next_step_handler(message, verify_step2, pipe)
         except Exception as e:
-            await bot.reply_to(message, f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
+            await bot.reply_to(message,
+                               f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
 
 
@@ -566,7 +570,7 @@ async def Start(bot, message, config):
             New = True
         if New:
             # 读取用户
-            group_k, key = verifyRedis.read_user(str(message.from_user.id))
+            group_k, key = verifyRedis.read_user(message.from_user.id)
             PassID = key
             well_unban = False
             # 如果有参数，进行解码覆盖
@@ -582,7 +586,6 @@ async def Start(bot, message, config):
                         group_k = False
                     if statu in ["member", "left"]:
                         well_unban = True
-
             # 开始判断
             info = f"开始验证群组 `{group_k}`,你有总 200 秒的时间回答下面的问题" \
                    f"\n\nPassID:`{PassID}`" \
@@ -601,7 +604,8 @@ async def Start(bot, message, config):
                 sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 if sth[0].get("picture") is None:
                     await bot.reply_to(message,
-                                       botWorker.convert(sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
+                                       botWorker.convert(
+                                           sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
                 else:
                     await bot.send_photo(message.chat.id,
                                          caption=botWorker.convert(

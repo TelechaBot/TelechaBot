@@ -8,7 +8,6 @@ from pathlib import Path
 
 import aioschedule
 import rtoml
-import yaml
 import time
 import json
 
@@ -67,8 +66,8 @@ class botWorker(object):
     @staticmethod
     async def send_ban(message, bot, groups):
         msgss = await bot.send_message(groups,
-                                       f"刚刚{message.from_user.id}没有通过验证，已经被扭送璃月警察局...！"
-                                       f"\n用户12分钟后自动从黑名单中保释")
+                                       f"刚刚{message.from_user.id}没有通过验证，已经被扭送月球...！"
+                                       f"\n用户12分钟后自动从黑名单中被保释")
         return msgss
 
     @staticmethod
@@ -109,7 +108,8 @@ class botWorker(object):
             if new.status in ["member"] and old.status not in ["member"]:
                 userName = botWorker.convert(msg.from_user.first_name)
                 botName = botWorker.convert(new.user.username)
-                info = {"text": f"{userName}向群组添加了同类 {botName}", "id": str(new.user.id), "group": str(msg.chat.id)}
+                info = {"text": f"{userName}向群组添加了同类 {botName}", "id": str(new.user.id),
+                        "group": str(msg.chat.id)}
         if msg.from_user.is_bot:
             need = False
         # 被踢出的
@@ -283,20 +283,6 @@ class yamler(object):
     @staticmethod
     def rm(top):
         Path(top).unlink()
-
-    @staticmethod
-    def read(path):
-        if Path(path).exists():
-            with open(path, 'r', encoding='utf-8') as f:
-                result = yaml.full_load(f.read())
-            return result
-        else:
-            raise Exception("Config dont exists in" + path)
-
-    @staticmethod
-    def save(path, Data):
-        with open(path, 'w+', encoding='utf-8') as f:
-            yaml.dump(data=Data, stream=f, allow_unicode=True)
 
 
 class Dict(dict):

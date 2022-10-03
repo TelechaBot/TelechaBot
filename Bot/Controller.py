@@ -135,6 +135,7 @@ class clientBot(object):
             bot.add_custom_filter(asyncio_filters.ChatFilter())
             bot.add_custom_filter(asyncio_filters.StateFilter(bot))
             from Bot.Redis import JsonRedis
+            JsonRedis.start()
             import aioschedule
             aioschedule.every(3).seconds.do(JsonRedis.checker)
 
@@ -144,6 +145,8 @@ class clientBot(object):
                     await asyncio.sleep(1)
 
             async def main():
-                await asyncio.gather(bot.polling(non_stop=True, allowed_updates=util.update_types), scheduler())
+                # await asyncio.gather(bot.polling(skip_pending=True,non_stop=True,allowed_updates=util.update_types),
+                await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
+                                     scheduler())
 
             asyncio.run(main())
