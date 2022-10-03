@@ -132,7 +132,28 @@ class JsonRedis(object):
             _data = _MsgTask[key]
             if abs(int(time.time()) - int(_data["time"])) > int(_data["interval"]):
                 ban.append({"user": _data["user"], "group": _data["group"]})
-        # 先处理掉 dismiss 的数据，然后对数据进行检查，添加到执行队列封杀
+
+        # 释放数据
+        try:
+            task_lock.acquire()
+            allL = []
+            allL.extend(ban)
+            allL.extend(dismiss)
+            allL.extend(unban)
+            # print(allL)
+            for key in allL:
+                profile = key
+                userId = profile.get("user")
+                groupId = profile.get("group")
+                _key = JsonRedis.crateKey(user_id=userId, group_id=groupId)
+                _MsgTask.pop(_key, None)
+        except Exception as err:
+            raise err
+        finally:
+            task_lock.release()
+            _redis.set("_Telecha_Task", json.dumps(_MsgTask))
+
+        # 处理掉数据
         try:
             for key in unban:
                 profile = key
@@ -158,26 +179,6 @@ class JsonRedis(object):
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
         except Exception as err:
             print(err)
-
-        # 释放数据
-        try:
-            task_lock.acquire()
-            allL = []
-            allL.extend(ban)
-            allL.extend(dismiss)
-            allL.extend(unban)
-            # print(allL)
-            for key in allL:
-                profile = key
-                userId = profile.get("user")
-                groupId = profile.get("group")
-                _key = JsonRedis.crateKey(user_id=userId, group_id=groupId)
-                _MsgTask.pop(_key, None)
-        except Exception as err:
-            raise err
-        finally:
-            task_lock.release()
-            _redis.set("_Telecha_Task", json.dumps(_MsgTask))
 
     @staticmethod
     def crateKey(user_id, group_id):
