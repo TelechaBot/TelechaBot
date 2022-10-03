@@ -94,9 +94,9 @@ async def Switch(bot, message, config):
             if "/redis" in command:
                 import redis
                 # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
-                r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-                task = r.get('tasks')
-                task = ast.literal_eval(task)
+                _redis = redis.Redis(host='localhost', port=6379, decode_responses=True)
+                Course = _redis.get("_Telecha_Task")
+                task = json.loads(Course)
                 with open('taskRedis.json', 'w') as f:  # 设置文件对象
                     json.dump(task, f, indent=4, ensure_ascii=False)
                 doc = open('taskRedis.json', 'rb')
