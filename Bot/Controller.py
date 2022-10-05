@@ -145,7 +145,7 @@ class clientBot(object):
                     await asyncio.sleep(1)
 
             async def main():
-                await asyncio.gather(bot.polling(skip_pending=False, non_stop=True, allowed_updates=util.update_types),
+                await asyncio.gather(bot.polling(skip_pending=True, non_stop=True, allowed_updates=util.update_types),
                 # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
                                      scheduler())
 
