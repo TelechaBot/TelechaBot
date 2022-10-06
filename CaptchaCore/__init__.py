@@ -804,7 +804,7 @@ class Importer(object):
         if model_name == "数学题库":
             verify_papaer = [i for i in Mathematics(self.samples) if
                              difficulty_min <= i.get("diff") <= difficulty_limit]
-            verify = {"diff": binary_first_equation().difficulty,
+            verify = {"diff": binary_first_equation(id_now).difficulty,
                       "obj": binary_first_equation(id_now).create()}
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
