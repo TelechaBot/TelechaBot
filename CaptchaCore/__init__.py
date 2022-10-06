@@ -804,35 +804,35 @@ class Importer(object):
         if model_name == "数学题库":
             verify_papaer = [i for i in Mathematics(self.samples) if
                              difficulty_min <= i.get("diff") <= difficulty_limit]
+            verify = {"diff": binary_first_equation().difficulty,
+                      "obj": binary_first_equation(id_now).create()}
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
-            else:
-                verify = {"diff": binary_first_equation().difficulty,
-                          "obj": binary_first_equation(id_now).create()}
+
         elif model_name == "物理题库":
             verify_papaer = [i for i in Physics(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
+            verify = {"diff": gravity_work(id_now).difficulty, "obj": gravity_work(id_now).create()}
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
-            else:
-                verify = {"diff": gravity_work(id_now).difficulty, "obj": gravity_work(id_now).create()}
+
         elif model_name == "化学题库":
             verify_papaer = [i for i in Chemistry(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
+            verify = {"diff": Combustion_Calculations(id_now).difficulty,
+                      "obj": Combustion_Calculations(id_now).create()}
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
-            else:
-                verify = {"diff": Combustion_Calculations(id_now).difficulty,
-                          "obj": Combustion_Calculations(id_now).create()}
+
         elif model_name == "生物题库":
             verify_papaer = [i for i in Biology(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
+            verify = {"diff": biological_gene(id_now).difficulty, "obj": biological_gene(id_now).create()}
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
                 # verify = (random.sample(verify_papaer, 1)[0])
-            else:
-                verify = {"diff": biological_gene(id_now).difficulty, "obj": biological_gene(id_now).create()}
+
         elif model_name == "图形化学":
             verify = Chemistry_Pic(id_now)[0]
         elif model_name == "图形成语":
