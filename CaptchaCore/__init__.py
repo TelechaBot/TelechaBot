@@ -131,43 +131,6 @@ class Tool_CaptchaCore(object):
                 print(f"出现错误: {str(error)}")
                 return False, False
 
-    @staticmethod
-    def drawPic(news_content, font='simkai.ttf', filename="temp.png"):
-        if pathlib.Path(filename).exists():
-            from PIL import Image, ImageDraw, ImageFont  # 引入图片，画图笔，图片字体三个库
-            news_content = news_content.splitlines()  # 按行分割
-            import textwrap  # 手动换行文字
-            news_wrap = []
-            for line in news_content:
-                if len(line) < 4:
-                    continue
-                elif len(line) < 25:
-                    news_wrap.append(line)  # 添加到数组中
-                else:  # 若字数大于25个字
-                    wrap = textwrap.wrap(line, 25)  # 按每行25个字分割成数组
-                    news_wrap = news_wrap + wrap
-            IMG_SIZE = (920, len(news_wrap) * 60)  # 图片尺寸
-            img_1 = Image.new('RGB', IMG_SIZE, (255, 255, 255))  # 底色三个255表示纯白
-            draw = ImageDraw.Draw(img_1)  # 创建一个画笔
-
-            header_position = (60, 30)
-            header_font = ImageFont.truetype(font, 55)
-            current_height = 100
-            for line in news_wrap:
-                if line.startswith('【'):
-                    news_font = ImageFont.truetype(font, 45)  # 标题的字体楷体，字号50
-                    draw.text((60, current_height + 30), line, '#726053', news_font)
-                    current_height += 80
-                else:
-                    news_font = ImageFont.truetype(font, 30)
-                    draw.text((60, current_height), line, '#726053', news_font)
-                    current_height += 40
-
-            img_1.save(filename)
-            return filename
-        else:
-            return False
-
 
 # π
 class bili_hard_core(object):
@@ -237,8 +200,8 @@ class chemical_formula(object):
     @staticmethod
     def create():
         # rsd = (random.randint(1, 5) * 1)
-        sde = (random.randint(2, 6) * 1)
-        rse = (random.randint(1, 4) * 2)
+        sde = (random.randint(2, 8) * 1)
+        # rse = (random.randint(1, 4) * 2)
         inputs = f"P{sde}+H2O"
         output = "PH4+H3PO4"
         key = "PH4"
@@ -828,13 +791,15 @@ class Importer(object):
 
     @staticmethod
     def getMethod():
-        return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一", "哔哩硬核测试", "图形成语"]
+        return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一",
+                "哔哩硬核测试", "图形成语"]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
         difficulty_min = int(difficulty_min)
         difficulty_limit = int(difficulty_limit)
-        verify = {"diff": binary_first_equation(time.time()).difficulty,
-                  "obj": binary_first_equation(time.time()).create()}
+        id_now = time.time()
+        verify = {"diff": binary_first_equation(id_now).difficulty,
+                  "obj": binary_first_equation(id_now).create()}
         difficulty_min, difficulty_limit = Importer.reset(difficulty_min, difficulty_limit)
         if model_name == "数学题库":
             verify_papaer = [i for i in Mathematics(self.samples) if
@@ -843,23 +808,23 @@ class Importer(object):
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
             else:
-                verify = {"diff": binary_first_equation(time.time()).difficulty,
-                          "obj": binary_first_equation(time.time()).create()}
+                verify = {"diff": binary_first_equation().difficulty,
+                          "obj": binary_first_equation(id_now).create()}
         elif model_name == "物理题库":
             verify_papaer = [i for i in Physics(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
             else:
-                verify = {"diff": gravity_work(time.time()).difficulty, "obj": gravity_work(time.time()).create()}
+                verify = {"diff": gravity_work(id_now).difficulty, "obj": gravity_work(id_now).create()}
         elif model_name == "化学题库":
             verify_papaer = [i for i in Chemistry(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
             if len(verify_papaer) != 0:
                 random.shuffle(verify_papaer)
                 verify = (choice(verify_papaer))
             else:
-                verify = {"diff": Combustion_Calculations(time.time()).difficulty,
-                          "obj": Combustion_Calculations(time.time()).create()}
+                verify = {"diff": Combustion_Calculations(id_now).difficulty,
+                          "obj": Combustion_Calculations(id_now).create()}
         elif model_name == "生物题库":
             verify_papaer = [i for i in Biology(self.samples) if difficulty_min <= i.get("diff") <= difficulty_limit]
             if len(verify_papaer) != 0:
@@ -867,21 +832,21 @@ class Importer(object):
                 verify = (choice(verify_papaer))
                 # verify = (random.sample(verify_papaer, 1)[0])
             else:
-                verify = {"diff": biological_gene(time.time()).difficulty, "obj": biological_gene(time.time()).create()}
+                verify = {"diff": biological_gene(id_now).difficulty, "obj": biological_gene(id_now).create()}
         elif model_name == "图形化学":
-            verify = Chemistry_Pic(time.time())[0]
+            verify = Chemistry_Pic(id_now)[0]
         elif model_name == "图形成语":
-            verify = Idiom_Pic(time.time())[0]
+            verify = Idiom_Pic(id_now)[0]
         elif model_name == "学习强国":
-            verify = study(time.time())[0]
+            verify = study(id_now)[0]
         elif model_name == "宋词300":
-            verify = Songci(time.time())[0]
+            verify = Songci(id_now)[0]
         elif model_name == "论语问答":
-            verify = Lunyu(time.time())[0]
+            verify = Lunyu(id_now)[0]
         elif model_name == "科目一":
-            verify = car_subject(time.time())[0]
+            verify = car_subject(id_now)[0]
         elif model_name == "哔哩硬核测试":
-            verify = bili(time.time())[0]
+            verify = bili(id_now)[0]
         return verify.get("obj")
 
 # print(chemical_formula.create())
