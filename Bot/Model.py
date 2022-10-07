@@ -478,7 +478,7 @@ async def Verify2(bot, message, config):
                 # 不通知群组
                 # msgs = await botWorker.send_ban(message, bot, group_k)
                 aioschedule.every(360 * 2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
-                    message.from_user.id * abs(group_k))
+                    message.from_user.id * abs(int(group_k)))
                 # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                 #    msgs.message_id * abs(msgs.chat.id))
                 # 取消状态
