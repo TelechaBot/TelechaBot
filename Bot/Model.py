@@ -466,21 +466,21 @@ async def Verify2(bot, message, config):
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
                 # 通知群组
-                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
+                # msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
+                # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                #     msgs.message_id * abs(msgs.chat.id))
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
                 _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
                 await verifyRedis.checker(ban=[_keys])
                 await bot.reply_to(message, '回答错误!')
-                # 通知群组
-                msgs = await botWorker.send_ban(message, bot, group_k)
-                aioschedule.every(360).seconds.do(botWorker.unbanUser, bot, msgs.chat.id, message.from_user.id).tag(
-                    message.from_user.id * abs(msgs.chat.id))
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
+                # 不通知群组
+                # msgs = await botWorker.send_ban(message, bot, group_k)
+                aioschedule.every(360*2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
+                    message.from_user.id * abs(group_k))
+                # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                #    msgs.message_id * abs(msgs.chat.id))
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
         except Exception as e:
@@ -503,9 +503,9 @@ async def Verify(bot, message, config):
             if str(answers) == str(QA[1].get("rightKey")):
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
-                msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                    msgs.message_id * abs(msgs.chat.id))
+                # msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
+                # aioschedule.every(2).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
+                #     msgs.message_id * abs(msgs.chat.id))
                 # 删除状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
