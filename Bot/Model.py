@@ -49,7 +49,7 @@ async def About(bot, message, config):
                                "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
-# 主控模块
+# Control
 async def Switch(bot, message, config):
     userID = message.from_user.id
     load_csonfig()
@@ -472,17 +472,18 @@ async def Verify2(bot, message, config):
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
+                # 取消状态
+                await bot.delete_state(message.from_user.id, message.chat.id)
                 _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
                 await verifyRedis.checker(ban=[_keys])
-                await bot.reply_to(message, '回答错误!')
+                await bot.reply_to(message, '回答错误')
                 # 不通知群组
                 # msgs = await botWorker.send_ban(message, bot, group_k)
                 aioschedule.every(360 * 2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
                     message.from_user.id * abs(int(group_k)))
                 # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                 #    msgs.message_id * abs(msgs.chat.id))
-                # 取消状态
-                await bot.delete_state(message.from_user.id, message.chat.id)
+
         except Exception as e:
             await bot.reply_to(message,
                                f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
