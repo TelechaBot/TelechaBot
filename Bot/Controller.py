@@ -31,6 +31,12 @@ def set_delay_del(msgs, second: int):
     scheduler.start()
 
 
+async def set_cron(funcs, second: int):
+    tick_scheduler = AsyncIOScheduler()
+    tick_scheduler.add_job(funcs, 'interval', seconds=second)
+    tick_scheduler.start()
+
+
 # IO
 def load_csonfig():
     global _csonfig
@@ -147,17 +153,12 @@ class clientBot(object):
             bot.add_custom_filter(asyncio_filters.StateFilter(bot))
             from Bot.Redis import JsonRedis
             JsonRedis.start()
-            import aioschedule
-            aioschedule.every(3).seconds.do(JsonRedis.checker)
 
-            async def scheduler():
-                while True:
-                    await aioschedule.run_pending()
-                    await asyncio.sleep(1)
-
+            # aioschedule.every(3).seconds.do(JsonRedis.checker)
+            # 不再使用的
+            # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
             async def main():
                 await asyncio.gather(bot.polling(skip_pending=True, non_stop=True, allowed_updates=util.update_types),
-                                     # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
-                                     scheduler())
+                                     set_cron(JsonRedis.checker, second=3))
 
             asyncio.run(main())
