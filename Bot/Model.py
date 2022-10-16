@@ -9,7 +9,8 @@ import pathlib
 import random
 import time
 
-import aioschedule
+import datetime
+
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
@@ -18,6 +19,20 @@ from Bot.Redis import JsonRedis
 from utils.BotTool import botWorker, userStates
 import binascii
 from utils import ChatSystem
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+
+def set_delay_del(msgs, second: int):
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        botWorker.delmsg,
+        args=[msgs.chat.id, msgs.message_id],
+        trigger='date',
+        run_date=datetime.datetime.now() + datetime.timedelta(seconds=second)
+    )
+    scheduler.start()
+
 
 # 构建多少秒的验证对象
 
@@ -157,8 +172,7 @@ async def Banme(bot, message, config):
                                       f"管理员手动解封请使用 `+unban {message.from_user.id}` ",
                                       # reply_markup=bot_link,
                                       parse_mode='MarkdownV2')
-            aioschedule.every(60).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                msgs.message_id * abs(msgs.chat.id))
+            set_delay_del(msgs, second=10)
             try:
                 # userId = "".join(list(filter(str.isdigit, user)))
                 # verifyRedis.checker(unban=[key])
@@ -175,28 +189,23 @@ async def Admin(bot, message, config):
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
-        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        set_delay_del(msgs, second=12)
     if "/onantispam" == message.text or ("/onantispam" in message.text and "@" in message.text):
         botWorker.AntiSpam(message.chat.id, True)
         msgs = await bot.reply_to(message, f"启动了AntiSpam反诈系统")
-        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        set_delay_del(msgs, second=12)
     if "/offantispam" == message.text or ("/offantispam" in message.text and "@" in message.text):
         botWorker.AntiSpam(message.chat.id, False)
         msgs = await bot.reply_to(message, f"关闭了AntiSpam反诈系统")
-        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        set_delay_del(msgs, second=12)
     if "+oncasspam" == message.text or ("+oncasspam" in message.text and "@" in message.text):
         botWorker.casSystem(message.chat.id, True)
         msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
-        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        set_delay_del(msgs, second=12)
     if "+offcasspam" == message.text or ("+offcasspam" in message.text and "@" in message.text):
         botWorker.casSystem(message.chat.id, False)
         msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
-        aioschedule.every(12).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        set_delay_del(msgs, second=12)
     if "+select" in message.text and len(message.text) == len("+select"):
         def gen_markup():
             import CaptchaCore
@@ -214,14 +223,12 @@ async def Admin(bot, message, config):
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_limit=level)
             msgs = await bot.reply_to(message, "调整难度上限为:" + str(level))
-            aioschedule.every(20).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                msgs.message_id * abs(msgs.chat.id))
+            set_delay_del(msgs, second=20)
             # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
-            aioschedule.every(10).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                msgs.message_id * abs(msgs.chat.id))
+            set_delay_del(msgs, second=10)
             # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             # t.start()
     if "+diff_min" in message.text and len(message.text) != len("+diff_min"):
@@ -230,14 +237,12 @@ async def Admin(bot, message, config):
         if level:
             botWorker.set_difficulty(message.chat.id, difficulty_min=level)
             msgs = await bot.reply_to(message, "调整难度下限为:" + str(level))
-            aioschedule.every(20).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                msgs.message_id * abs(msgs.chat.id))
+            set_delay_del(msgs, second=20)
             # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
-            aioschedule.every(10).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                msgs.message_id * abs(msgs.chat.id))
+            set_delay_del(msgs, second=10)
             # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
             # t.start()
     if "+unban" in message.text:
@@ -255,8 +260,7 @@ async def Admin(bot, message, config):
                                                can_send_other_messages=True)
         # 机器人核心：发送通知并自毁消息
         TIPS = await bot.reply_to(message, f"手动解禁:从欧几里得家里解救了{status}")
-        aioschedule.every(30).seconds.do(botWorker.delmsg, TIPS.chat.id, TIPS.message_id).tag(
-            TIPS.message_id * abs(TIPS.chat.id))
+        set_delay_del(TIPS, second=30)
         # t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
         # t.start()
     if "+ban" in message.text:
@@ -378,8 +382,7 @@ async def member_update(bot, msg, config):
                                            info,
                                            reply_markup=bot_link,
                                            parse_mode='MarkdownV2')
-        aioschedule.every(60).seconds.do(botWorker.delmsg, msgss.chat.id, msgss.message_id).tag(
-            msgss.message_id * abs(msgss.chat.id))
+        # 这里要有一个定时器，我给删了。如果启动需加上
         # t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
         # t.start()
         try:
@@ -391,8 +394,7 @@ async def member_update(bot, msg, config):
             no_power = await bot.send_message(msg.chat.id,
                                               f"对不起，没有权限执行对新用户 `{new.user.id}` 的限制\nPassID: `{user_key}` \nGroupID:`{msg.chat.id}`",
                                               parse_mode='HTML')
-            aioschedule.every(6).seconds.do(botWorker.delmsg, no_power.chat.id, no_power.message_id).tag(
-                no_power.message_id * abs(no_power.chat.id))
+            # 这里要有一个定时器，我给删了。如果启动需加上
             # t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
             # t.start()
 
@@ -414,8 +416,7 @@ async def member_update(bot, msg, config):
         #     return markup
 
         msgs = await bot.send_message(msg.chat.id, botWorker.convert(info_.get("text")))  # , reply_markup=bot_verify())
-        aioschedule.every(8).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-            msgs.message_id * abs(msgs.chat.id))
+        # 这里要有一个定时器，我给删了。如果启动需加上
     if iss:
         print(str(new.user.id) + "加入了" + str(msg.chat.id))
         if _csonfig.get("whiteGroupSwitch"):
@@ -479,11 +480,10 @@ async def Verify2(bot, message, config):
                 await bot.reply_to(message, '回答错误')
                 # 不通知群组
                 # msgs = await botWorker.send_ban(message, bot, group_k)
-                aioschedule.every(360 * 2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
-                    message.from_user.id * abs(int(group_k)))
+                # aioschedule.every(360 * 2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
+                #    message.from_user.id * abs(int(group_k)))
                 # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
                 #    msgs.message_id * abs(msgs.chat.id))
-
         except Exception as e:
             await bot.reply_to(message,
                                f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',

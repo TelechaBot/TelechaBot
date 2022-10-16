@@ -3,7 +3,6 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-from pathlib import Path
 from Bot.Controller import clientBot
 from utils.BotTool import Check, Tool
 

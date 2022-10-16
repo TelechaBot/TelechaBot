@@ -5,6 +5,7 @@
 # @Github    ：sudoskys
 # import aiohttp
 import asyncio
+import datetime
 import json
 from pathlib import Path
 
@@ -16,6 +17,18 @@ from telebot.asyncio_storage import StateMemoryStorage
 from telebot import types, util
 from utils.BotTool import Tool
 from utils.BotTool import botWorker, userStates
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+
+def set_delay_del(msgs, second: int):
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        botWorker.delmsg,
+        args=[msgs.chat.id, msgs.message_id],
+        trigger='date',
+        run_date=datetime.datetime.now() + datetime.timedelta(seconds=second)
+    )
+    scheduler.start()
 
 
 # IO
@@ -113,15 +126,13 @@ class clientBot(object):
             async def callback_query(call):
                 # from CaptchaCore.__init__ import Importer
                 if call.data in CaptchaCore.Importer.getMethod():
-                    aioschedule.every(5).seconds.do(botWorker.delmsg, call.message.chat.id, call.message.id) \
-                        .tag(call.message.id * abs(call.message.chat.id))
+                    set_delay_del(msgs=call.message, second=5)
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success")
                             msgs = await bot.send_message(call.message.chat.id,
                                                           f"Info:群组验证模式已经切换至{call.data}")
-                            aioschedule.every(30).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.id).tag(
-                                msgs.id * abs(msgs.chat.id))
+                            set_delay_del(msgs=msgs, second=30)
 
                 else:
                     # 如果不是题库定义的方法，那就向下执行
@@ -146,7 +157,7 @@ class clientBot(object):
 
             async def main():
                 await asyncio.gather(bot.polling(skip_pending=True, non_stop=True, allowed_updates=util.update_types),
-                # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
+                                     # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
                                      scheduler())
 
             asyncio.run(main())
