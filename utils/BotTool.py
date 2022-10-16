@@ -6,7 +6,7 @@
 import pathlib
 from pathlib import Path
 
-import aioschedule
+
 import rtoml
 import time
 import json
@@ -42,7 +42,7 @@ class botWorker(object):
         from Bot.Controller import clientBot
         bot, config = clientBot().botCreate()
         await bot.delete_message(chat, message)
-        aioschedule.clear(message * abs(chat))
+        # aioschedule.clear(message * abs(chat))
 
     @staticmethod
     async def un_restrict(message, bot, groups, un_restrict_all=False):
@@ -74,7 +74,7 @@ class botWorker(object):
     async def unbanUser(bot, chat, user):
         msgss = await bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
         print("执行了移除黑名单:" + str(user))
-        aioschedule.clear(user * abs(chat))
+        # aioschedule.clear(user * abs(chat))
         return msgss
 
     @staticmethod

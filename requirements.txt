@@ -7,4 +7,4 @@ rtoml
 aiohttp
 chempy
 Pillow
-aioschedule
+apscheduler
