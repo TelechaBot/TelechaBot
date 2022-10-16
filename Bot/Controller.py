@@ -155,9 +155,10 @@ class clientBot(object):
             JsonRedis.start()
 
             # aioschedule.every(3).seconds.do(JsonRedis.checker)
+            # 不再使用的
+            # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
             async def main():
                 await asyncio.gather(bot.polling(skip_pending=True, non_stop=True, allowed_updates=util.update_types),
-                                     # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
                                      set_cron(JsonRedis.checker, second=3))
 
             asyncio.run(main())
