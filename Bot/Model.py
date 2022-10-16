@@ -148,7 +148,7 @@ async def Banme(bot, message, config):
             # bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
             # bot_link.add(
             #    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
-            mins = (random.randint(1, 15) * 1)
+            mins = (random.randint(1, 20) * 1)
             user = botWorker.convert(message.from_user.first_name)
             msgs = await bot.reply_to(message,
                                       f"[{user}](tg://openmessage?user_id={message.from_user.id}) "
