@@ -57,8 +57,9 @@ class TTS_verification(object):
         try:
             _now = int(time.time() * 100)
             import pyttsx3
+
             def engine_init():
-                importlib.reload(pyttsx3)  # Workaround to be avoid pyttsx3 being stuck
+                importlib.reload(pyttsx3)  # Workaround to be avoided pyttsx3 being stuck
                 engine = pyttsx3.init()
                 return engine
 
@@ -91,7 +92,7 @@ class TTS_verification(object):
             A = _NowTTS[1]
             Question = {"question": Q, "voice_path": file_name, "type": "voice"}
             Answer = {"rightKey": A}
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             Question, Answer = Idiom_verification.nofind()
         return Question, Answer
 
