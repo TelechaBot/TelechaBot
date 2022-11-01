@@ -3,7 +3,7 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github  :sudoskys
-
+import hashlib
 import json
 import pathlib
 import random
@@ -303,6 +303,27 @@ async def botSelf(bot, message, config):
                 await bot.leave_chat(message.chat.id)
 
 
+async def deal_send(bot, message, sth, tip):
+    # "\n\n输入 /saveme 重新生成题目，答题后不能重置。"
+    if sth[0].get("type") == "text" or sth[0].get("type") is None:
+        await bot.reply_to(message,
+                           botWorker.convert(
+                               sth[0].get("question")) + tip)
+    elif sth[0].get("type") == "photo":
+        await bot.send_photo(message.chat.id,
+                             caption=botWorker.convert(
+                                 sth[0].get("question")) + tip,
+                             photo=sth[0].get("picture"))
+    elif sth[0].get("type") == "voice":
+        await bot.send_message(message.chat.id,
+                               text=botWorker.convert(sth[0].get(
+                                   "question")) + tip)
+        await bot.send_voice(message.chat.id, voice=open(sth[0].get("voice_path"), 'rb'),
+                             protect_content=True)
+    else:
+        await bot.reply_to(message, "题库出现了没有标记的类型数据，无法出题")
+
+
 async def msg_del(bot, message, config):
     try:
         await bot.delete_message(message.chat.id, message.message_id)
@@ -536,18 +557,12 @@ async def Saveme(bot, message, config):
             paper = (CaptchaCore.Importer(s=time.time()).pull(difficulty_min=min_,
                                                               difficulty_limit=limit_ - 1,
                                                               model_name=_model))
-            import CaptchaCore
             if times == 0:
-                tip = f"必须回答"
+                tip = "\n\n输入 /saveme 重新生成题目,必须回答"
             else:
-                tip = f"目前还能生成{times}次"
-            if paper[0].get("picture") is None:
-                await bot.reply_to(message,
-                                   botWorker.convert(paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}")
-            else:
-                await bot.send_photo(message.chat.id, caption=botWorker.convert(
-                    paper[0].get("question")) + f"\n\n输入 /saveme 重新生成题目,{tip}",
-                                     photo=paper[0].get("picture"))
+                tip = f"\n\n输入 /saveme 重新生成题目,目前还能生成{times}次"
+            # 处理发送题目 paper tip
+            await deal_send(bot, message, sth=paper, tip=tip)
             # await bot.delete_state(message.from_user.id, message.chat.id)
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['QA'] = paper
@@ -603,15 +618,7 @@ async def Start(bot, message, config):
                 # 拉取题目例子
                 import CaptchaCore
                 sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
-                if sth[0].get("picture") is None:
-                    await bot.reply_to(message,
-                                       botWorker.convert(
-                                           sth[0].get("question")) + f"\n\n输入 /saveme 重新生成题目，答题后不能重置。")
-                else:
-                    await bot.send_photo(message.chat.id,
-                                         caption=botWorker.convert(
-                                             sth[0].get("question")) + "\n\n输入 /saveme 重新生成题目，答题后不能重置。",
-                                         photo=sth[0].get("picture"))
+                await deal_send(bot, message, sth=sth, tip="\n\n输入 /saveme 重新生成题目，答题后不能重置。")
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
                 async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:

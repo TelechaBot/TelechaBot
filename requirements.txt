@@ -8,3 +8,4 @@ aiohttp
 chempy
 Pillow
 apscheduler
+pyttsx3
