@@ -614,13 +614,12 @@ async def Start(bot, message, config):
                 # 拉取设置信息
                 min_, limit_ = botWorker.get_difficulty(group_k)
                 model = botWorker.get_model(group_k)
-
+                # 注册状态
+                await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
                 # 拉取题目例子
                 import CaptchaCore
                 sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 await deal_send(bot, message, sth=sth, tip="\n\n输入 /saveme 重新生成题目，答题后不能重置。")
-                # 注册状态
-                await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
                 async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                     data['QA'] = sth
                     data['Group'] = group_k

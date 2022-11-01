@@ -17,7 +17,7 @@ TelechaBot 是一个使用 Python 编写的机器人项目，使用可更新小�
 
 ### 环境需求
 
-应当使用 Python 3.7 或更高版本，主机需要安装redis！
+应当使用 Python 3.7 或更高版本，主机需要安装 redis！
 
 **安装TTS支持**
 
@@ -61,6 +61,9 @@ cp Captcha_exp.toml Captcha.toml
  
 nano Captcha.toml 
 ```
+#### 更新
+
+使用 `git pull` 即可
 
 #### 配置文件说明
 
