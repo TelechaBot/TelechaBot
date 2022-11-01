@@ -6,6 +6,6 @@ redis
 rtoml
 aiohttp
 chempy
+pyttsx3
 Pillow
 apscheduler
-pyttsx3
