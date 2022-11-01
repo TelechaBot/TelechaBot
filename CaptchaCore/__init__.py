@@ -3,10 +3,12 @@
 # @FileName: Redis.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-
+import importlib
 import json
 import math
+import os
 import random
+import string
 import time
 import pathlib
 from random import choice
@@ -23,6 +25,77 @@ difficulty = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 # print(choice(l)) # 随机抽取一个
 
 # print(random.randint(0, 9))
+def MD5(strs: str):
+    import hashlib
+    hl = hashlib.md5()
+    hl.update(strs.encode(encoding='utf-8'))
+    return hl.hexdigest()
+
+
+# TTS
+class TTS_verification(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 1
+
+    @staticmethod
+    def nofind():
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"TTSFileNoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        Question = {"question": Q, "type": "text"}
+        Answer = {"rightKey": round(A)}
+        return Question, Answer
+
+    @staticmethod
+    def create():
+        try:
+            _now = int(time.time() * 100)
+            import pyttsx3
+
+            def engine_init():
+                importlib.reload(pyttsx3)  # Workaround to be avoided pyttsx3 being stuck
+                engine = pyttsx3.init()
+                return engine
+
+            tts = engine_init()
+            tts.setProperty('rate', 1)
+            tts.setProperty('volume', 3.0)
+            _random = [f"{random.randint(0, 7)}", f"{random.randint(0, 7)}", f"{random.randint(0, 7)}",
+                       f"{random.randint(0, 7)}", f"{random.randint(0, 7)}"]
+            _letter = f"{random.choice(string.ascii_lowercase)}s"
+            _random_q = " ".join(iter(_random))
+            _random_int = "".join(iter(_random))
+            TTS = [[_random_q, _random_int],
+                   # [f"{_random_q} {_letter}", _random_int + _letter],
+                   # [f"{_letter} {_random_q}", _letter + _random_int]
+                   ]
+            _NowTTS = random.choice(TTS)
+            pathlib.Path("TTS").mkdir(exist_ok=True)
+            file_name = f'TTS/{MD5(_random_int)}.mp3'
+            if not os.path.exists(file_name):
+                tts.save_to_file(_NowTTS[0], file_name)
+                # tts.say(_NowTTS[0])
+                tts.runAndWait()
+                _i = 100
+                while not os.path.exists(file_name) and _i != 0:
+                    time.sleep(0.1)
+                    _i = _i - 1
+            if not os.path.exists(file_name):
+                raise FileNotFoundError("NO TTS File")
+            Q = f"听这段音频，它由数字组成\n发送你听到的内容，不要有空格"
+            A = _NowTTS[1]
+            Question = {"question": Q, "voice_path": file_name, "type": "voice"}
+            Answer = {"rightKey": A}
+        except FileNotFoundError:
+            Question, Answer = Idiom_verification.nofind()
+        return Question, Answer
+
 
 # 成语验证
 class Idiom_verification(object):
@@ -40,7 +113,7 @@ class Idiom_verification(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -56,7 +129,7 @@ class Idiom_verification(object):
                 Exp = item.get("explain")
                 Q = f"成语的词汇在以下词组内\n{Tips}\n\n释义为{Exp}\n\n猜猜看吧～"
                 A = item.get("answer")
-                Question = {"question": Q, "picture": Pic}
+                Question = {"question": Q, "picture": Pic, "type": "photo"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = Idiom_verification.nofind()
@@ -81,13 +154,12 @@ class Chemical_verification(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
     @staticmethod
     def create():
-        Pic = None
         if pathlib.Path('Data/PubChems.json').exists():
             with open("Data/PubChems.json", 'r') as tiku_file:
                 samples = json.load(tiku_file)
@@ -98,7 +170,7 @@ class Chemical_verification(object):
                 An = (samples[Qn])
                 A = An.get("Answer")
                 Pic = An.get("Pic")
-                Question = {"question": Q, "picture": Pic}
+                Question = {"question": Q, "picture": Pic, "type": "photo"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = Chemical_verification.nofind()
@@ -148,7 +220,7 @@ class bili_hard_core(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -169,7 +241,7 @@ class bili_hard_core(object):
                 d = str(key_obj.get("opt4"))
                 Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
                 A = key_obj.get("answer")
-                Question = {"question": Q, "picture": None}
+                Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = bili_hard_core.nofind()
@@ -193,7 +265,7 @@ class chemical_formula(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -211,7 +283,7 @@ class chemical_formula(object):
         if samples:
             Q = f"现在有 {inputs}={output} 这个没有配平的化学方程式，不考虑是否合理的情况下，前面的{tip_key}的系数为{tip}请问方程式后半段的 {key} 的系数是多少？(答出数字)"
             A = samples.get(key)
-            Question = {"question": Q, "picture": None}
+            Question = {"question": Q, "type": "text"}
             Answer = {"rightKey": A}
         else:
             Question, Answer = chemical_formula.nofind()
@@ -233,7 +305,7 @@ class car_subject_one(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -255,7 +327,7 @@ class car_subject_one(object):
                 d = str(key_obj.get("opt4"))
                 Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
                 A = key_obj.get("answer")
-                Question = {"question": Q, "picture": None}
+                Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = car_subject_one.nofind()
@@ -280,7 +352,7 @@ class songci_300(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -293,7 +365,7 @@ class songci_300(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
-                Question = {"question": Q, "picture": None}
+                Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = songci_300.nofind()
@@ -319,7 +391,7 @@ class lunyu(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -332,7 +404,7 @@ class lunyu(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
-                Question = {"question": Q, "picture": None}
+                Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = lunyu.nofind()
@@ -358,7 +430,7 @@ class study_build_up(object):
         r = (random.randint(5, 10) * 2)
         Q = f"NoFind:一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -371,7 +443,7 @@ class study_build_up(object):
                 key_obj = random.sample(samples.keys(), 1)
                 Q = key_obj[0]
                 A = (samples[Q])
-                Question = {"question": Q, "picture": None}
+                Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
                 Question, Answer = study_build_up.nofind()
@@ -395,7 +467,7 @@ class radius(object):
         r = (random.randint(5, 10) * 2)
         Q = f"一个扇形弧长为{lena}，半径为{r}，求其面积为多少π！（四舍五入，只答出数字）"
         A = (lena * r) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -416,7 +488,7 @@ class find_volume_cone(object):
 
         Q = f"一个圆锥的底面积为{lena}π，高为{h}，求其体积为多少π!(四舍五入，只答出数字部分！)"
         A = (lena * h) / 3
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -436,7 +508,7 @@ class find_ball_cone(object):
         r = (random.randint(1, 14) * 3)
         Q = f"一个球的半径为{r}，求其体积是多少π!(四舍五入，只答出数字部分！)"
         A = 4 / 3 * r ** 3
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -458,7 +530,7 @@ class cosmic_speed(object):
         Q = f"若取地球的第一宇宙速度为8km/s，缇茶所在的机器人星球的质量是地球的{bei}倍，半径是地球的{radius_}倍，则此行星的第一宇宙速度约为(回答四舍五入后的数字答案！)"
         A = pow(bei / pow(radius_, 2) * radius_, 0.5) * 8
 
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -482,7 +554,7 @@ class gravity_work(object):
         Q = f"经测量，重{g1}N的物体沿斜面运行时，受到的摩擦力为{g2}N,斜面的长和高分别是{long}和{high}，" \
             f"如果物体从斜面顶部自由滑到底端，重力对物体所做的功和克服摩擦力所做的功的和是(四舍五入)？(只答出数字部分！)"
         A = g1 * high + g2 * long
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -527,7 +599,7 @@ class binary_first_equation(object):
         if not iss:
             A = 0
         Q = f"已知二元一次方程 ax²+bx+c=0，其中a为{a}，b为{b}，c为{c}。求其两根的和四舍五入后的绝对值。如果无解请写0."
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(abs(A))}
         return Question, Answer
 
@@ -547,7 +619,7 @@ class parabola(object):
         a = p * 4 + 2
         Q = f"长度为{a}的线段 AB 的两个端点A、B都在抛物线y2(2次方)={p}x 上滑动，则线段 AB 的中点 M 到 y 轴的最短距离为?(四舍五入)"
         A = (a - p / 2) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -567,7 +639,7 @@ class parabola_2(object):
         num2 = (random.randint(7, 21) * 4)
         Q = f"若抛物线x2(2次方)=-2py(p>0)上纵坐标为-{num}的点到焦点的距离为{num2}，则焦点到准线的距离是?四舍五入且取绝对值"
         A = (num2 - num) / 2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -586,10 +658,11 @@ class biological_Flag_Recap(object):
         once = (random.randint(10, 15) * 5)
         twice = round(once / (random.randint(1, 5) * 1))
         scend = abs(twice - (random.randint(1, 5) * 1))
-        Q = f"用标志重捕法来估计某个种群的个体数量，例如在对某种鼠群的种群密度的调查中，第一次捕获并标志{once}只，第二次捕获{twice}只，其中有标志鼠{scend}只，则对该种群的数量估计，该种群数量大约为多少只？(答出数字)"
+        Q = f"用标志重捕法来估计某个种群的个体数量，例如在对某种鼠群的种群密度的调查中，" \
+            f"第一次捕获并标志{once}只，第二次捕获{twice}只，其中有标志鼠{scend}只，则对该种群的数量估计，该种群数量大约为多少只？(答出数字) "
         A = (twice * once) / scend
         # A = 128 * (num1 + num2) - 18 * num2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -609,7 +682,7 @@ class biological_protein(object):
         num2 = (random.randint(7, 21) * 2)
         Q = f"已知20种氨基酸的平均分子量是128，现有一蛋白质分子由{num1}条多肽链组成，共有肽键{num2}个，此蛋白质分子量是?(答出数字)"
         A = 128 * (num1 + num2) - 18 * num2
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -628,7 +701,7 @@ class biological_DNA(object):
         num1 = (random.randint(7, 21) * 2)
         Q = f"一段DNA有{num1}对碱基对，请问它可以储藏多少种遗传信息？(答出数字)"
         A = num1 * 4
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
@@ -655,7 +728,7 @@ class biological_gene(object):
             An = (2 * num1 + num2) / (2 * (num1 + num2 + num3)) * 100
         else:
             An = (num2 + 2 * num3) / (2 * (num1 + num2 + num3)) * 100
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(An)}
         return Question, Answer
 
@@ -675,54 +748,63 @@ class Combustion_Calculations(object):
         Hx = Cx * 4 - (random.randint(1, 2) * 4)
         Q = f"1mol 有机物 C{Cx}H{Hx} 完全燃烧消耗多少mol氧气？(只答出数字并四舍五入)"
         A = Cx + (Hx / 4)
-        Question = {"question": Q, "picture": None}
+        Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(A)}
         return Question, Answer
 
 
 # --------------------------------
+
+def TTS_VOICE(s):
+    _TTS_VOICE = [
+        {"diff": TTS_verification(s).difficulty,
+         "obj": TTS_verification(s).create()},
+    ]
+    return _TTS_VOICE
+
+
 def Idiom_Pic(s):
-    Idiom_Pic = [
+    _Idiom_Pic = [
         {"diff": Idiom_verification(s).difficulty,
          "obj": Idiom_verification(s).create()},
 
     ]
-    return Idiom_Pic
+    return _Idiom_Pic
 
 
 def Chemistry_Pic(s):
-    Chemistry_Pic = [
+    _Chemistry_Pic = [
         {"diff": Chemical_verification(s).difficulty,
          "obj": Chemical_verification(s).create()},
 
     ]
-    return Chemistry_Pic
+    return _Chemistry_Pic
 
 
 def Chemistry(s):
-    Chemistry = [
+    _Chemistry = [
         {"diff": Combustion_Calculations(s).difficulty,
          "obj": Combustion_Calculations(s).create()},
         {"diff": chemical_formula(s).difficulty,
          "obj": chemical_formula(s).create()},
 
     ]
-    return Chemistry
+    return _Chemistry
 
 
 def Biology(s):
-    Biology = [
+    _Biology = [
         {"diff": biological_gene(s).difficulty, "obj": biological_gene(s).create()},
         {"diff": biological_DNA(s).difficulty, "obj": biological_DNA(s).create()},
         {"diff": biological_protein(s).difficulty, "obj": biological_protein(s).create()},
         {"diff": biological_Flag_Recap(s).difficulty, "obj": biological_Flag_Recap(s).create()},
 
     ]
-    return Biology
+    return _Biology
 
 
 def Mathematics(s):
-    Mathematics = [
+    _Mathematics = [
         {"diff": find_volume_cone(s).difficulty, "obj": find_volume_cone(s).create()},
         {"diff": find_ball_cone(s).difficulty, "obj": find_ball_cone(s).create()},
         {"diff": binary_first_equation(s).difficulty, "obj": binary_first_equation(s).create()},
@@ -730,50 +812,50 @@ def Mathematics(s):
         {"diff": parabola(s).difficulty, "obj": parabola(s).create()},
         {"diff": radius(s).difficulty, "obj": radius(s).create()},
     ]
-    return Mathematics
+    return _Mathematics
 
 
 def Physics(s):
-    Physics = [
+    _Physics = [
         {"diff": gravity_work(s).difficulty, "obj": gravity_work(s).create()},
         {"diff": cosmic_speed(s).difficulty, "obj": cosmic_speed(s).create()},
     ]
-    return Physics
+    return _Physics
 
 
 def study(s):
-    study = [
+    _study = [
         {"diff": study_build_up(s).difficulty, "obj": study_build_up(s).create()},
     ]
-    return study
+    return _study
 
 
 def car_subject(s):
-    car_subject = [
+    _car_subject = [
         {"diff": car_subject_one(s).difficulty, "obj": car_subject_one(s).create()},
     ]
-    return car_subject
+    return _car_subject
 
 
 def bili(s):
-    bili = [
+    _bili = [
         {"diff": bili_hard_core(s).difficulty, "obj": bili_hard_core(s).create()},
     ]
-    return bili
+    return _bili
 
 
 def Songci(s):
-    songci = [
+    _songci = [
         {"diff": songci_300(s).difficulty, "obj": songci_300(s).create()},
     ]
-    return songci
+    return _songci
 
 
 def Lunyu(s):
-    lunyus = [
+    _lunyus = [
         {"diff": lunyu(s).difficulty, "obj": lunyu(s).create()},
     ]
-    return lunyus
+    return _lunyus
 
 
 class Importer(object):
@@ -792,7 +874,7 @@ class Importer(object):
     @staticmethod
     def getMethod():
         return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一",
-                "哔哩硬核测试", "图形成语"]
+                "哔哩硬核测试", "图形成语", "基础听力验证"]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
         difficulty_min = int(difficulty_min)
@@ -847,6 +929,8 @@ class Importer(object):
             verify = car_subject(id_now)[0]
         elif model_name == "哔哩硬核测试":
             verify = bili(id_now)[0]
+        elif model_name == "基础听力验证":
+            verify = TTS_VOICE(id_now)[0]
         return verify.get("obj")
 
 # print(chemical_formula.create())
