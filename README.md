@@ -10,7 +10,7 @@
 
 <h2 align="center">TelechaBot</h2>
 
-TelechaBot 是一个使用 Python 编写的机器人项目，使用可更新小初高题目模组进行生物验证！
+TelechaBot 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！
 项目经过严格模块化重构，便于扩展。目前由 `Sudoskys`做维护支持
 
 验证机器人主体，接入学科生物验证核心。
