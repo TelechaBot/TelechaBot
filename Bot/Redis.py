@@ -59,7 +59,7 @@ class JsonRedis(object):
                                               "group": group_id,
                                               "time": _time,
                                               "uuid": str(_uukey),
-                                              "interval": 200,
+                                              "interval": 240,
                                               }
 
     @staticmethod

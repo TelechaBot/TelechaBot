@@ -350,7 +350,7 @@ async def NewRequest(bot, msg, config):
             resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
             user = botWorker.convert(msg.from_user.id)
             group_name = botWorker.convert(msg.chat.title)
-            info = f"您正在申请加入 `{group_name}`，从现在开始您有 200 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
+            info = f"您正在申请加入 `{group_name}`，从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
                    f"\nPassID:`{resign_key}`" \
                    f"\nChatID:`{msg.chat.id}`" \
                    f"\nAuthID:`{user}`" \
@@ -497,7 +497,7 @@ async def Start(bot, message, config):
                     if statu in ["member", "left"]:
                         well_unban = True
             # 开始判断
-            info = f"开始验证群组 `{group_k}`,你有总 200 秒的时间回答下面的问题" \
+            info = f"开始验证群组 `{group_k}`" \
                    f"\n\nPassID:`{PassID}`" \
                    f"\nAuthID:`{message.from_user.id}`"
             if group_k:
