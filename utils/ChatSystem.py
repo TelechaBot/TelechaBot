@@ -113,9 +113,11 @@ class UserUtils(object):
             spam = True
         if _csonfig.get("antiSpam") and info:
             if not pathlib.Path("Data/AntiSpam.txt").exists():
-                lists = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放", "集团", "财神", "合作", "微信",
-                         "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费", "免费免", "咨询我", "接洽我", "问询我",
-                         "免费翻墙", "免翻墙"]
+                lists = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放",
+                         "集团", "财神", "合作", "微信",
+                         "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费", "免费免", "咨询我", "接洽我",
+                         "问询我",
+                         "免费翻墙", "免翻墙", "我主页"]
                 await UserUtils.renewAnti(message=None)
             else:
                 with open('Data/AntiSpam.txt') as f:  # 默认模式为‘r’，只读模式

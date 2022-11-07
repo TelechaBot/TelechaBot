@@ -3,7 +3,6 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github  :sudoskys
-import hashlib
 import json
 import pathlib
 import random
@@ -11,7 +10,7 @@ import time
 
 import datetime
 
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+# from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
 from Bot.Redis import JsonRedis
@@ -341,7 +340,6 @@ async def msg_del(bot, message, config):
 
 async def NewRequest(bot, msg, config):
     load_csonfig()
-    # print(msg)
     checkOK = await botWorker.checkGroup(bot, msg, config)
     if checkOK:
         ChatSystem.ChatUtils().addGroup(msg.chat.id)
@@ -366,110 +364,6 @@ async def NewRequest(bot, msg, config):
             info = "当前群组开启了 Spam 过滤，您的身份不符合设定或数据库记录仍未消除，请等待 Spam 键值对过期，大约几天，为你带来了烦扰很抱歉！"
             await bot.send_message(msg.from_user.id, botWorker.convert(info),
                                    parse_mode='MarkdownV2')
-
-
-# 此函数已经不再使用！
-# 启动新用户通知
-async def member_update(bot, msg, config):
-    # if msg.left_chat_member.id != bot.get_me().id:
-    old = msg.old_chat_member
-    new = msg.new_chat_member
-    load_csonfig()
-
-    async def verify_user(bot, config, statu):
-        # 用户操作
-        resign_key = verifyRedis.resign_user(new.user.id, msg.chat.id)
-        user_ke = str(resign_key) + " " + str(statu) + " " + str(new.user.id)
-        user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
-        InviteLink = config.link + "?start=" + str(user_key)
-        # print(InviteLink)
-        bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-        bot_link.add(
-            InlineKeyboardButton("点这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
-        user = botWorker.convert(new.user.first_name)
-        group_name = botWorker.convert(msg.chat.title)
-        info = f"[{user}](tg://openmessage?user_id={new.user.id}) 正在申请加入 `{group_name}`" \
-               f"\nPassID:`{botWorker.convert(user_key)}`" \
-               f"\n群组ID:`{botWorker.convert(msg.chat.id)}`" \
-               f"\n赫免命令`+unban {new.user.id}`"
-        try:
-            msgss = await bot.send_message(msg.chat.id,
-                                           info,
-                                           reply_markup=bot_link,
-                                           parse_mode='MarkdownV2')
-        except Exception as e:
-            print(e)
-            msgss = await bot.send_message(msg.chat.id,
-                                           info,
-                                           reply_markup=bot_link,
-                                           parse_mode='MarkdownV2')
-        # 这里要有一个定时器，我给删了。如果启动需加上
-        # t = Timer(88, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-        # t.start()
-        try:
-            await bot.restrict_chat_member(msg.chat.id, new.user.id, can_send_messages=False,
-                                           can_send_media_messages=False,
-                                           can_send_other_messages=False)
-        except Exception as e:
-            print(e)
-            no_power = await bot.send_message(msg.chat.id,
-                                              f"对不起，没有权限执行对新用户 `{new.user.id}` 的限制\nPassID: `{user_key}` \nGroupID:`{msg.chat.id}`",
-                                              parse_mode='HTML')
-            # 这里要有一个定时器，我给删了。如果启动需加上
-            # t = Timer(6, botWorker.delmsg, args=[bot, no_power.chat.id, no_power.message_id])
-            # t.start()
-
-    iss, info_ = botWorker.new_member_checker(msg)
-    if info_ is not None:
-        # ID = info.get("id")
-        # Group = info.get("group")
-        # await bot.restrict_chat_member(Group, ID, can_send_messages=False,
-        #                                can_send_media_messages=False,
-        #                                can_send_other_messages=False)
-        # 在回调函数中我们无法对返回的数据做管理员校验处理，所以禁用了此功能
-        # def bot_verify():
-        #     markup = InlineKeyboardMarkup()
-        #     markup.row_width = 1
-        #     markup.add(
-        #         InlineKeyboardButton("通过同类", callback_data=f"Pass+{Group}+{ID}"),
-        #         InlineKeyboardButton("踢出同类", callback_data=f"Ban+{Group}+{ID}"),
-        #     )
-        #     return markup
-
-        msgs = await bot.send_message(msg.chat.id, botWorker.convert(info_.get("text")))  # , reply_markup=bot_verify())
-        # 这里要有一个定时器，我给删了。如果启动需加上
-    if iss:
-        print(str(new.user.id) + "加入了" + str(msg.chat.id))
-        if _csonfig.get("whiteGroupSwitch"):
-            if int(msg.chat.id) in _csonfig.get("whiteGroup") or abs(int(msg.chat.id)) in _csonfig.get(
-                    "whiteGroup"):
-                await verify_user(bot, config, old.status)
-            else:
-                if hasattr(config.ClientBot, "contact_details"):
-                    contact = botWorker.convert(config.ClientBot.contact_details)
-                else:
-                    contact = "There is no reserved contact information."
-                await bot.send_message(msg.chat.id,
-                                       f"Bot开启了白名单模式，有人将我添加到此群组，但该群组不在我的白名单中...."
-                                       f"请向所有者申请权限...."
-                                       f"\nContact details:{contact}"
-                                       f'添加白名单命令:`/addwhite {msg.chat.id}`',
-                                       parse_mode='HTML')
-                await bot.leave_chat(msg.chat.id)
-        else:
-            await verify_user(bot, config, old.status)
-        # 启动验证流程
-    if new.status in ["left", 'kicked',
-                      "restricted"] and not msg.old_chat_member.is_member and not msg.from_user.is_bot:
-        # 注销任务
-        if new.status in ["kicked", "left"]:
-            print(str(new.user.id) + "离开了" + str(msg.chat.id))
-            await verifyRedis.remove_user(new.user.id, msg.chat.id)
-            try:
-                await bot.delete_state(new.user.id, msg.chat.id)
-            except Exception as e:
-                pass
-            # bot.ban_chat_member(msg.chat.id, user_id=new.user.id)
 
 
 async def Verify2(bot, message, config):
