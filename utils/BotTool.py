@@ -129,26 +129,11 @@ class botWorker(object):
     @staticmethod
     def convert(texts):
         text = str(texts)
+        chars = "_*[]()~`>#+-=|{','}.!'"
+        for c in chars:
+            text = text.replace(c, "\\" + c)
         # In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{',
         # '}', '.', '!' must be escaped with the preceding character '\'.
-        text.replace("_", "\_")
-        text.replace("*", "\*")
-        text.replace("[", "\[")
-        text.replace("]", "\]")
-        text.replace("(", "\(")
-        text.replace(")", "\)")
-        text.replace("~", "\~")
-        text.replace("`", "\`")
-        text.replace(">", "\>")
-        text.replace("#", "\#")
-        text.replace("+", "\+")
-        text.replace("-", "\-")
-        text.replace("=", "\=")
-        text.replace("|", "\|")
-        text.replace("{", "\{")
-        text.replace("}", "\{")
-        text.replace(".", "\.")
-        text.replace("!", "\!")
         return text
 
     @staticmethod

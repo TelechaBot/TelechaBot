@@ -57,7 +57,7 @@ def save_csonfig():
 async def About(bot, message, config):
     if message.chat.type == "private":
         if config.desc:
-            await bot.reply_to(message, config.desc)
+            await bot.reply_to(message, botWorker.convert(config.desc), parse_mode='MarkdownV2')
         else:
             await bot.reply_to(message,
                                "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
