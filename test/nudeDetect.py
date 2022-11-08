@@ -8,12 +8,9 @@ import time
 from utils.safeDetect import Nude
 
 t1 = time.time()
-n = Nude("./TestData/safe.jpg")
-n.parse()
-print(n.result)
 n = Nude("./TestData/nude.jpg")
+n.resize(maxheight=160, maxwidth=160)
 n.parse()
 print(n.result)
 t2 = time.time()
-
 print(t2 - t1)

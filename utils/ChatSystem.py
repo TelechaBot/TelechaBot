@@ -163,7 +163,7 @@ class UserUtils(object):
                             new_file.write(downloaded_file)
                             _downPhoto = True
                     n = Nude(_photoPath)
-                    n.resize(maxheight=800, maxwidth=600)
+                    n.resize(maxheight=160, maxwidth=160)
                     n.parse()
                     if n.result:
                         Status["nsfw"] = _nsfw["level"]
