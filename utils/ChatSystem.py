@@ -10,7 +10,11 @@ import time
 
 import requests
 
+from utils.BotTool import botWorker
+from utils.safeDetect import Nude
+
 redis_installed = True
+
 try:
     from redis import Redis, ConnectionPool
 except:
@@ -85,6 +89,109 @@ class ChatUtils(object):
 
 class UserUtils(object):
     def __init__(self):
+        self.DataWorker = DataWorker(prefix="Users_")
+
+    def setUser(self, userId: str, profile: dict):
+        return self.DataWorker.setKey(key=userId, obj=profile)
+
+    def getUser(self, userId: str):
+        listSpam = self.DataWorker.getKey(userId)
+        return listSpam
+
+    @staticmethod
+    def checkQrcode(filepath: str):
+        import zxing
+        reader = zxing.BarCodeReader()
+        barcode = reader.decode(filepath)
+        if barcode.format:
+            return True
+        else:
+            return False
+
+    async def Check(self, bot, _csonfig, groupId: str, UserProfile: dict, userId: str):
+        """
+        检查
+        :param bot: 机器人实例
+        :param _csonfig:
+        :param groupId:
+        :param UserProfile:
+        :param userId:
+        :return:
+        """
+        self.setUser(userId=UserProfile["id"], profile=UserProfile)
+        Setting = botWorker.GetGroupStrategy(group_id=groupId)["scanUser"]
+        _spam = Setting.get("spam")
+        _premium = Setting.get("premium")
+        _nsfw = Setting.get("nsfw")
+        _suspect = Setting.get("suspect")
+        _downPhoto = False
+        _photoPath = "VerifyUser.jpg"
+        # +[nsfw!on!ban!5] 代表入群审计头像是否含有 nsfw 内容
+        # +[nsfw!off!pass!4]
+        # +[nsfw!on!ask!30]
+        # Init Status
+        Status = {"spam": False, "premium": False, "nsfw": False, "suspect": False}
+        suspect = 0
+        # Status["24hjoin"] = False
+        # 因为检查成本过高，所以换用逐项判定的方式
+        if _spam:
+            if _spam.get("type") == "on":
+                # Check photo
+                if UserProfile["photo"]:
+                    if not _downPhoto:
+                        file_path = await bot.get_file(UserProfile["photo"])
+                        downloaded_file = await bot.download_file(file_path.file_path)
+                        with open(_photoPath, 'wb') as new_file:
+                            new_file.write(downloaded_file)
+                            _downPhoto = True
+                    IsSpam = self.checkQrcode(filepath=_photoPath)
+                    if IsSpam:
+                        Status["spam"] = _spam["level"]
+                # Check profile text
+                if UserProfile["token"]:
+                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile["token"], userId=userId)
+                    if IsSpam:
+                        Status["spam"] = _spam["level"]
+        # NSFW
+        if _nsfw:
+            if _nsfw.get("type") == "on":
+                if UserProfile["photo"]:
+                    if not _downPhoto:
+                        file_path = await bot.get_file(UserProfile["photo"])
+                        downloaded_file = await bot.download_file(file_path.file_path)
+                        with open(_photoPath, 'wb') as new_file:
+                            new_file.write(downloaded_file)
+                            _downPhoto = True
+                    n = Nude(_photoPath)
+                    n.parse()
+                    if n.result:
+                        Status["nsfw"] = _nsfw["level"]
+        # suspect
+        if _suspect:
+            if _suspect.get("type") == "on":
+                total = 30
+                if not UserProfile["photo"]:
+                    suspect += 10
+                if not UserProfile["bio"]:
+                    suspect += 10
+                if not UserProfile["username"]:
+                    suspect += 10
+                if UserProfile["is_premium"]:
+                    suspect -= 20
+                if suspect < (total / 2):
+                    Status["suspect"] = _suspect["level"]
+        # Check premium
+        if _premium:
+            if _premium.get("type") == "on":
+                if UserProfile["is_premium"]:
+                    Status["premium"] = _premium["level"]
+        # 排序启用的命令
+        key = max(Status, key=Status.get)
+        return Setting.get(key)
+
+
+class SpamUtils(object):
+    def __init__(self):
         self.DataWorker = DataWorker(prefix="Spams_")
 
     def addSpamUser(self, userId: str, groupId: str):
@@ -109,8 +216,8 @@ class UserUtils(object):
     async def checkUser(self, _csonfig, info: str, userId: str):
         spam = False
         # print(_csonfig)
-        if self.isUserSpam(userId):
-            spam = True
+        # if self.isUserSpam(userId):
+        #    return True
         if _csonfig.get("antiSpam") and info:
             if not pathlib.Path("Data/AntiSpam.txt").exists():
                 lists = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放",
@@ -118,7 +225,7 @@ class UserUtils(object):
                          "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费", "免费免", "咨询我", "接洽我",
                          "问询我",
                          "免费翻墙", "免翻墙", "我主页"]
-                await UserUtils.renewAnti(message=None)
+                await SpamUtils.renewAnti(message=None)
             else:
                 with open('Data/AntiSpam.txt') as f:  # 默认模式为‘r’，只读模式
                     contents = f.read()  # 读取文件全部内容
@@ -126,12 +233,12 @@ class UserUtils(object):
             for i in lists:
                 if len(i) > 1:
                     if i in info:
-                        spam = True
+                        return True
         if _csonfig.get("casSystem") and userId:
             netWork = requests.get(f'https://api.cas.chat/check?user_id={userId}')
             if netWork.status_code == 200:
                 if netWork.json().get("ok"):
-                    spam = True
+                    return True
         return spam
 
     @staticmethod

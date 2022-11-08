@@ -10,6 +10,44 @@
         -1001662266151,
         1001561314417
     ],
+    "GroupStrategy": {
+        "-1001561314417": {
+            "scanUser": {
+                "spam": {
+                    "level": 5,
+                    "command": "ban",
+                    "type": "on",
+                    "info": "策略:当前群组开启了 Spam 过滤"
+                },
+                "premium": {
+                    "level": 4,
+                    "command": "pass",
+                    "type": "off",
+                    "info": "策略:为会员用户跳过验证，已经为您自动放行"
+                },
+                "nsfw": {
+                    "level": 1,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "策略:当前群组开启了色情内容过滤"
+                },
+                "suspect": {
+                    "level": 5,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "策略:当前群组开启了嫌疑识别"
+                }
+            },
+            "afterVerify": {
+                "unpass": {
+                    "level": 5,
+                    "command": "cancel",
+                    "type": "on",
+                    "info": "不通过留看"
+                }
+            }
+        }
+    },
     "antiSpam": {
         "1000": true,
         "2000": true,
