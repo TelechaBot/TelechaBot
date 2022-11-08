@@ -11,7 +11,8 @@
 <h2 align="center">TelechaBot</h2>
 
 TelechaBot 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！
-项目经过严格模块化重构，便于扩展。目前由 `Sudoskys`做维护支持，点击 [使用一个实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users)
+项目经过严格模块化重构，便于扩展。目前由 `Sudoskys`
+做维护支持，点击 [使用一个实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users)
 
 验证机器人主体，接入学科生物验证核心。
 
@@ -61,6 +62,7 @@ cp Captcha_exp.toml Captcha.toml
  
 nano Captcha.toml 
 ```
+
 #### 更新
 
 使用 `git pull` 即可，注意更新依赖库
@@ -88,11 +90,9 @@ url = "http://127.0.0.1:7890"
 
 先去 Botfather 获取你自己的 Token
 
-
 **再去群组类型——谁可以发送消息——启用 `批准新成员`。**
 
 **如果绑定了频道，推荐额外启用 `仅成员`**
-
 
 机器人自 2.0.9 开始转换验证方式为批准模式，自动识别并反 Spam
 
@@ -154,8 +154,8 @@ kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 &
 | `/offw`                   | 关闭白名单，开放机器人                | 机器人 | 主人           |
 | `/show`                   | 对config设定的主人显示配置           | 私聊  | 主人           |
 | `/groupuser`              | 对config设定的主人显示正在使用的群组      | 私聊  | 主人           |
-| `/addwhite group_id`      | 加入白名单，仅开启白名单时生效            | 群组  | 主人           |
-| `/removewhite group_id`   | 移除白名单，仅开启白名单时生效            | 群组  | 主人           |
+| `/addwhite group_id`      | 加入白名单，仅开启白名单时生效            | 私聊  | 主人           |
+| `/removewhite group_id`   | 移除白名单，仅开启白名单时生效            | 私聊  | 主人           |
 | `/cat filepath`           | 查看文件                       | 私聊  | 主人           |
 | `/unban group_id user_id` | 解封指定群组的指定用户                | 私聊  | 主人           |
 | `/ban group_id user_id`   | 为了防止部署者滥权，没做功能             | 私聊  | 主人           |
@@ -163,6 +163,7 @@ kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 &
 | `/renew`                  | 从网络更新题库                    | 私聊  | 主人           |
 | `/about`                  | 关于机器人的信息（读取config中的预设描述）   | 私聊  | 任何人          |
 | `/upantispam`             | 更新反诈库                      | 私聊  | 主人           |
+| `/whatstrategy`           | 查看本群策略                     | 群组  | 管理           |
 
 机器人目前支持自动释放用户，6分钟后自动释放用户,期间中断执行会导致被封禁。
 
@@ -180,14 +181,17 @@ Spam需要过半天多，按情况调整。
 ``````
 
 **自定义群组策略**
+
 ```
 !door!premium=[level=1|type=off]
 ```
 
 支持的键类型目前为 `premium spam nsfw suspect`
 
-支持的属性为 ["level", "type", "command"]  level 为优先级（冲突时高等级策略优先），type 为 on 或者 off ，command 分 ask(验证),ban(禁止),pass(绿卡通过) 找不到默认ask。
+支持的属性为 ["level", "type", "command"]  level 为优先级（冲突时高等级策略优先），type 为 on 或者 off ，command 分 ask(
+验证),ban(禁止),pass(绿卡通过) 找不到默认ask。
 
+``/whatstrategy`` 查看策略
 
 **模板**
 
@@ -196,15 +200,15 @@ start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
 whatmodel - 管理 查看当前模组
 renew - 主人 更新题库
-upantispam - 主人 更新反诈数据 
+upantispam - 主人 更新反诈数据
 unban - 主人 群组ID+用户ID arg:id
-onw - 主人 对群组开启白名单 
+onw - 主人 对群组开启白名单
 offw - 主人 对群组关闭白名单
 show - 主人 对主人显示配置
 addwhite - 主人 群组加入白名单 arg:id
 removewhite - 主人 群组踢出白名单 arg:id
 cat - 主人 查看文件 arg:path
-redis - 主人 查看目前队列 
+redis - 主人 查看目前队列
 groupuser - 主人 查看使用者
 ```
 
@@ -242,7 +246,8 @@ groupuser - 主人 查看使用者
 
 **自定义题库**
 
-将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，处理这个文件返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank) 的Issue 或者
+将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，处理这个文件返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank)
+的Issue 或者
 Pr。
 
 调试需要启动 redis-server
