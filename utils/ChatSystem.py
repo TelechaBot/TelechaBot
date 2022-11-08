@@ -218,7 +218,7 @@ class SpamUtils(object):
         # print(_csonfig)
         # if self.isUserSpam(userId):
         #    return True
-        if _csonfig.get("antiSpam") and info:
+        if info:
             if not pathlib.Path("Data/AntiSpam.txt").exists():
                 lists = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放",
                          "集团", "财神", "合作", "微信",
