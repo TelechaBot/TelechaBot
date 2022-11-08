@@ -188,7 +188,10 @@ class UserUtils(object):
                     Status["premium"] = _premium["level"]
         # 排序启用的命令
         key = max(Status, key=Status.get)
-        return Setting.get(key)
+        if Status[key]:
+            return Setting.get(key)
+        else:
+            return None
 
 
 class SpamUtils(object):
