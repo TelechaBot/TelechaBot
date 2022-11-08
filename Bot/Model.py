@@ -239,7 +239,7 @@ async def Admin(bot, message, config):
                 _csonfig["GroupStrategy"][str(message.chat.id)] = _Setting
                 save_csonfig()
             msgs = await bot.reply_to(message, f"设置完毕{command[1]}")
-            set_delay_del(msgs, second=12)
+            set_delay_del(msgs, second=24)
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
