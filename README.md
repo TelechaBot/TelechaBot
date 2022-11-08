@@ -63,7 +63,7 @@ nano Captcha.toml
 ```
 #### 更新
 
-使用 `git pull` 即可
+使用 `git pull` 即可，注意更新依赖库
 
 #### 配置文件说明
 
@@ -147,8 +147,6 @@ kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 &
 | `+diff_limit level`       | 设定当前群组的验证难度上限              | 群组  | 管理           |
 | `+select`                 | 设定验证题库模式，自定义需要自部署或者提交合并    | 群组  | 管理           |
 | `+diff_min level`         | 设定当前群组的验证难度下限              | 群组  | 管理           |
-| `/onantispam`             | 开启Spam反诈                   | 群组  | 管理           |
-| `/offantispam`            | 关闭Spam反诈                   | 群组  | 管理           |
 | `/whatmodel`              | 查看当前群组的验证模型                | 群组  | 管理           |
 | `+banme`                  | 俄罗斯禁言轮盘，管理不能玩              | 群组  | 群员           |
 | `+ban`+ID或者回复             | ban掉一个用户                   | 群组  | 管理           |
@@ -181,14 +179,22 @@ Spam需要过半天多，按情况调整。
 +unban 解禁+ID
 ``````
 
+**自定义群组策略**
+```
+!door!premium=[level=1|type=off]
+```
+
+支持的键类型目前为 `premium spam nsfw suspect`
+
+支持的属性为 ["level", "type", "command"]  level 为优先级（冲突时高等级策略优先），type 为 on 或者 off ，command 分 ask(验证),ban(禁止),pass(绿卡通过) 找不到默认ask。
+
+
 **模板**
 
 ```md
 start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
 whatmodel - 管理 查看当前模组
-onantispam - 管理 开启spam反诈
-offantispam - 管理 关闭spam反诈
 renew - 主人 更新题库
 upantispam - 主人 更新反诈数据 
 unban - 主人 群组ID+用户ID arg:id
