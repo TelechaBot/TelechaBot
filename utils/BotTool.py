@@ -256,7 +256,7 @@ class botWorker(object):
         default = {
             "scanUser": {
                 "spam": {
-                    "level": 5,
+                    "level": 10,
                     "command": "ban",
                     "type": "on",
                     "info": "当前群组开启了 Spam 过滤"
@@ -265,7 +265,7 @@ class botWorker(object):
                     "level": 5,
                     "command": "pass",
                     "type": "off",
-                    "info": "当前群组开启了 快速通过"
+                    "info": "当前群组开启了 大会员自动放行"
                 },
                 "nsfw": {
                     "level": 5,
