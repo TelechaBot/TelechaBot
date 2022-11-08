@@ -9,3 +9,4 @@ chempy
 pyttsx3
 Pillow
 apscheduler
+zxing

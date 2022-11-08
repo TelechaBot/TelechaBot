@@ -6,7 +6,6 @@
 import pathlib
 from pathlib import Path
 
-
 import rtoml
 import time
 import json
@@ -95,10 +94,6 @@ class botWorker(object):
         old = msg.old_chat_member
         new = msg.new_chat_member
         info = None
-        # if msg.old_chat_member.is_member is None:
-        #     need = True
-        # if new.status in ["member"] and old.status not in ["member"]:
-        #     need = True
         # 机器人
         if old.user.is_bot:
             need = False
@@ -243,16 +238,78 @@ class botWorker(object):
                     contact = botWorker.convert(config.ClientBot.contact_details)
                 else:
                     contact = "There is no reserved contact information."
+                info = f"Bot开启了白名单模式，有人将我添加到此群组，但该群组不在我的白名单中...."
+                f"请向所有者申请权限...."
+                f"\nContact details:{contact}"
+                f'添加白名单命令:`/addwhite {msg.chat.id}`'
                 await bot.send_message(msg.chat.id,
-                                       f"Bot开启了白名单模式，有人将我添加到此群组，但该群组不在我的白名单中...."
-                                       f"请向所有者申请权限...."
-                                       f"\nContact details:{contact}"
-                                       f'添加白名单命令:`/addwhite {msg.chat.id}`',
-                                       parse_mode='HTML')
+                                       botWorker.convert(info),
+                                       parse_mode='MarkdownV2')
                 await bot.leave_chat(msg.chat.id)
                 return False
         else:
             return True
+
+    @staticmethod
+    def GetGroupStrategy(group_id: str) -> dict:
+        load_csonfig()
+        default = {
+            "scanUser": {
+                "spam": {
+                    "level": 5,
+                    "command": "ban",
+                    "type": "on",
+                    "info": "当前群组开启了 Spam 过滤"
+                },
+                "premium": {
+                    "level": 5,
+                    "command": "pass",
+                    "type": "off",
+                    "info": "当前群组开启了 快速通过"
+                },
+                "nsfw": {
+                    "level": 5,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "当前群组开启了 色情内容过滤"
+                },
+                "suspect": {
+                    "level": 5,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "当前群组开启了 嫌疑识别"
+                }
+            },
+            "afterVerify": {
+                "unpass": {
+                    "level": 5,
+                    "command": "cancel",
+                    "type": "on",
+                    "info": "不通过留看"
+                }
+            }
+        }
+        if _csonfig.get("GroupStrategy"):
+            if _csonfig["GroupStrategy"][str(group_id)]:
+                return _csonfig["GroupStrategy"][str(group_id)]
+            else:
+                _csonfig["GroupStrategy"][str(group_id)] = default
+                save_csonfig()
+                return default
+        else:
+            _csonfig["GroupStrategy"] = {}
+            _csonfig["GroupStrategy"][str(group_id)] = default
+            save_csonfig()
+            return default
+
+    @staticmethod
+    def SetScanUserStrategy(group_id: str, key, tables) -> dict:
+        _Setting = botWorker.GetGroupStrategy(group_id=group_id)
+        if _Setting["scanUser"].get(key):
+            _Setting["scanUser"][key] = tables
+            _csonfig["GroupStrategy"][str(group_id)] = _Setting
+            save_csonfig()
+
 
 
 class yamler(object):

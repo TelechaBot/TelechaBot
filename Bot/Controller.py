@@ -136,8 +136,8 @@ class clientBot(object):
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success")
-                            msgs = await bot.send_message(call.message.chat.id,
-                                                          f"Info:群组验证模式已经切换至{call.data}")
+                            msgs = await bot.reply_to(call.message.json.get("reply_to_message").get("id"),
+                                                      f"Info:群组验证模式已经切换至{call.data}")
                             set_delay_del(msgs=msgs, second=30)
 
                 else:
