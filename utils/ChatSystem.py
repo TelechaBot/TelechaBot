@@ -166,6 +166,7 @@ class UserUtils(object):
                     n.parse()
                     if n.result:
                         Status["nsfw"] = _nsfw["level"]
+                "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E8%89%B2%E6%83%85%E7%B1%BB.txt"
         # suspect
         if _suspect:
             if _suspect.get("type") == "on":
