@@ -246,8 +246,8 @@ async def Admin(bot, message, config):
         info = []
         for key in Config:
             item = Config[key]
-            info.append(f"{key}执行{item['command']}，状态 {item['type']} 优先级{item['level']}\n")
-        msgs = await bot.reply_to(message, f"本群策略为\n{''.join(info)} ")
+            info.append(f"{key} Use:{item['command']} Status:{item['type']} Level:{item['level']}\n")
+        msgs = await bot.reply_to(message, f"本群验证前策略为\n{''.join(info)} ")
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)

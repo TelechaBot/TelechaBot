@@ -135,10 +135,10 @@ class clientBot(object):
                     set_delay_del(msgs=call.message, second=5)
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
-                            await bot.answer_callback_query(call.id, "Success")
-                            msgs = await bot.reply_to(call.message.json.get("reply_to_message").get("id"),
-                                                      f"Info:群组验证模式已经切换至{call.data}")
-                            set_delay_del(msgs=msgs, second=30)
+                            await bot.answer_callback_query(call.id, "Success Change")
+                            # msgs = await bot.reply_to(call.message.json.get("reply_to_message").get("id"),
+                            #                          f"Info:群组验证模式已经切换至{call.data}")
+                            # set_delay_del(msgs=msgs, second=30)
 
                 else:
                     # 如果不是题库定义的方法，那就向下执行
