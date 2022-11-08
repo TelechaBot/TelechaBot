@@ -239,7 +239,15 @@ async def Admin(bot, message, config):
                 _csonfig["GroupStrategy"][str(message.chat.id)] = _Setting
                 save_csonfig()
             msgs = await bot.reply_to(message, f"设置完毕{command[1]}")
-            set_delay_del(msgs, second=12)
+            set_delay_del(msgs, second=24)
+    if "/whatstrategy" == message.text or ("/whatstrategy" in message.text and "@" in message.text):
+        _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
+        Config = _Setting["scanUser"]
+        info = []
+        for key in Config:
+            item = Config[key]
+            info.append(f"{key}-{item['type']}-{item['command']}-{item['level']}\n")
+        msgs = await bot.reply_to(message, f"本群策略为\n {''.join(info)} ")
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)

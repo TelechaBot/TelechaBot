@@ -290,7 +290,7 @@ class botWorker(object):
             }
         }
         if _csonfig.get("GroupStrategy"):
-            if _csonfig["GroupStrategy"][str(group_id)]:
+            if _csonfig["GroupStrategy"].get(str(group_id)):
                 return _csonfig["GroupStrategy"][str(group_id)]
             else:
                 _csonfig["GroupStrategy"][str(group_id)] = default
