@@ -422,11 +422,14 @@ async def NewRequest(bot, msg, config):
             "time": msg.date,
             "token": f"{msg.from_user.first_name}{msg.from_user.last_name}{_chat_info.bio}"
         }
-        Command = await CheckSystem.Check(bot=bot, userId=msg.from_user.id,
-                                          groupId=str(msg.chat.id),
-                                          UserProfile=UserThis,
-                                          _csonfig=load_csonfig())
-
+        try:
+            Command = await CheckSystem.Check(bot=bot, userId=msg.from_user.id,
+                                              groupId=str(msg.chat.id),
+                                              UserProfile=UserThis,
+                                              _csonfig=load_csonfig())
+        except Exception as e:
+            Command = {"command": "ask", "info": "error"}
+            print(e)
         if Command.get("command") == "ban":
             # await verifyRedis.checker(fail_user=[msg.from_user.id])
             await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
