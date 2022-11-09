@@ -283,13 +283,13 @@ class botWorker(object):
                     "level": 10,
                     "command": "ban",
                     "type": "on",
-                    "info": "群组策略:Spam 过滤"
+                    "info": "群组策略:反垃圾系统"
                 },
                 "premium": {
                     "level": 5,
                     "command": "pass",
                     "type": "off",
-                    "info": "群组策略:绿卡"
+                    "info": "群组策略:自动通过"
                 },
                 "nsfw": {
                     "level": 4,

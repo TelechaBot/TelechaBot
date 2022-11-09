@@ -5,24 +5,39 @@
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Mit-ff69b4">
   <img src="https://img.shields.io/badge/USE-python-green" alt="PYTHON" >
   <a href="https://github.com/TelechaBot/TelechaBot/releases"><img src="https://img.shields.io/github/v/release/TelechaBot/TelechaBot?style=plastic" alt="V" ></a>
-  <a href="https://azz.net/ly233"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
+  <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
 </p>
 
 <h2 align="center">TelechaBot</h2>
 
-TelechaBot 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！
+*TelechaBot* 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！ 项目经过模块化，便于扩展。
 
-项目经过模块化，便于扩展。
+为了给群组提供有效的验证模式，便捷的以**筛选**为目的**梯度验证**模式，它支持诸如 **成语验证** **普通语音听力验证** **图片验证** **文本验证** **诗词验证** **数学** **物理** **化学** **生物** **哔哩哔哩题库** 等验证模式。
 
-目前由 `Sudoskys` 做维护支持，点击 [使用一个实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users)
+这让它既可以作为普通群组的智能安全的验证工具(科目一等系列)，也可以作为严肃型群组的得力助手(例如数学验证)。
 
-如果服务器没钱就不会维护
+目前由 `Sudoskys` 做维护支持，点击 [使用一个可爱的实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users) *如果服务器没钱可能就不会维护*
+
+## 👋特性
+
+* MVC架构
+* 支持白名单
+* 支持一键部署
+* 异步 + 线程锁
+* 模块化**题库**模组
+* 体验第一性能第二
+* 支持英文语音验证
+* 内存散列表过期队列实现
+* 支持热载维护反Spam关键词
+* 群组自定义 绿卡/红牌 策略支持
+* 自由选择的枚举和不可枚举混合题库
+* 反垃圾内容全方位系统，用户从头像到Bio,人类能看见的它也可以看见。
 
 ## 🙌应用
 
-### 如何使用
+### 🤔如何使用
 
-本机器人采用 `审批邀请` 的验证方式，舍弃旧的禁烟公屏方式。
+本机器人采用 **自动审批邀请** 的验证方式，舍弃旧的禁言公屏验证方式。
 
 * 防止机器人宕机拦截不及时
 * 防止响应过慢导致的拦截不住
@@ -94,24 +109,11 @@ Spam需要过半天多，按情况调整。
 `level` 为优先级（冲突时高等级策略优先），`type` 为 `on` 或者 `off` ，`command` 分 `ask`(验证),`ban`(禁止),`pass`(绿卡通过) 找不到默认 ask。
 
 
-
-### 👋特性
-
-* MVC架构
-* 支持白名单
-* 异步+线程锁
-* 支持一键部署
-* 支持热载关键词
-* 模块化题库模组
-* 体验第一性能第二
-* 英文语音验证模组
-* 群组自定义策略支持
-* 散列表过期队列实现
-* 枚举和不可枚举混合题库
-* 反内容系统，用户从头像到Bio,人类能看见的它也可以看见。
-
 ### 🔨待办
 
+- [ ] 智能通过可信用户(在严格模式下)
+- [ ] 日志频道支持
+- [ ] 兼容 Rose 语法
 - [x] 异步实现
 - [x] 网络热加载
 - [x] 群组白名单
@@ -258,11 +260,13 @@ cd TelechaBot
 curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
 ```
 
-### 关于反内容系统
+### 🪐关于反内容系统
 
 使用 CV2 和 DFA 技术，智能识别。
 
-### 关于验证模型
+如果出现 **误报** 或 **失效**，请提交 ISSUE 进行相关处理。
+
+### 🪐关于验证模型
 
 支持多重模型，自定义模型,自带多重模型。
 
@@ -301,3 +305,8 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 调试需要启动 `redis-server`
 
+### 协议
+
+缇茶主体使用 AGPL 协议开源，但是接受商用目的的申请。
+
+同属本组织的题库部件和其他部件按照相应协议开源，你可以遵循协议使用这些部件。

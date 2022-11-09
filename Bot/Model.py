@@ -616,13 +616,16 @@ async def NewRequest(bot, msg, config):
             await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
             await bot.ban_chat_member(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id),
                                       until_date=datetime.datetime.timestamp(
-                                          datetime.datetime.now() + datetime.timedelta(minutes=12)))
-            await bot.send_message(msg.from_user.id, botWorker.convert(f"{Commands.get('info')}，请等待 10～15 分钟"),
+                                          datetime.datetime.now() + datetime.timedelta(minutes=15)))
+            await bot.send_message(msg.from_user.id, botWorker.convert(
+                f"GroupPolicy{Commands.get('info')}causes Intercept，wait 15～50 min \n "
+                f"IF You Think its an Error， report it"),
                                    parse_mode='MarkdownV2')
 
         elif Commands.get("command") == "pass":
             await bot.approve_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
-            await bot.send_message(msg.from_user.id, botWorker.convert(str(Commands.get("info"))),
+            await bot.send_message(msg.from_user.id, botWorker.convert(
+                f"GroupPolicy{Commands.get('info')}causes AutoMaticPassing"),
                                    parse_mode='MarkdownV2')
         else:
             group_k, key = verifyRedis.read_user(msg.from_user.id)
