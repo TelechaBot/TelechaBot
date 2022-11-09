@@ -260,11 +260,11 @@ cd TelechaBot
 curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
 ```
 
-### 关于反内容系统
+### 🪐关于反内容系统
 
 使用 CV2 和 DFA 技术，智能识别。
 
-### 关于验证模型
+### 🪐关于验证模型
 
 支持多重模型，自定义模型,自带多重模型。
 
@@ -303,3 +303,6 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 调试需要启动 `redis-server`
 
+### 协议
+
+仓库使用 AGPL 协议，但是接受商用申请。
