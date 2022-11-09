@@ -167,7 +167,7 @@ class UserUtils(object):
                     n.parse()
                     if n.result:
                         Status["nsfw"] = _nsfw["level"]
-                # TODO 采用以下敏感词库
+                # TODO 采用以下敏感词库并编码
                 # "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E8%89%B2%E6%83%85%E7%B1%BB.txt"
         # suspect
         if _suspect:
