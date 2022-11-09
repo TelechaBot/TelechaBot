@@ -10,3 +10,4 @@ pyttsx3
 Pillow
 apscheduler
 zxing
+httpx

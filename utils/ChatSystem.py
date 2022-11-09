@@ -12,13 +12,56 @@ import requests
 
 from utils.BotTool import botWorker
 from utils.safeDetect import Nude
+from utils.DfaDetecte import DFA, Censor
+from utils.BotTool import ReadConfig
 
 redis_installed = True
 
 try:
     from redis import Redis, ConnectionPool
-except:
+except Exception:
     redis_installed = False
+
+urlForm = {
+    "AntiSpam.bin": [
+        "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Spam.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/色情类.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/涉枪涉爆违法信息关键词.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/广告.txt",
+        "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
+    ],
+    "Nsfw.bin": [
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/色情类.txt"],
+    "Politics.bin": [
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/政治类.txt",
+    ],
+    "AbsolutelySafe.bin": [
+        "https://raw.githubusercontent.com/adlered/DangerousSpamWords/master/DangerousSpamWords/General_SpamWords_V1.0.1_CN.min.txt",
+        "https://raw.githubusercontent.com/nonecares/-/master/ban.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/涉枪涉爆违法信息关键词.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/政治类.txt",
+        "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/广告.txt",
+    ]
+}
+
+
+def InitCensor():
+    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Captcha.toml")
+    if config.Proxy.status:
+        proxies = {
+            'all://': config.Proxy.url,
+        }  # 'http://127.0.0.1:7890'  # url
+        return Censor.InitWords(url=urlForm, proxy=proxies)
+    else:
+        return Censor.InitWords(url=urlForm)
+
+
+if not pathlib.Path("AntiSpam.bin").exists():
+    InitCensor()
+SpamDfa = DFA(path="AntiSpam.bin")
+NsfwDfa = DFA(path="Nsfw.bin")
+PoliticsDfa = DFA(path="Politics.bin")
+AbsolutelySafeDfa = DFA(path="AbsolutelySafe.bin")
 
 
 class DataWorker(object):
@@ -124,16 +167,40 @@ class UserUtils(object):
         _premium = Setting.get("premium")
         _nsfw = Setting.get("nsfw")
         _suspect = Setting.get("suspect")
+        _politics = Setting.get("politics")
+        _safe = Setting.get("safe")
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
         # +[nsfw!on!ban!5] 代表入群审计头像是否含有 nsfw 内容
         # +[nsfw!off!pass!4]
         # +[nsfw!on!ask!30]
         # Init Status
-        Status = {"spam": False, "premium": False, "nsfw": False, "suspect": False}
+        Status = botWorker.get_door_strategy()
         suspect = 0
+
         # Status["24hjoin"] = False
         # 因为检查成本过高，所以换用逐项判定的方式
+        def getlevel(clas):
+            if clas.get("level"):
+                return clas["level"]
+            else:
+                return 1
+
+        if _politics:
+            if _politics.get("type") == "on":
+                # Check profile text
+                if UserProfile["token"]:
+                    if PoliticsDfa.exists(UserProfile["token"]):
+                        Status["politics"] = getlevel(_politics)
+        if _safe:
+            if _safe.get("type") == "on":
+                # Check photo
+                if not UserProfile["photo"]:
+                    Status["safe"] = getlevel(_safe)
+                # Check profile text
+                if UserProfile["token"]:
+                    if AbsolutelySafeDfa.exists(UserProfile["token"]):
+                        Status["safe"] = getlevel(_safe)
         if _spam:
             if _spam.get("type") == "on":
                 # Check photo
@@ -146,12 +213,12 @@ class UserUtils(object):
                             _downPhoto = True
                     IsSpam = self.checkQrcode(filepath=_photoPath)
                     if IsSpam:
-                        Status["spam"] = _spam["level"]
+                        Status["spam"] = getlevel(_spam)
                 # Check profile text
                 if UserProfile["token"]:
                     IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile["token"], userId=userId)
                     if IsSpam:
-                        Status["spam"] = _spam["level"]
+                        Status["spam"] = getlevel(_spam)
         # NSFW
         if _nsfw:
             if _nsfw.get("type") == "on":
@@ -166,9 +233,10 @@ class UserUtils(object):
                     n.resize(maxheight=160, maxwidth=160)
                     n.parse()
                     if n.result:
-                        Status["nsfw"] = _nsfw["level"]
-                # TODO 采用以下敏感词库并编码
-                # "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/%E8%89%B2%E6%83%85%E7%B1%BB.txt"
+                        Status["nsfw"] = getlevel(_nsfw)
+                if UserProfile["token"]:
+                    if NsfwDfa.exists(UserProfile["token"]):
+                        Status["nsfw"] = getlevel(_nsfw)
         # suspect
         if _suspect:
             if _suspect.get("type") == "on":
@@ -182,12 +250,12 @@ class UserUtils(object):
                 if UserProfile["is_premium"]:
                     suspect -= 20
                 if suspect < (total / 2):
-                    Status["suspect"] = _suspect["level"]
+                    Status["suspect"] = getlevel(_suspect)
         # Check premium
         if _premium:
             if _premium.get("type") == "on":
                 if UserProfile["is_premium"]:
-                    Status["premium"] = _premium["level"]
+                    Status["premium"] = getlevel(_premium)
         # 排序启用的命令
         key = max(Status, key=Status.get)
         if Status[key]:
@@ -225,41 +293,31 @@ class SpamUtils(object):
         # if self.isUserSpam(userId):
         #    return True
         if info:
-            if not pathlib.Path("Data/AntiSpam.txt").exists():
-                lists = ["远控", "外挂", "支付", "哈希", "日赚", "广告", "招商", "梯子", "搞钱", "电报中文", "投放",
-                         "集团", "财神", "合作", "微信",
-                         "流量", "支付", "流量", "现货", "中文电报", "VPN免费", "vpn免费", "免费免", "咨询我", "接洽我",
-                         "问询我",
-                         "免费翻墙", "免翻墙", "我主页"]
+            if not pathlib.Path("AntiSpam.bin").exists():
                 await SpamUtils.renewAnti(message=None)
-            else:
-                with open('Data/AntiSpam.txt') as f:  # 默认模式为‘r’，只读模式
-                    contents = f.read()  # 读取文件全部内容
-                    lists = contents.split("\n")
-            for i in lists:
-                if len(i) > 1:
-                    if i in info:
-                        return True
+            if SpamDfa.exists(info):
+                return True
         if _csonfig.get("casSystem") and userId:
-            netWork = requests.get(f'https://api.cas.chat/check?user_id={userId}')
-            if netWork.status_code == 200:
-                if netWork.json().get("ok"):
-                    return True
+            try:
+                netWork = requests.get(f'https://api.cas.chat/check?user_id={userId}')
+            except:
+                pass
+            else:
+                if netWork.status_code == 200:
+                    if netWork.json().get("ok"):
+                        return True
         return spam
 
     @staticmethod
     async def renewAnti(message):
-        import aiohttp
         from Bot.Controller import clientBot
         bot, config = clientBot().botCreate()
-        async with aiohttp.request('GET',
-                                   'https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Spam.txt') as response:
-            if response.status == 200:
-                some = await response.text()
-                with open("Data/AntiSpam.txt", 'w') as f:  # 如果filename不存在会自动创建， 'w'表示写数据，写之前会清空文件中的原有数据！
-                    f.write(some)
-                if message:
-                    await bot.reply_to(message, "OK..Renew it")
-            else:
-                if message:
-                    await bot.reply_to(message, f"Fail..{response.status}")
+        keys, _error = InitCensor()
+        if _error:
+            error = '\n'.join(_error)
+            errors = f"Error:\n{error}"
+        else:
+            SpamDfa.change_words(path="AntiSpam.bin")
+            errors = "No Error"
+        if message:
+            await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")

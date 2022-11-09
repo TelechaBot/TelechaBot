@@ -14,7 +14,7 @@
         "-1001561314417": {
             "scanUser": {
                 "spam": {
-                    "level": 5,
+                    "level": 10,
                     "command": "ban",
                     "type": "on",
                     "info": "策略:当前群组开启了 Spam 过滤"
@@ -26,16 +26,28 @@
                     "info": "策略:为会员用户跳过验证，已经为您自动放行"
                 },
                 "nsfw": {
-                    "level": 1,
+                    "level": 2,
                     "command": "ask",
-                    "type": "off",
+                    "type": "on",
                     "info": "策略:当前群组开启了色情内容过滤"
+                },
+                "safe": {
+                    "level": 1,
+                    "command": "ban",
+                    "type": "off",
+                    "info": "群组策略:安全审查"
                 },
                 "suspect": {
                     "level": 5,
                     "command": "ask",
                     "type": "off",
                     "info": "策略:当前群组开启了嫌疑识别"
+                },
+                "politics": {
+                    "level": 10,
+                    "command": "ban",
+                    "type": "on",
+                    "info": "群组策略:立场审查"
                 }
             },
             "afterVerify": {

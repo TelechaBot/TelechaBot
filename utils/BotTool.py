@@ -32,6 +32,30 @@ def save_csonfig():
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
+def dict_update(raw, new):
+    dict_update_iter(raw, new)
+    dict_add(raw, new)
+
+
+def dict_update_iter(raw, new):
+    for key in raw:
+        if key not in new.keys():
+            continue
+        if isinstance(raw[key], dict) and isinstance(new[key], dict):
+            dict_update(raw[key], new[key])
+        else:
+            raw[key] = new[key]
+
+
+def dict_add(raw, new):
+    update_dict = {}
+    for key in new:
+        if key not in raw.keys():
+            update_dict[key] = new[key]
+
+    raw.update(update_dict)
+
+
 class botWorker(object):
     def __init__(self):
         pass
@@ -259,25 +283,37 @@ class botWorker(object):
                     "level": 10,
                     "command": "ban",
                     "type": "on",
-                    "info": "当前群组开启了 Spam 过滤"
+                    "info": "群组策略:Spam 过滤"
                 },
                 "premium": {
                     "level": 5,
                     "command": "pass",
                     "type": "off",
-                    "info": "当前群组开启了 大会员自动放行"
+                    "info": "群组策略:绿卡"
                 },
                 "nsfw": {
-                    "level": 5,
+                    "level": 4,
                     "command": "ask",
                     "type": "off",
-                    "info": "当前群组开启了 色情内容过滤"
+                    "info": "群组策略:色情审查"
+                },
+                "safe": {
+                    "level": 1,
+                    "command": "ban",
+                    "type": "off",
+                    "info": "群组策略:安全审查"
                 },
                 "suspect": {
-                    "level": 5,
+                    "level": 2,
                     "command": "ask",
                     "type": "off",
-                    "info": "当前群组开启了 嫌疑识别"
+                    "info": "群组策略:嫌疑识别"
+                },
+                "politics": {
+                    "level": 2,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "群组策略:立场审查"
                 }
             },
             "afterVerify": {
@@ -291,7 +327,8 @@ class botWorker(object):
         }
         if _csonfig.get("GroupStrategy"):
             if _csonfig["GroupStrategy"].get(str(group_id)):
-                return _csonfig["GroupStrategy"][str(group_id)]
+                dict_update(default, _csonfig["GroupStrategy"][str(group_id)])
+                return default
             else:
                 _csonfig["GroupStrategy"][str(group_id)] = default
                 save_csonfig()
@@ -303,13 +340,16 @@ class botWorker(object):
             return default
 
     @staticmethod
-    def SetScanUserStrategy(group_id: str, key, tables) -> dict:
+    def SetScanUserStrategy(group_id: str, key, tables):
         _Setting = botWorker.GetGroupStrategy(group_id=group_id)
         if _Setting["scanUser"].get(key):
             _Setting["scanUser"][key] = tables
             _csonfig["GroupStrategy"][str(group_id)] = _Setting
             save_csonfig()
 
+    @staticmethod
+    def get_door_strategy():
+        return {"spam": False, "premium": False, "nsfw": False, "suspect": False, "safe": False, "politics": False}
 
 
 class yamler(object):
