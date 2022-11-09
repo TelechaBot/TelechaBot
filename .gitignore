@@ -1,6 +1,8 @@
 # Compiled Lua sources
 luac.out
-
+*.bin
+TTS/*.mp3
+/*/**.bin
 
 .idea
 Captcha.yaml

@@ -152,33 +152,39 @@ class JsonRedis(object):
         finally:
             task_lock.release()
             _redis.set("_Telecha_Task", json.dumps(_MsgTask))
-
         # 处理掉数据
-        try:
-            for key in unban:
-                profile = key
-                userId = profile.get("user")
-                groupId = profile.get("group")
+        for key in unban:
+            profile = key
+            userId = profile.get("user")
+            groupId = profile.get("group")
+            from Bot.Controller import clientBot
+            bot, config = clientBot().botCreate()
+            try:
+                await bot.approve_chat_join_request(chat_id=groupId, user_id=userId)
+            except Exception as e:
+                pass
+            finally:
+                await bot.delete_state(userId, groupId)
+        for key in ban:
+            profile = key
+            userId = profile.get("user")
+            groupId = profile.get("group")
+            # print(f"释放{uuid}，{userId}-{groupId}")
+            if groupId and userId:
                 from Bot.Controller import clientBot
                 bot, config = clientBot().botCreate()
-                await bot.delete_state(userId, groupId)
-                await bot.approve_chat_join_request(chat_id=groupId, user_id=userId)
-            for key in ban:
-                profile = key
-                userId = profile.get("user")
-                groupId = profile.get("group")
-                # print(f"释放{uuid}，{userId}-{groupId}")
-                if groupId and userId:
-                    from Bot.Controller import clientBot
-                    bot, config = clientBot().botCreate()
-                    await bot.delete_state(userId, groupId)
+                try:
                     await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                     await bot.ban_chat_member(chat_id=groupId, user_id=userId,
                                               until_date=datetime.datetime.timestamp(
                                                   datetime.datetime.now() + datetime.timedelta(minutes=12)))
+                except:
+                    pass
+                # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
+                else:
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
-        except Exception as err:
-            print(err)
+                finally:
+                    await bot.delete_state(userId, groupId)
 
     @staticmethod
     def crateKey(user_id, group_id):

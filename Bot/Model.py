@@ -234,20 +234,30 @@ async def Admin(bot, message, config):
         command = Command.parseDoorCommand(message.text)
         if command:
             _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
-            if _Setting["scanUser"].get(command[0]):
+            if command[0] in botWorker.get_door_strategy().keys():
+                if not _Setting["scanUser"].get(command[0]):
+                    _Setting["scanUser"][command[0]] = {}
                 _Setting["scanUser"][command[0]].update(command[1])
                 _csonfig["GroupStrategy"][str(message.chat.id)] = _Setting
                 save_csonfig()
             msgs = await bot.reply_to(message, f"设置完毕{command[1]}")
             set_delay_del(msgs, second=24)
+
     if "/whatstrategy" == message.text or ("/whatstrategy" in message.text and "@" in message.text):
         _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
         Config = _Setting["scanUser"]
         info = []
+        after_info = []
+        Config = dict(sorted(Config.items(), key=lambda x: x[1]["level"], reverse=True))
         for key in Config:
             item = Config[key]
-            info.append(f"{key}执行{item['command']}，状态 {item['type']} 优先级{item['level']}\n")
-        msgs = await bot.reply_to(message, f"本群策略为\n{''.join(info)} ")
+            if item['type'] == "on":
+                info.append(f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n")
+            else:
+                after_info.append(f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n")
+        info.extend(after_info)
+        _types = botWorker.get_door_strategy().keys()
+        msgs = await bot.reply_to(message, f"本群验证前策略为\n{''.join(info)} \n Support Type:{','.join(_types)}")
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)

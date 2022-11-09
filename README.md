@@ -5,7 +5,7 @@
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Mit-ff69b4">
   <img src="https://img.shields.io/badge/USE-python-green" alt="PYTHON" >
   <a href="https://github.com/TelechaBot/TelechaBot/releases"><img src="https://img.shields.io/github/v/release/TelechaBot/TelechaBot?style=plastic" alt="V" ></a>
-  <a href="https://dun.mianbaoduo.com/@Sky0717"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
+  <a href="https://azz.net/ly233"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
 </p>
 
 <h2 align="center">TelechaBot</h2>
@@ -218,7 +218,7 @@ groupuser - 主人 查看使用者
 
 理论可以兼容其他绝大部分机器人的验证方式！
 
-作用是抽取并随机生成题目，支持难度梯度过滤
+抽取或随机生成题目，支持难度梯度过滤。
 
 `some = model_name.Importer().pull(difficulty_limit=5)`
 
@@ -267,3 +267,6 @@ Pr。
 - [x] 初步使用Redis接管数据
 - [x] 使用Redis重构队列逻辑
 - [x] 重构设计模式
+- [x] DFA 检测算法
+- [x] CV计算判定NSFW
+- [x] 反QrCode判定
