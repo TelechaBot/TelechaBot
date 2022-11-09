@@ -162,7 +162,7 @@ class JsonRedis(object):
             try:
                 await bot.approve_chat_join_request(chat_id=groupId, user_id=userId)
             except Exception as e:
-                await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
+                pass
             finally:
                 await bot.delete_state(userId, groupId)
         for key in ban:
@@ -179,7 +179,8 @@ class JsonRedis(object):
                                               until_date=datetime.datetime.timestamp(
                                                   datetime.datetime.now() + datetime.timedelta(minutes=12)))
                 except:
-                    await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
+                    pass
+                # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                 else:
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
                 finally:
