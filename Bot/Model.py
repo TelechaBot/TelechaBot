@@ -556,11 +556,11 @@ async def Start(bot, message, config):
                 # print("生成了一道题目:" + str(sth))
         else:
             if not _New_User:
-                await bot.reply_to(message, "不能重复验证！")
+                await bot.reply_to(message, "NO duplicate Verification!")
             else:
-                pass
+                # pass
                 # 防止洪水攻击
-                # await bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
+                await bot.reply_to(message, "NO ongoing verification tasks")
 
 
 """
