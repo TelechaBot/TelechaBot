@@ -558,7 +558,9 @@ async def Start(bot, message, config):
             if not _New_User:
                 await bot.reply_to(message, "不能重复验证！")
             else:
-                await bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
+                pass
+                # 防止洪水攻击
+                # await bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
 
 
 """

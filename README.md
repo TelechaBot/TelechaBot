@@ -11,135 +11,30 @@
 <h2 align="center">TelechaBot</h2>
 
 TelechaBot 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！
-项目经过严格模块化重构，便于扩展。目前由 `Sudoskys`
-做维护支持，点击 [使用一个实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users)
 
-验证机器人主体，接入学科生物验证核心。
+项目经过模块化，便于扩展。
 
-### 环境需求
+目前由 `Sudoskys` 做维护支持，点击 [使用一个实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users)
 
-应当使用 Python 3.7 或更高版本，主机需要安装 redis！
+如果服务器没钱就不会维护
 
-**安装TTS支持**
+## 🙌应用
 
-`sudo apt install espeak ffmpeg libespeak1`
+### 如何使用
 
-**安装 Redis**
+本机器人采用 `审批邀请` 的验证方式，舍弃旧的禁烟公屏方式。
 
-```shell
-apt-get install redis
-```
+* 防止机器人宕机拦截不及时
+* 防止响应过慢导致的拦截不住
+* 防止操作记录被污染和打扰聊天(邀请只能管理员看到)
+* 适应 Topic 验证
 
-使用 ```systemctl start redis.service``` 启动服务，或者使用```nohup redis-server > output.log 2>&1 &```启动，推荐前者。
+先在群组设置 `群组类型` 中开启 `批准新成员` 或 `加入需要审核` 选项。
 
-### 安装
+然后你需要将机器人添加进入群组，然后给予 `禁言` `邀请用户` `封禁用户` 权限。此时机器人管理就可以读取群内消息了。
+基于白名单机制需要，机器人会存储一下群组 ID。
 
-安装脚本会自动备份恢复配置
-
-在根目录运行(不要在程序目录内)
-
-```
-curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
-
-```
-
-或者
-
-```
-curl -LO https://raw.fastgit.org/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
-```
-
-安装后不需要手动创建``taskRedis.json``，如果有此文件且``taskRedis.json`` 没有内容，需要手动填入`{}`，否则解析库报错。
-
-**编辑Captcha.toml**
-
-```bash
-cd TelechaBot
-
-sudo apt install nano
-
-cp Captcha_exp.toml Captcha.toml
- 
-nano Captcha.toml 
-```
-
-#### 更新
-
-使用 `git pull` 即可，注意更新依赖库
-
-#### 配置文件说明
-
-*USE Captcha.toml*
-
-```toml
-# Sample
-desc = "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
-link = "https://t.me/SmartCapthaBot"
-botToken = '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
-
-[ClientBot]
-owner = '5477776859'
-contact_details = "判定为非白名单群组后的联系方式"
-
-[Proxy]
-status = false
-url = "http://127.0.0.1:7890" 
-```
-
-### 部署机器人
-
-先去 Botfather 获取你自己的 Token
-
-**再去群组类型——谁可以发送消息——启用 `批准新成员`。**
-
-**如果绑定了频道，推荐额外启用 `仅成员`**
-
-机器人自 2.0.9 开始转换验证方式为批准模式，自动识别并反 Spam
-
-**后台运行**
-
-```shell
-
-# 长时间运行
-nohup python3 main.py > /dev/null 2>&1 & 
-
-# 临时
-nohup python3 main.py > output.log 2>&1 &
-cat output.log
-
-```
-
-**查看进程**
-
-```shell
-ps -aux|grep python3
-```
-
-**终止进程**
-
-```shell
-kill -9  进程号
-```
-
-**无缝更新**
-
-```shell
-curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
-```
-
-```shell
-cd TelechaBot
-```
-
-```shell
-ps -aux|grep python3
-```
-
-```shell
-kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 & 
-```
-
-### 使用
+### 命令表格
 
 | 命令                        | 含义                         | 作用域 | 权限(主人,管理,群员) |
 |---------------------------|----------------------------|-----|--------------|
@@ -169,48 +64,203 @@ kill -9 进程号 && nohup python3 main.py >/dev/null 2>&1 &
 
 Spam需要过半天多，按情况调整。
 
-群组管理(+开头)
+#### ⚒群组管理命令
 
-``````
-+ban 回复或+ID
-+banme 嗯?
-+diff_min 设定最小难度
+缇茶 *目前* 使用 `+` 作为关键符。
+
+```shell
 +select 选择题库
++ban 回复或+ID
++banme 俄罗斯轮盘
++diff_min 设定最小难度
 +diff_limit 设定最大难度
 +unban 解禁+ID
-``````
+```
 
-**自定义群组策略**
+#### 🎛策略组
 
+什么是入群前策略组？
+
+缇茶会在验证之前先根据群组的策略进行分流筛选，然后根据特征将待验证者分流到不同的操作逻辑。
+
+* 样式
 ```
 !door!premium=[level=1|type=off]
 ```
 
-支持的键类型目前为 `premium spam nsfw suspect`
+使用 ``/whatstrategy`` 查看策略和支持的键类型。
 
-支持的属性为 ["level", "type", "command"]  level 为优先级（冲突时高等级策略优先），type 为 on 或者 off ，command 分 ask(
-验证),ban(禁止),pass(绿卡通过) 找不到默认ask。
+支持的属性为 ["level", "type", "command"]  
+`level` 为优先级（冲突时高等级策略优先），`type` 为 `on` 或者 `off` ，`command` 分 `ask`(验证),`ban`(禁止),`pass`(绿卡通过) 找不到默认 ask。
 
-``/whatstrategy`` 查看策略
 
-**模板**
+
+### 👋特性
+
+* MVC架构
+* 支持白名单
+* 异步+线程锁
+* 支持一键部署
+* 支持热载关键词
+* 模块化题库模组
+* 体验第一性能第二
+* 英文语音验证模组
+* 群组自定义策略支持
+* 散列表过期队列实现
+* 枚举和不可枚举混合题库
+* 反内容系统，用户从头像到Bio,人类能看见的它也可以看见。
+
+### 🔨待办
+
+- [x] 异步实现
+- [x] 网络热加载
+- [x] 群组白名单
+- [x] 手动解除封锁
+- [x] 重新选择题目
+- [x] 重构消息逻辑
+- [x] 自动释放黑名单
+- [x] DFA 反内容算法
+- [x] 反 QrCode 判定
+- [x] CV 计算判定NSFW
+- [x] 群组设置自定义难度
+- [x] 重构设计模式为 MVC
+- [x] 自定义题目仓库在线更新
+- [x] 初步使用Redis接管数据
+- [x] 使用Redis重构队列逻辑
+- [x] 群组设置自定义题目仓库，设计题库读取类
+
+## ⚙️自部署指南
+
+### 🥪环境支持
+
+应当使用 Python 3.7 或更高版本，主机需要安装 `redis-server`
+
+* 安装 Redis
+
+```shell
+apt-get install redis
+```
+
+使用 ```systemctl start redis.service``` 启动服务，或者使用```nohup redis-server > output.log 2>&1 &```启动，推荐前者。
+
+* 安装TTS支持
+  使用 `sudo apt install espeak ffmpeg libespeak1` 安装 TTS 语音验证支持。
+
+### 🥕安装维护
+
+* 拉取/更新程序
+
+安装脚本会自动备份恢复配置，在根目录运行(不要在程序目录内)
+，更新时候重新运行就可以备份程序了，如果是小更新可以直接 ``git pull``
+
+```shell
+curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
+```
+
+然后切换到程序目录进行配置 ``cd TelechaBot``
+
+#### ⚙️配置
+
+* 安装依赖库
+
+```shell
+cd TelechaBot
+pip install -r requirements.txt
+```
+
+* 编辑配置文件 `Captcha.toml`
+
+```shell
+sudo apt install nano
+cp Captcha_exp.toml Captcha.toml
+nano Captcha.toml 
+```
+
+#### 📚配置文件说明
+
+* nano Captcha.toml
+
+```toml
+# Sample
+desc = "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
+link = "https://t.me/SmartCapthaBot"
+botToken = '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
+
+[ClientBot]
+owner = '5477776859'
+contact_details = "判定为非白名单群组后的联系方式"
+
+[Proxy]
+status = false
+url = "http://127.0.0.1:7890" 
+```
+
+这里的 `botToken` 填写你在 `botFather` 那里申请的botToken,这个是机器人的登陆凭证，请妥善保管。
+
+这里的 `desc` 是 About 字段，可以删除整个字段。
+
+### 🚀运行
+
+#### 📚命令模板
+
 
 ```md
 start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
 whatmodel - 管理 查看当前模组
+whatstrategy - 管理 查看本群策略
 renew - 主人 更新题库
 upantispam - 主人 更新反诈数据
-unban - 主人 群组ID+用户ID arg:id
+unban - 主人 群组ID+用户ID
 onw - 主人 对群组开启白名单
 offw - 主人 对群组关闭白名单
 show - 主人 对主人显示配置
-addwhite - 主人 群组加入白名单 arg:id
-removewhite - 主人 群组踢出白名单 arg:id
-cat - 主人 查看文件 arg:path
+addwhite - 主人 加入白名单
+removewhite - 主人 踢出白名单
+cat - 主人 查看文件
 redis - 主人 查看目前队列
 groupuser - 主人 查看使用者
 ```
+
+
+#### 🧊后台运行
+
+```shell
+# 长时间运行
+nohup python3 telecha.py > /dev/null 2>&1 & 
+```
+
+```shell
+# 有日志，因为TG脆弱的土豆服务器，可能会日志爆炸
+nohup python3 telecha.py > output.log 2>&1 &
+cat output.log
+```
+
+* 查看进程
+```shell
+ps -aux|grep python3
+```
+
+* 终止进程
+后加进程号码
+```shell
+kill -9  
+```
+
+* 更新
+
+```shell
+cd TelechaBot
+```
+
+小型更新也可以使用 `git pull`
+```shell
+curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
+```
+
+### 关于反内容系统
+
+使用 CV2 和 DFA 技术，智能识别。
 
 ### 关于验证模型
 
@@ -247,26 +297,7 @@ groupuser - 主人 查看使用者
 **自定义题库**
 
 将你的题库文件放在Github或者托管在其他可以直链公开访问的服务上，然后写一个类，处理这个文件返回Q和A两个参数，并提交到 [这个仓库](https://github.com/TelechaBot/QaBank)
-的Issue 或者
-Pr。
+的Issue 或者 Pr。
 
-调试需要启动 redis-server
+调试需要启动 `redis-server`
 
-### 待办
-
-- [x] 重新选择题目
-- [x] 自动释放黑名单
-- [x] 群组设置自定义难度
-- [x] 手动解除封锁
-- [x] 群组白名单
-- [x] 网络热加载
-- [x] 重构消息逻辑
-- [x] 群组设置自定义题目仓库，设计题库读取类
-- [x] 自定义题目仓库在线更新
-- [x] 异步实现
-- [x] 初步使用Redis接管数据
-- [x] 使用Redis重构队列逻辑
-- [x] 重构设计模式
-- [x] DFA 检测算法
-- [x] CV计算判定NSFW
-- [x] 反QrCode判定
