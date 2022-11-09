@@ -5,7 +5,7 @@
   <img alt="License" src="https://img.shields.io/badge/LICENSE-Mit-ff69b4">
   <img src="https://img.shields.io/badge/USE-python-green" alt="PYTHON" >
   <a href="https://github.com/TelechaBot/TelechaBot/releases"><img src="https://img.shields.io/github/v/release/TelechaBot/TelechaBot?style=plastic" alt="V" ></a>
-  <a href="https://azz.net/ly233"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
+  <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
 </p>
 
 <h2 align="center">TelechaBot</h2>
@@ -264,6 +264,8 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 使用 CV2 和 DFA 技术，智能识别。
 
+如果出现 **误报** 或 **失效**，请提交 ISSUE 进行相关处理。
+
 ### 🪐关于验证模型
 
 支持多重模型，自定义模型,自带多重模型。
@@ -305,4 +307,6 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 ### 协议
 
-仓库使用 AGPL 协议，但是接受商用申请。
+缇茶主体使用 AGPL 协议开源，但是接受商用目的的申请。
+
+同属本组织的题库部件和其他部件按照相应协议开源，你可以遵循协议使用这些部件。
