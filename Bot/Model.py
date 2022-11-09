@@ -3,7 +3,7 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github  :sudoskys
-import binascii
+# import binascii
 import json
 import pathlib
 import random
@@ -412,69 +412,6 @@ async def msg_del(bot, message, config):
     # print(cmu.new_chat_member)  # ChatMember : The bot's new status
 
 
-async def NewRequest(bot, msg, config):
-    # 加载一次设置
-    load_csonfig()
-
-    # 白名单参数检查
-    WorkOn = await botWorker.checkGroup(bot, msg, config)
-    if WorkOn:
-        # 记录群组数据
-        ChatSystem.ChatUtils().addGroup(msg.chat.id)
-        CheckSystem = ChatSystem.UserUtils()
-        _chat_info = await bot.get_chat(chat_id=msg.from_user.id)
-        pic_id = None
-        if _chat_info.photo:
-            pic_id = _chat_info.photo.small_file_id
-        # 构建画像
-        UserThis = {
-            "language_code": msg.from_user.language_code,
-            "is_bot": msg.from_user.is_bot,
-            "is_premium": msg.from_user.is_premium,
-            "first_name": msg.from_user.first_name,
-            "last_name": msg.from_user.last_name,
-            "username": msg.from_user.username,
-            "id": msg.from_user.id,
-            "photo": pic_id,
-            "bio": _chat_info.bio,
-            "time": msg.date,
-            "token": f"{msg.from_user.first_name}{msg.from_user.last_name}{_chat_info.bio}"
-        }
-        try:
-            Command = await CheckSystem.Check(bot=bot, userId=msg.from_user.id,
-                                              groupId=str(msg.chat.id),
-                                              UserProfile=UserThis,
-                                              _csonfig=load_csonfig())
-        except Exception as e:
-            Command = {"command": "ask", "info": "error"}
-            print(e)
-        if Command.get("command") == "ban":
-            # await verifyRedis.checker(fail_user=[msg.from_user.id])
-            await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
-            await bot.ban_chat_member(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id),
-                                      until_date=datetime.datetime.timestamp(
-                                          datetime.datetime.now() + datetime.timedelta(minutes=12)))
-            await bot.send_message(msg.from_user.id, botWorker.convert(f"{Command.get('info')}，请等待 10～15 分钟"),
-                                   parse_mode='MarkdownV2')
-
-        elif Command.get("command") == "pass":
-            await bot.approve_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
-            await bot.send_message(msg.from_user.id, botWorker.convert(str(Command.get("info"))),
-                                   parse_mode='MarkdownV2')
-
-        else:
-            resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
-            user = botWorker.convert(msg.from_user.id)
-            group_name = botWorker.convert(msg.chat.title)
-            info = f"您正在申请加入 `{group_name}`，从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝,机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
-                   f"\nPassID:`{resign_key}`" \
-                   f"\nChatID:`{msg.chat.id}`" \
-                   f"\nAuthID:`{user}`" \
-                   f"\n按下 \/start 开始验证"
-            await bot.send_message(msg.from_user.id, info,
-                                   parse_mode='MarkdownV2')
-
-
 async def Verify(bot, message, config):
     if message.chat.type == "private":
         async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -587,59 +524,118 @@ async def Start(bot, message, config):
     if message.chat.type == "private":
         try:
             async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                # print(Data)
                 if data is None:
-                    New = True
+                    _New_User = True
                 else:
-                    New = False
+                    _New_User = False
         except Exception as e:
-            New = True
-        if New:
-            # 读取用户
-            group_k, key = verifyRedis.read_user(message.from_user.id)
-            PassID = key
-            well_unban = False
-            code = botWorker.extract_arg(message.text)
-            if len(code) == 1:
-                PassID = code[0]
-                param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
-                if len(param) == 3:
-                    key = param[0]
-                    statu = param[1]
-                    user_id = param[2]
-                    if str(user_id) != str(message.from_user.id):
-                        group_k = False
-                    if statu in ["member", "left"]:
-                        well_unban = True
+            _New_User = True
+        group_k, key = verifyRedis.read_user(message.from_user.id)
+        if _New_User and group_k:
             # 开始判断
-            info = f"开始验证群组 `{group_k}`" \
-                   f"\n\nPassID:`{PassID}`" \
-                   f"\nAuthID:`{message.from_user.id}`"
-            if group_k:
-                await bot.reply_to(message,
-                                   info,
-                                   parse_mode='MarkdownV2')
-                load_csonfig()
-                # 拉取设置信息
-                min_, limit_ = botWorker.get_difficulty(group_k)
-                model = botWorker.get_model(group_k)
-                # 注册状态
-                await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
-                # 拉取题目例子
-                import CaptchaCore
-                sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
-                await deal_send(bot, message, sth=sth, tip="\n\n输入 /saveme 重新生成题目，答题后不能重置。")
-                async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['QA'] = sth
-                    data['Group'] = group_k
-                    data['BanState'] = well_unban
-                    data['times'] = 2
-                    data['key'] = key
+            _seem = f"开始验证群组 `{group_k}`" \
+                    f"\n\nPassID:`{key}`" \
+                    f"\nAuthID:`{message.from_user.id}`"
+            await bot.reply_to(message, _seem, parse_mode='MarkdownV2')
+            # 拉取设置信息
+            load_csonfig()
+            min_, limit_ = botWorker.get_difficulty(group_k)
+            model = botWorker.get_model(group_k)
+            # 注册状态
+            await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
+            # 拉取题目例子
+            import CaptchaCore
+            sth = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
+            await deal_send(bot, message, sth=sth, tip="\n\n输入 /saveme 重新生成题目，答题后不能重置。")
+            async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['QA'] = sth
+                data['Group'] = group_k
+                data['BanState'] = False
+                data['times'] = 2
+                data['key'] = key
                 # print("生成了一道题目:" + str(sth))
+        else:
+            if not _New_User:
+                await bot.reply_to(message, "不能重复验证！")
             else:
                 await bot.reply_to(message, "数据库内没有你的信息哦，你无需验证！")
+
+
+"""
+        code = botWorker.extract_arg(message.text)
+        if len(code) == 1:
+            PassID = code[0]
+            param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
+            if len(param) == 3:
+                key = param[0]
+                statu = param[1]
+                user_id = param[2]
+                if str(user_id) != str(message.from_user.id):
+                    group_k = False
+                if statu in ["member", "left"]:
+                    well_unban = True
+"""
+
+
+async def NewRequest(bot, msg, config):
+    # 加载一次设置
+    load_csonfig()
+    # 白名单参数检查
+    WorkOn = await botWorker.checkGroup(bot, msg, config)
+    if WorkOn:
+        # 记录群组数据
+        ChatSystem.ChatUtils().addGroup(msg.chat.id)
+        CheckSystem = ChatSystem.UserUtils()
+        _chat_info = await bot.get_chat(chat_id=msg.from_user.id)
+        pic_id = None
+        if _chat_info.photo:
+            pic_id = _chat_info.photo.small_file_id
+        # 构建画像
+        UserThis = {
+            "language_code": msg.from_user.language_code,
+            "is_bot": msg.from_user.is_bot,
+            "is_premium": msg.from_user.is_premium,
+            "first_name": msg.from_user.first_name,
+            "last_name": msg.from_user.last_name,
+            "username": msg.from_user.username,
+            "id": msg.from_user.id,
+            "photo": pic_id,
+            "bio": _chat_info.bio,
+            "time": msg.date,
+            "token": f"{msg.from_user.first_name}{msg.from_user.last_name}{_chat_info.bio}"
+        }
+        try:
+            Commands = await CheckSystem.Check(bot=bot, userId=msg.from_user.id, groupId=str(msg.chat.id),
+                                               UserProfile=UserThis, _csonfig=load_csonfig())
+        except Exception as e:
+            Commands = {"command": "ask", "info": "error"}
+        if Commands.get("command") == "ban":
+            # await verifyRedis.checker(fail_user=[msg.from_user.id])
+            await bot.decline_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
+            await bot.ban_chat_member(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id),
+                                      until_date=datetime.datetime.timestamp(
+                                          datetime.datetime.now() + datetime.timedelta(minutes=12)))
+            await bot.send_message(msg.from_user.id, botWorker.convert(f"{Commands.get('info')}，请等待 10～15 分钟"),
+                                   parse_mode='MarkdownV2')
+
+        elif Commands.get("command") == "pass":
+            await bot.approve_chat_join_request(chat_id=str(msg.chat.id), user_id=str(msg.from_user.id))
+            await bot.send_message(msg.from_user.id, botWorker.convert(str(Commands.get("info"))),
+                                   parse_mode='MarkdownV2')
         else:
-            await bot.reply_to(message, "不能重复验证！")
-    else:
-        pass
-    # print(0)
+            group_k, key = verifyRedis.read_user(msg.from_user.id)
+            if not group_k:
+                resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
+                # 字符处理
+                user = botWorker.convert(msg.from_user.id)
+                group_name = botWorker.convert(msg.chat.title)
+                _info = f"您正在申请加入 `{group_name}`，从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝," \
+                        f"机器人并不会向您发送通知\n如果中途被其他管理同意，机器人不被通知故不会放行，请手动解禁" \
+                        f"\nPassID:`{resign_key}`" \
+                        f"\nChatID:`{msg.chat.id}`" \
+                        f"\nAuthID:`{user}`" \
+                        f"\n按下 \/start 开始验证"
+                await bot.send_message(msg.from_user.id, _info, parse_mode='MarkdownV2')
+            else:
+                _info = f"验证群组 {group_k} 仍未完成"
+                await bot.send_message(msg.from_user.id, botWorker.convert(_info), parse_mode='MarkdownV2')

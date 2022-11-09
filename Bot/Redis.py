@@ -132,7 +132,6 @@ class JsonRedis(object):
             _data = _MsgTask[key]
             if abs(int(time.time()) - int(_data["time"])) > int(_data["interval"]):
                 ban.append({"user": _data["user"], "group": _data["group"]})
-
         # 释放数据
         try:
             task_lock.acquire()
@@ -178,9 +177,9 @@ class JsonRedis(object):
                     await bot.ban_chat_member(chat_id=groupId, user_id=userId,
                                               until_date=datetime.datetime.timestamp(
                                                   datetime.datetime.now() + datetime.timedelta(minutes=12)))
-                except:
+                except Exception as e:
                     pass
-                # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
+                    # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                 else:
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
                 finally:
@@ -189,3 +188,5 @@ class JsonRedis(object):
     @staticmethod
     def crateKey(user_id, group_id):
         return f"Task_{user_id}_{group_id}"
+
+# OJ
