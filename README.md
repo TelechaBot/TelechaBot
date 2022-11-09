@@ -14,7 +14,7 @@ TelechaBot 是一个使用 Python 编写的机器人项目，使用 可更新模
 
 目前由 `Sudoskys` 做维护支持，点击 [使用一个可爱的实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users) *如果服务器没钱可能就不会维护*
 
-### 👋特性
+## 👋特性
 
 * MVC架构
 * 支持白名单
