@@ -27,21 +27,22 @@ class Censor:
             for i in wordlist:
                 try:
                     response = httpx.get(i, proxies=proxy)
+                    # response.encoding = response.charset_encoding
                 except:
                     print(f"初始化失败 -> {i}")
                     error.append({i})
                 else:
                     if response.status_code == 200:
-                        tmpList = response.text.split("\n")
+                        tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
                         for i in tmpList:
-                            item = i.strip(",")
+                            item = i.strip(",").strip("\n")
                             if item:
                                 Words.append(item)
                     else:
                         print(f"初始化失败 -> {i}")
                         error.append({i})
             if Words:
-                with open(ir, "w+") as code:
+                with open(ir, "w+", encoding='utf-8') as code:
                     code.write("\n".join(list(set(Words))))
             print(f"初始化 -> {ir}")
         return url.keys(), error
