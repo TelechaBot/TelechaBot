@@ -2,7 +2,7 @@
 
 ------------------------------------
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/LICENSE-Mit-ff69b4">
+  <img alt="License" src="https://img.shields.io/badge/LICENSE-Other-ff69b4">
   <img src="https://img.shields.io/badge/USE-python-green" alt="PYTHON" >
   <a href="https://github.com/TelechaBot/TelechaBot/releases"><img src="https://img.shields.io/github/v/release/TelechaBot/TelechaBot?style=plastic" alt="V" ></a>
   <a href="https://afdian.net/a/Suki1077"><img src="https://img.shields.io/badge/Become-sponsor-DB94A2" alt="SPONSOR"></a>
