@@ -321,8 +321,4 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 #### 协议
 
-如果用于非商用用途，本项目主体采用 AGPL 协议进行授权。
-
-如果用于商用用途，需要向 Github@TelechaBot 组织申请许可。
-
-同属本组织的题库部件和其他部件等按照仓库附带协议开源，你可以遵循协议使用这些部件。
+见 LICENSE
