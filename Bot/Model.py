@@ -597,11 +597,11 @@ async def NewRequest(bot, msg, config):
                 # 字符处理
                 user = botWorker.convert(msg.from_user.id)
                 group_name = botWorker.convert(msg.chat.title)
-                _info = f"您正在申请加入 `{group_name}`，从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝或同意," \
-                        f"机器人并不会向您发送通知" \
-                        f"\nPassID:`{resign_key}`" \
-                        f"\nChatID:`{msg.chat.id}`" \
+                _info = f"您正在申请加入 `{group_name}` " \
                         f"\nAuthID:`{user}`" \
+                        f"\nChatID:`{msg.chat.id}`" \
+                        f"\nPassID:`{resign_key}`" \
+                        f"从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝或同意,机器人并不会向您发送通知" \
                         f"\n按下 \/start 开始验证"
                 await bot.send_message(msg.from_user.id, _info, parse_mode='MarkdownV2')
             else:
