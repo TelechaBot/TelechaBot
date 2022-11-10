@@ -58,6 +58,54 @@
                     "info": "不通过留看"
                 }
             }
+        },
+        "5477776859": {
+            "scanUser": {
+                "spam": {
+                    "level": 10,
+                    "command": "ban",
+                    "type": "on",
+                    "info": "群组策略:反垃圾系统"
+                },
+                "premium": {
+                    "level": 5,
+                    "command": "pass",
+                    "type": "off",
+                    "info": "群组策略:自动通过"
+                },
+                "nsfw": {
+                    "level": 4,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "群组策略:色情审查"
+                },
+                "safe": {
+                    "level": 1,
+                    "command": "ban",
+                    "type": "off",
+                    "info": "群组策略:安全审查"
+                },
+                "suspect": {
+                    "level": 2,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "群组策略:嫌疑识别"
+                },
+                "politics": {
+                    "level": 2,
+                    "command": "ask",
+                    "type": "off",
+                    "info": "群组策略:立场审查"
+                }
+            },
+            "afterVerify": {
+                "unpass": {
+                    "level": 5,
+                    "command": "cancel",
+                    "type": "on",
+                    "info": "不通过留看"
+                }
+            }
         }
     },
     "antiSpam": {
