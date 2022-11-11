@@ -633,6 +633,7 @@ async def PrepareCheck(bot, msg, userId, groupId):
                                            UserProfile=UserThis, _csonfig=load_csonfig())
     except Exception as e:
         Commands = {"command": "error", "info": "error"}
+        print(e)
     if Commands.get("command") == "ban":
         # await verifyRedis.checker(fail_user=[msg.from_user.id])
         await bot.decline_chat_join_request(chat_id=str(groupId), user_id=str(userId))
