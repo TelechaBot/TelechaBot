@@ -173,10 +173,7 @@ class UserUtils(object):
         _safe = Setting.get("safe")
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
-        # +[nsfw!on!ban!5] 代表入群审计头像是否含有 nsfw 内容
-        # +[nsfw!off!pass!4]
-        # +[nsfw!on!ask!30]
-        # Init Status
+
         Status = botWorker.get_door_strategy()
         suspect = 0
 
@@ -263,7 +260,7 @@ class UserUtils(object):
         if Status[key]:
             return Setting.get(key)
         else:
-            return None
+            return {"level": 1, "command": "none", "type": "on", "info": "没有策略组"}
 
 
 class SpamUtils(object):
