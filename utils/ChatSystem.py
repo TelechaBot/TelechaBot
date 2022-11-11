@@ -141,12 +141,16 @@ class UserUtils(object):
 
     @staticmethod
     def checkQrcode(filepath: str):
-        import zxing
-        reader = zxing.BarCodeReader()
-        barcode = reader.decode(filepath)
-        if barcode.format:
-            return True
-        else:
+        try:
+            import zxing
+            reader = zxing.BarCodeReader()
+            barcode = reader.decode(filepath)
+            if barcode.format:
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(e)
             return False
 
     async def Check(self, bot, _csonfig, groupId: str, UserProfile: dict, userId: str):
@@ -169,10 +173,7 @@ class UserUtils(object):
         _safe = Setting.get("safe")
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
-        # +[nsfw!on!ban!5] 代表入群审计头像是否含有 nsfw 内容
-        # +[nsfw!off!pass!4]
-        # +[nsfw!on!ask!30]
-        # Init Status
+
         Status = botWorker.get_door_strategy()
         suspect = 0
 
@@ -259,7 +260,7 @@ class UserUtils(object):
         if Status[key]:
             return Setting.get(key)
         else:
-            return None
+            return {"level": 1, "command": "none", "type": "on", "info": "没有策略组"}
 
 
 class SpamUtils(object):

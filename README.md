@@ -142,6 +142,13 @@
 
 应当使用 Python 3.7 或更高版本，主机需要安装 `redis-server`
 
+* 反二维码支持(可选)
+
+```bash
+sudo apt update
+sudo apt install openjdk-11-jdk
+```
+
 * 安装 Redis
 
 ```shell

@@ -629,12 +629,14 @@ async def PrepareCheck(bot, msg, userId, groupId):
             "token": f"{msg.from_user.first_name}{msg.from_user.last_name}{_chat_info.bio}"
         }
         CheckSystem = ChatSystem.UserUtils()
+        # Commands = {"command": "error", "info": "error"}
         Commands = await CheckSystem.Check(bot=bot, userId=userId, groupId=str(groupId),
                                            UserProfile=UserThis, _csonfig=load_csonfig())
     except Exception as e:
-        Commands = {"command": "error", "info": "error"}
-        print(e)
-    if Commands.get("command") == "ban":
+        Commands = {"level": 1, "command": "error", "type": "on", "info": e}
+    if not Commands:
+        return False
+    elif Commands.get("command") == "ban":
         # await verifyRedis.checker(fail_user=[msg.from_user.id])
         await bot.decline_chat_join_request(chat_id=str(groupId), user_id=str(userId))
         await bot.ban_chat_member(chat_id=str(groupId), user_id=str(userId),
