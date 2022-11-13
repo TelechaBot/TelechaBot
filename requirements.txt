@@ -1,6 +1,6 @@
 requests
 pathlib
-pyTelegramBotAPI
+pyTelegramBotAPI=4.7.1
 rich
 redis
 rtoml

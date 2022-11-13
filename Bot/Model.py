@@ -11,6 +11,7 @@ import time
 
 import datetime
 
+import telebot.types
 # from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
@@ -58,8 +59,7 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, botWorker.convert(config.desc), parse_mode='MarkdownV2')
         else:
-            await bot.reply_to(message,
-                               "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
+            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
 # Control
@@ -94,6 +94,30 @@ async def Switch(bot, message, config):
                         await bot.send_document(message.chat.id, doc)
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
+            if "/initcommand" in command:
+                await bot.set_my_commands(
+                    commands=[
+                        telebot.types.BotCommand("start", "私聊 开始验证"),
+                        telebot.types.BotCommand("about", "私聊 关于这个好玩的Bot"),
+                        telebot.types.BotCommand("select", "管理 切换题库"),
+                        telebot.types.BotCommand("whatmodel", "管理 查看当前模组"),
+                        telebot.types.BotCommand("whatstrategy", "管理 查看本群策略"),
+                        telebot.types.BotCommand("upantispam", "Root 更新反诈数据"),
+                        telebot.types.BotCommand("renew", "Root 更新题库"),
+                        telebot.types.BotCommand("unban", "Root 群组ID+用户ID"),
+                        telebot.types.BotCommand("onw", "Root 开启白名单模式"),
+                        telebot.types.BotCommand("offw", "Root 关闭白名单模式"),
+                        telebot.types.BotCommand("show", "Root 对主人显示配置"),
+                        telebot.types.BotCommand("addwhite", "Root 加入白名单"),
+                        telebot.types.BotCommand("removewhite", "Root 踢出白名单"),
+                        telebot.types.BotCommand("cat", "Root 查看文件"),
+                        telebot.types.BotCommand("redis", "Root 查看队列"),
+                        telebot.types.BotCommand("groupuser", "Root 查看使用者"),
+                        telebot.types.BotCommand("initcommand", "Root 初始化指令"),
+                    ],
+                    # scope=telebot.types.BotCommandScopeChat(12345678)  # use for personal command for users
+                    # scope=telebot.types.BotCommandScopeAllPrivateChats()  # use for all private chats
+                )
 
             if "/groupuser" in command:
                 import redis
@@ -102,8 +126,8 @@ async def Switch(bot, message, config):
                 with open('tmp.log', 'w') as f:  # 设置文件对象
                     f.write(str(task))
                 doc = open('tmp.log', 'rb')
-
                 await bot.send_document(message.chat.id, doc)
+
             if "/redis" in command:
                 import redis
                 # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
@@ -131,8 +155,8 @@ async def Switch(bot, message, config):
 
                 for group in extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
-                    _csonfig["whiteGroup"].append(int(groupId))
-                    await bot.reply_to(message, '白名单加入了' + str(groupId))
+                    _csonfig["whiteGroup"].append(str(groupId))
+                    await bot.reply_to(message, 'White Group Added' + str(groupId))
                 save_csonfig()
             if "/removewhite" in command:
                 def extract_arg(arg):
@@ -141,14 +165,13 @@ async def Switch(bot, message, config):
                 for group in extract_arg(command):
                     groupId = "".join(list(filter(str.isdigit, group)))
                     if int(groupId) in _csonfig["whiteGroup"]:
-                        _csonfig["whiteGroup"].remove(int(groupId))
-                        await bot.reply_to(message, '白名单移除了' + str(groupId))
+                        _csonfig["whiteGroup"].remove(str(groupId))
+                        await bot.reply_to(message, 'White Group Removed ' + str(groupId))
                 if isinstance(_csonfig["whiteGroup"], list):
                     _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                 save_csonfig()
-
         except Exception as e:
-            await bot.reply_to(message, "Wrong:" + str(e))
+            await bot.reply_to(message, "Error:" + str(e))
 
 
 async def Banme(bot, message, config):
@@ -182,19 +205,11 @@ async def Banme(bot, message, config):
                 pass
 
 
-"""
-    if "/onantispam" == message.text or ("/onantispam" in message.text and "@" in message.text):
-        botWorker.AntiSpam(message.chat.id, True)
-        msgs = await bot.reply_to(message, f"启动了AntiSpam反诈系统")
-        set_delay_del(msgs, second=12)
-    if "/offantispam" == message.text or ("/offantispam" in message.text and "@" in message.text):
-        botWorker.AntiSpam(message.chat.id, False)
-        msgs = await bot.reply_to(message, f"关闭了AntiSpam反诈系统")
-        set_delay_del(msgs, second=12)
-"""
-
-
 class Command(object):
+    """
+    命令解析器
+    """
+
     @staticmethod
     def parseDoorCommand(text: str) -> [list | bool]:
         """
@@ -229,6 +244,14 @@ class Command(object):
 
 # 群组管理员操作命令
 async def Admin(bot, message, config):
+    """
+    管理员命令
+    :param bot: 机器人
+    :param message: 消息对象
+    :param config: 配置
+    :return:
+    """
+    # Door
     if message.text.strip().startswith('!door!'):
         load_csonfig()
         command = Command.parseDoorCommand(message.text)
@@ -243,6 +266,7 @@ async def Admin(bot, message, config):
             msgs = await bot.reply_to(message, f"设置完毕{command[1]}")
             set_delay_del(msgs, second=24)
 
+    # What Strategy
     if "/whatstrategy" == message.text or ("/whatstrategy" in message.text and "@" in message.text):
         _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
         Config = _Setting["scanUser"]
@@ -268,11 +292,13 @@ async def Admin(bot, message, config):
         botWorker.casSystem(message.chat.id, True)
         msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
         set_delay_del(msgs, second=12)
+
     if "+offcasspam" == message.text or ("+offcasspam" in message.text and "@" in message.text):
         botWorker.casSystem(message.chat.id, False)
         msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
         set_delay_del(msgs, second=12)
-    if "+select" in message.text and len(message.text) == len("+select"):
+
+    if "/select" == message.text or ("/select@" in message.text):
         def gen_markup():
             import CaptchaCore
             Get = {}
@@ -290,13 +316,10 @@ async def Admin(bot, message, config):
             botWorker.set_difficulty(message.chat.id, difficulty_limit=level)
             msgs = await bot.reply_to(message, "调整难度上限为:" + str(level))
             set_delay_del(msgs, second=20)
-            # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
             set_delay_del(msgs, second=10)
-            # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            # t.start()
+
     if "+diff_min" in message.text and len(message.text) != len("+diff_min"):
         status = message.text.split()[1:]
         level = "".join(list(filter(str.isdigit, status[0])))
@@ -304,13 +327,10 @@ async def Admin(bot, message, config):
             botWorker.set_difficulty(message.chat.id, difficulty_min=level)
             msgs = await bot.reply_to(message, "调整难度下限为:" + str(level))
             set_delay_del(msgs, second=20)
-            # t = Timer(20, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            # t.start()
         else:
             msgs = await bot.reply_to(message, "无效参数,必须为数字")
             set_delay_del(msgs, second=10)
-            # t = Timer(10, botWorker.delmsg, args=[bot, msgs.chat.id, msgs.message_id])
-            # t.start()
+
     if "+unban" in message.text:
         status = message.text.split()[1:]
         for user in status:
@@ -325,10 +345,9 @@ async def Admin(bot, message, config):
                                                can_send_media_messages=True,
                                                can_send_other_messages=True)
         # 机器人核心：发送通知并自毁消息
-        TIPS = await bot.reply_to(message, f"手动解禁:从欧几里得家里解救了{status}")
+        TIPS = await bot.reply_to(message, f"Unban: {status}")
         set_delay_del(TIPS, second=30)
-        # t = Timer(30, botWorker.delmsg, args=[bot, TIPS.chat.id, TIPS.message_id])
-        # t.start()
+
     if "+ban" in message.text:
         status = message.text.split()[1:]
         if len(message.text) == 4:
@@ -336,13 +355,13 @@ async def Admin(bot, message, config):
                 if message.reply_to_message.from_user.id:
                     await bot.ban_chat_member(message.chat.id, message.reply_to_message.from_user.id)  # .from_user.id)
                     await bot.reply_to(message.reply_to_message,
-                                       f'我已经把 {message.reply_to_message.from_user.id} 扭送到璃月警察局了！')
+                                       f'Good Bye, {message.reply_to_message.from_user.id} was kicked!')
             except:
                 pass
         for user in status:
             try:
                 await bot.ban_chat_member(message.chat.id, user)
-                await bot.reply_to(message.reply_to_message, f'我已经把{user}扭送到璃月警察局了！')
+                await bot.reply_to(message.reply_to_message, f'Good Bye, {user} was kicked！')
             except Exception as err:
                 pass
 
@@ -354,9 +373,12 @@ async def botSelf(bot, message, config):
     new = message.new_chat_member
     if new.status == "member" and message.chat.type != "private":
         load_csonfig()
-        await bot.send_message(message.chat.id,
-                               "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息,封禁用户和邀请用户的权限才能正常行动\n"
-                               "请开启新人入群审批，我会自动审批")
+        try:
+            await bot.send_message(message.chat.id,
+                                   "我是璃月科技的生物验证机器人，负责群内新人的生物验证。\n提示:这个 Bot 需要删除消息,封禁用户和邀请用户的权限才能正常行动\n"
+                                   "请开启新人入群审批，我会自动审批")
+        except:
+            pass
         if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
                 "whiteGroup"):
             pass
@@ -442,6 +464,14 @@ async def Verify(bot, message, config):
 
 
 async def Verify2(bot, message, config):
+    """
+    二步验证
+    :param bot: 机器人对象
+    :param message: 消息对象
+    :param config: 配置
+    :return:
+    """
+
     if message.chat.type == "private":
         async with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             QA = data["QA"]
@@ -456,10 +486,6 @@ async def Verify2(bot, message, config):
                 # await botWorker.un_restrict(message, bot, group_k, un_restrict_all=well_unban)
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
-                # 通知群组
-                # msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                #     msgs.message_id * abs(msgs.chat.id))
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
@@ -468,12 +494,6 @@ async def Verify2(bot, message, config):
                 _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
                 await verifyRedis.checker(ban=[_keys])
                 await bot.reply_to(message, '回答错误')
-                # 不通知群组
-                # msgs = await botWorker.send_ban(message, bot, group_k)
-                # aioschedule.every(360 * 2).seconds.do(botWorker.unbanUser, bot, group_k, message.from_user.id).tag(
-                #    message.from_user.id * abs(int(group_k)))
-                # aioschedule.every(25).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                #    msgs.message_id * abs(msgs.chat.id))
         except Exception as e:
             await bot.reply_to(message,
                                f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
@@ -521,6 +541,13 @@ async def Saveme(bot, message, config):
 
 
 async def Start(bot, message, config):
+    """
+    start 命令拦截
+    :param bot: 机器人对象
+    :param message: 消息对象
+    :param config: 配置
+    :return:
+    """
     if message.chat.type == "private":
         try:
             if await bot.get_state(message.from_user.id, message.chat.id):
@@ -582,6 +609,13 @@ async def Start(bot, message, config):
 
 
 async def NewRequest(bot, msg, config):
+    """
+    处理新请求
+    :param bot: 机器人对象
+    :param msg: 消息对象
+    :param config: 设置
+    :return:
+    """
     # 加载一次设置
     load_csonfig()
     # 白名单参数检查
@@ -609,6 +643,14 @@ async def NewRequest(bot, msg, config):
 
 
 async def PrepareCheck(bot, msg, userId, groupId):
+    """
+    预先检查
+    :param bot: 机器人对象
+    :param msg: 消息
+    :param userId: 用户ID
+    :param groupId: 群组ID
+    :return: 是否被处理
+    """
     try:
         _chat_info = await bot.get_chat(chat_id=userId)
         pic_id = None
@@ -634,6 +676,8 @@ async def PrepareCheck(bot, msg, userId, groupId):
                                            UserProfile=UserThis, _csonfig=load_csonfig())
     except Exception as e:
         Commands = {"level": 1, "command": "error", "type": "on", "info": e}
+
+    # RUN
     if not Commands:
         return False
     elif Commands.get("command") == "ban":
@@ -643,15 +687,14 @@ async def PrepareCheck(bot, msg, userId, groupId):
                                   until_date=datetime.datetime.timestamp(
                                       datetime.datetime.now() + datetime.timedelta(minutes=15)))
         await bot.send_message(userId, botWorker.convert(
-            f"GroupPolicy{Commands.get('info')}causes Intercept，wait 15～50 min \n "
+            f"GroupPolicy {Commands.get('info')}causes Intercept，wait 15～50 min \n "
             f"IF You Think its an Error， report it"),
                                parse_mode='MarkdownV2')
         return True
-
     elif Commands.get("command") == "pass":
         await bot.approve_chat_join_request(chat_id=str(groupId), user_id=str(userId))
         await bot.send_message(userId, botWorker.convert(
-            f"GroupPolicy{Commands.get('info')}causes AutoMaticPassing"),
+            f"GroupPolicy {Commands.get('info')}causes AutoMaticPassing"),
                                parse_mode='MarkdownV2')
         return True
     else:

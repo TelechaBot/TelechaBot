@@ -3,7 +3,8 @@ luac.out
 *.bin
 TTS/*.mp3
 /*/**.bin
-
+test/TestData
+test/RawData
 .idea
 Captcha.yaml
 venv

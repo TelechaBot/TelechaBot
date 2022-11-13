@@ -3,6 +3,9 @@
 # @FileName: ChatSystem.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
+# 基于 Redis 的存储系统
+
 import ast
 import json
 import pathlib

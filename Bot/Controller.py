@@ -32,6 +32,12 @@ def set_delay_del(msgs, second: int):
 
 
 async def set_cron(funcs, second: int):
+    """
+    启动一个异步定时器
+    :param funcs: 回调函数
+    :param second: 秒数
+    :return:
+    """
     tick_scheduler = AsyncIOScheduler()
     tick_scheduler.add_job(funcs, 'interval', seconds=second)
     tick_scheduler.start()
@@ -82,6 +88,7 @@ class clientBot(object):
             async def new_request(message: telebot.types.ChatJoinRequest):
                 await Bot.Model.NewRequest(bot, message, config)
 
+            # 捕获私聊启动请求
             @bot.message_handler(commands=["start", 'about'])
             async def handle_command(message):
                 if "/start" in message.text:
@@ -115,6 +122,7 @@ class clientBot(object):
             # 管理命令捕获
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
             async def group_msg_admin(message):
+                print(message)
                 await Bot.Model.Admin(bot, message, config)
 
             # 加群提示
@@ -136,16 +144,11 @@ class clientBot(object):
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success Change")
-                            # msgs = await bot.reply_to(call.message.json.get("reply_to_message").get("id"),
-                            #                          f"Info:群组验证模式已经切换至{call.data}")
-                            # set_delay_del(msgs=msgs, second=30)
-
-                else:
-                    # 如果不是题库定义的方法，那就向下执行
-                    listP = call.data.split('+')
-                    listKey = listP[0]
-                    if listKey in ["Ban", "Pass"]:
-                        pass
+                            msgs = await bot.send_message(call.message.chat.id,
+                                                          f"Info:群组验证模式已经切换至{call.data}",
+                                                          reply_to_message_id=call.message.json["reply_to_message"][
+                                                              "message_id"])
+                            set_delay_del(msgs=msgs, second=120)
 
             from telebot import asyncio_filters
             bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
