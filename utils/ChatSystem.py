@@ -10,10 +10,8 @@ import ast
 import json
 import pathlib
 import time
-
 import requests
-
-from utils.BotTool import botWorker
+from utils.BotTool import GroupStrategy
 from utils.safeDetect import Nude
 from utils.DfaDetecte import DFA, Censor
 from utils.BotTool import ReadConfig
@@ -25,6 +23,7 @@ try:
 except Exception:
     redis_installed = False
 
+# 远端敏感词库
 urlForm = {
     "AntiSpam.bin": [
         "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Spam.txt",
@@ -59,6 +58,7 @@ def InitCensor():
 
 if not pathlib.Path("AntiSpam.bin").exists():
     InitCensor()
+# 初始化反 Spam 系统，供下面使用
 SpamDfa = DFA(path="AntiSpam.bin")
 NsfwDfa = DFA(path="Nsfw.bin")
 PoliticsDfa = DFA(path="Politics.bin")
@@ -167,7 +167,7 @@ class UserUtils(object):
         :return:
         """
         self.setUser(userId=UserProfile["id"], profile=UserProfile)
-        Setting = botWorker.GetGroupStrategy(group_id=groupId)["scanUser"]
+        Setting = GroupStrategy.GetGroupStrategy(group_id=groupId)["scanUser"]
         _spam = Setting.get("spam")
         _premium = Setting.get("premium")
         _nsfw = Setting.get("nsfw")
@@ -177,7 +177,7 @@ class UserUtils(object):
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
 
-        Status = botWorker.get_door_strategy()
+        Status = GroupStrategy.get_door_strategy()
         suspect = 0
 
         # Status["24hjoin"] = False
@@ -319,7 +319,8 @@ class SpamUtils(object):
             error = '\n'.join(_error)
             errors = f"Error:\n{error}"
         else:
+            # 重载 AntiSpam 主题库
             SpamDfa.change_words(path="AntiSpam.bin")
-            errors = "No Error"
+            errors = "Success"
         if message:
             await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")

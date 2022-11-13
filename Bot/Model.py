@@ -34,6 +34,8 @@ def set_delay_del(msgs, second: int):
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis()
 
+global _csonfig
+
 
 # IO
 def load_csonfig():

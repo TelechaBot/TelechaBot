@@ -43,6 +43,9 @@ async def set_cron(funcs, second: int):
     tick_scheduler.start()
 
 
+global _csonfig
+
+
 # IO
 def load_csonfig():
     global _csonfig

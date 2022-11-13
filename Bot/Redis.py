@@ -160,7 +160,7 @@ class JsonRedis(object):
             bot, config = clientBot().botCreate()
             try:
                 await bot.approve_chat_join_request(chat_id=groupId, user_id=userId)
-            except Exception as e:
+            except Exception:
                 pass
             finally:
                 await bot.delete_state(userId, groupId)
@@ -177,7 +177,7 @@ class JsonRedis(object):
                     await bot.ban_chat_member(chat_id=groupId, user_id=userId,
                                               until_date=datetime.datetime.timestamp(
                                                   datetime.datetime.now() + datetime.timedelta(minutes=12)))
-                except Exception as e:
+                except Exception:
                     pass
                     # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                 else:

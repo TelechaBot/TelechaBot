@@ -273,7 +273,7 @@ class botWorker(object):
                 return False
         else:
             return True
-
+class GroupStrategy(object):
     @staticmethod
     def GetGroupStrategy(group_id: str) -> dict:
         load_csonfig()
@@ -341,6 +341,13 @@ class botWorker(object):
 
     @staticmethod
     def SetScanUserStrategy(group_id: str, key, tables):
+        """
+        暂时没有用也没有测试过的类，请注意
+        :param group_id:
+        :param key:
+        :param tables:
+        :return:
+        """
         _Setting = botWorker.GetGroupStrategy(group_id=group_id)
         if _Setting["scanUser"].get(key):
             _Setting["scanUser"][key] = tables
