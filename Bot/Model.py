@@ -59,7 +59,8 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, botWorker.convert(config.desc), parse_mode='MarkdownV2')
         else:
-            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
+            await bot.reply_to(message,
+                               "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
 # Control
@@ -355,11 +356,8 @@ async def botSelf(bot, message, config):
                                    "请开启新人入群审批，我会自动审批")
         except:
             pass
-        if int(message.chat.id) in _csonfig.get("whiteGroup") or abs(int(message.chat.id)) in _csonfig.get(
-                "whiteGroup"):
+        if str(message.chat.id) in _csonfig.get("whiteGroup"):
             pass
-            # bot.send_message(message.chat.id,
-            #                 "Hello bro! i can use high level problem to verify new chat member~~")
         else:
             if _csonfig.get("whiteGroupSwitch"):
                 await bot.send_message(message.chat.id, "检查设置发现群组不在白名单之中！...")
