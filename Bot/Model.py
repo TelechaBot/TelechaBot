@@ -94,30 +94,6 @@ async def Switch(bot, message, config):
                         await bot.send_document(message.chat.id, doc)
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
-            if "/initcommand" in command:
-                await bot.set_my_commands(
-                    commands=[
-                        telebot.types.BotCommand("start", "私聊 开始验证"),
-                        telebot.types.BotCommand("about", "私聊 关于这个好玩的Bot"),
-                        telebot.types.BotCommand("select", "管理 切换题库"),
-                        telebot.types.BotCommand("whatmodel", "管理 查看当前模组"),
-                        telebot.types.BotCommand("whatstrategy", "管理 查看本群策略"),
-                        telebot.types.BotCommand("upantispam", "Root 更新反诈数据"),
-                        telebot.types.BotCommand("renew", "Root 更新题库"),
-                        telebot.types.BotCommand("unban", "Root 群组ID+用户ID"),
-                        telebot.types.BotCommand("onw", "Root 开启白名单模式"),
-                        telebot.types.BotCommand("offw", "Root 关闭白名单模式"),
-                        telebot.types.BotCommand("show", "Root 对主人显示配置"),
-                        telebot.types.BotCommand("addwhite", "Root 加入白名单"),
-                        telebot.types.BotCommand("removewhite", "Root 踢出白名单"),
-                        telebot.types.BotCommand("cat", "Root 查看文件"),
-                        telebot.types.BotCommand("redis", "Root 查看队列"),
-                        telebot.types.BotCommand("groupuser", "Root 查看使用者"),
-                        telebot.types.BotCommand("initcommand", "Root 初始化指令"),
-                    ],
-                    # scope=telebot.types.BotCommandScopeChat(12345678)  # use for personal command for users
-                    # scope=telebot.types.BotCommandScopeAllPrivateChats()  # use for all private chats
-                )
 
             if "/groupuser" in command:
                 import redis
