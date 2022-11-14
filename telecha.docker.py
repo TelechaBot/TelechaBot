@@ -7,10 +7,10 @@ import sys
 
 ConfigDir = "/app/Config/"
 DataDir = "/app/Data/"
-ConfigFile = DataDir + "Captcha.toml"
+ConfigFile = ConfigDir + "Captcha.toml"
 if not Path(ConfigFile).exists():
-    copy("/test/Config/Captcha.toml", ConfigDir)
-    copy("/test/Config/config.json", DataDir)
+    copy("/app/test/Config/Captcha.toml", ConfigDir)
+    copy("/app/test/Config/config.json", DataDir)
     print("配置文件创建完成,请修改配置文件后重新运行")
     sys.exit()
 
