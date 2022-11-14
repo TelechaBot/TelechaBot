@@ -89,4 +89,4 @@ if __name__ == "__main__":
         }
     }
     user = GroupStrategy(**default)
-    print(user.scanUser.spam)
+    print(user.scanUser)
