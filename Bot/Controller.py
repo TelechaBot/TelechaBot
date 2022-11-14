@@ -62,7 +62,7 @@ class clientBot(object):
     def __init__(self, ConfigPath: str = None):
         from utils.BotTool import ReadConfig
         if not ConfigPath:
-            ConfigPath = str(Path.cwd()) + "/Captcha.toml"
+            ConfigPath = str(Path.cwd()) + "/Config/Captcha.toml"
         self.config = ReadConfig().parseFile(ConfigPath)
 
     def botCreate(self):

@@ -5,7 +5,7 @@ from utils.BotTool import Check
 from shutil import copy
 import sys
 
-ConfigDir = "/app/Config"
+ConfigDir = "/app/Config/"
 DataDir = "/app/Data"
 ConfigFile = DataDir + "Captcha.toml"
 if not Path(ConfigFile).exists():

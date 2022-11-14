@@ -293,7 +293,7 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 `some = model_name.Importer().pull(difficulty_limit=5)`
 
-[项目详细信息和参数信息](https://github.com/TelechaBot/CaptchCore)
+[项目详细信息和参数信息](https://github.com/TelechaBot/CaptchaCore)
 
 **实例**
 

@@ -6,6 +6,8 @@
 import datetime
 import json
 import time
+
+import loguru
 import redis
 import uuid
 import multiprocessing
@@ -160,10 +162,10 @@ class JsonRedis(object):
             bot, config = clientBot().botCreate()
             try:
                 await bot.approve_chat_join_request(chat_id=groupId, user_id=userId)
-            except Exception:
-                pass
+            except Exception as e:
+                loguru.logger.error(e)
             finally:
-                await bot.delete_state(userId, groupId)
+                await bot.delete_state(user_id=userId, chat_id=groupId)
         for key in ban:
             profile = key
             userId = profile.get("user")
@@ -177,13 +179,13 @@ class JsonRedis(object):
                     await bot.ban_chat_member(chat_id=groupId, user_id=userId,
                                               until_date=datetime.datetime.timestamp(
                                                   datetime.datetime.now() + datetime.timedelta(minutes=12)))
-                except Exception:
-                    pass
+                except Exception as e:
+                    loguru.logger.error(e)
                     # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                 else:
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
                 finally:
-                    await bot.delete_state(userId, groupId)
+                    await bot.delete_state(user_id=userId, chat_id=groupId)
 
     @staticmethod
     def crateKey(user_id, group_id):

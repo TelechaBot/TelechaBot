@@ -405,6 +405,7 @@ async def Verify(bot, message, config):
                 await bot.set_state(message.from_user.id, userStates.answer2, message.chat.id)
                 # await bot.register_next_step_handler(message, verify_step2, pipe)
         except Exception as e:
+            logger.error(f"{message.from_user.id}-{e}")
             await bot.reply_to(message,
                                f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
@@ -442,6 +443,7 @@ async def Verify2(bot, message, config):
                 await verifyRedis.checker(ban=[_keys])
                 await bot.reply_to(message, '回答错误')
         except Exception as e:
+            logger.error(f"{message.from_user.id}-{e}")
             await bot.reply_to(message,
                                f'机器人出错了，请发送日志到项目Issue,或尝试等待队列自然过期再尝试验证\n 日志:`{botWorker.convert(e)}`',
                                parse_mode='MarkdownV2')
