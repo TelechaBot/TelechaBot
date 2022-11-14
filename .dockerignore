@@ -1,0 +1,16 @@
+luac.out
+*.bin
+TTS/*.mp3
+/*/**.bin
+test/TestData
+test/RawData
+.idea
+Captcha.yaml
+venv
+Data/*.bin
+*.user
+/.idea/misc.xml
+/Config/Captcha.toml
+*.jpg
+*.log
+.gitignore
