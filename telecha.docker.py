@@ -6,12 +6,12 @@ from shutil import copy
 import sys
 
 ConfigDir = "/app/Config/"
-DataDir = "/app/Data"
+DataDir = "/app/Data/"
 ConfigFile = DataDir + "Captcha.toml"
 if not Path(ConfigFile).exists():
-    copy("/app/Captcha_exp.toml", ConfigFile)
-    copy("/app/Data/", DataDir)
-    print("配置文件创建完成,请修改配置文件后, 重新运行本容器")
+    copy("/test/Config/Captcha.toml", ConfigDir)
+    copy("/test/Config/config.json", DataDir)
+    print("配置文件创建完成,请修改配置文件后重新运行")
     sys.exit()
 
 Check().run()

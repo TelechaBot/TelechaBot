@@ -4,8 +4,8 @@ services:
     build: .
     volumes:
       # 数据持久化
-      - ${HOME}/Data:/app/Data
-      - ${HOME}/Config:/app/Config
+      # - ${HOME}/telecha/Data:/app/Data
+      - ${HOME}/telecha/Config:/app/Config
     stdin_open: true
     tty: true
     restart: unless-stopped
