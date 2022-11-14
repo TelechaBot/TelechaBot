@@ -10,10 +10,9 @@ import ast
 import json
 import pathlib
 import time
-import requests
 from utils.BotTool import GroupStrategy
 from utils.safeDetect import Nude
-from utils.DfaDetecte import DFA, Censor
+from utils.DfaDetect import DFA, Censor
 from utils.BotTool import ReadConfig
 
 redis_installed = True
@@ -218,7 +217,7 @@ class UserUtils(object):
                         Status["spam"] = getlevel(_spam)
                 # Check profile text
                 if UserProfile["token"]:
-                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile["token"], userId=userId)
+                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile["token"])
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
         # NSFW
@@ -289,7 +288,7 @@ class SpamUtils(object):
         return self.DataWorker.getPuffix("Spams_")
         # self.DataWorker.getList("Spam")
 
-    async def checkUser(self, _csonfig, info: str, userId: str):
+    async def checkUser(self, _csonfig, info: str):
         spam = False
         # print(_csonfig)
         # if self.isUserSpam(userId):
@@ -299,15 +298,6 @@ class SpamUtils(object):
                 await SpamUtils.renewAnti(message=None)
             if SpamDfa.exists(info):
                 return True
-        if _csonfig.get("casSystem") and userId:
-            try:
-                netWork = requests.get(f'https://api.cas.chat/check?user_id={userId}')
-            except:
-                pass
-            else:
-                if netWork.status_code == 200:
-                    if netWork.json().get("ok"):
-                        return True
         return spam
 
     @staticmethod

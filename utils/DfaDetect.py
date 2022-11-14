@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 11/9/22 8:46 AM
-# @FileName: DfaDetecte.py
+# @FileName: DfaDetect.py
 # @Software: PyCharm
 # @Github    ：spirit-yzk
 import base64

@@ -4,20 +4,25 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
+import json
 import asyncio
 import datetime
-import json
 from pathlib import Path
 
 import telebot
-import Bot.Model
-import CaptchaCore
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot import types, util
+
+import Bot.Model
+import CaptchaCore
 from utils.BotTool import Tool
 from utils.BotTool import botWorker, userStates
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from loguru import logger
+
+logger.add("run.log", rotation="100MB", encoding="utf-8", enqueue=True, retention="4 days")
 
 
 def set_delay_del(msgs, second: int):
@@ -54,23 +59,18 @@ def load_csonfig():
 
 
 class clientBot(object):
-    def __init__(self):
+    def __init__(self, ConfigPath: str = None):
         from utils.BotTool import ReadConfig
-        self.config = ReadConfig().parseFile(str(Path.cwd()) + "/Captcha.toml")
-        # ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
+        if not ConfigPath:
+            ConfigPath = str(Path.cwd()) + "/Captcha.toml"
+        self.config = ReadConfig().parseFile(ConfigPath)
 
     def botCreate(self):
-        # if pathlib.Path("project.ini").exists():
-        #     from configparser import ConfigParser
-        #     value = ConfigParser()
-        #     value.read("project.ini")
-        #     version = value.get('project', 'version')
-        #     Tool().console.print("Create Async Bot Obj,版本:" + version, style='blue')
         bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
         return bot, self.config
 
     def SyncBotCreate(self):
-        print("Create NoAsync Bot Obj")
+        logger.info("Create NoAsync Bot Obj")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
 
@@ -84,7 +84,7 @@ class clientBot(object):
                 if config.Proxy.status:
                     from telebot import asyncio_helper
                     asyncio_helper.proxy = config.Proxy.url  # 'http://127.0.0.1:7890'  # url
-                    print("正在使用隧道！")
+                    logger.info("正在使用隧道！")
 
             # 捕获加群请求
             @bot.chat_join_request_handler()
@@ -120,12 +120,11 @@ class clientBot(object):
             # 非管理命令捕获
             @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
             async def group_msg_no_admin(message):
-                await Bot.Model.Banme(bot, message, config)
+                await Bot.Model.Group_User(bot, message, config)
 
             # 管理命令捕获
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
             async def group_msg_admin(message):
-                print(message)
                 await Bot.Model.Admin(bot, message, config)
 
             # 加群提示
@@ -160,7 +159,6 @@ class clientBot(object):
             from Bot.Redis import JsonRedis
             JsonRedis.start()
 
-            # aioschedule.every(3).seconds.do(JsonRedis.checker)
             # 不再使用的
             # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
             async def main():

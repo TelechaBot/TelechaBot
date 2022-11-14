@@ -11,13 +11,17 @@ import random
 import time
 # import telebot.types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from loguru import logger
 # from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.util import quick_markup
 
 from Bot.Redis import JsonRedis
 # import binascii
 from utils import ChatSystem
-from utils.BotTool import botWorker, userStates
+from utils.BotTool import botWorker, userStates, GroupStrategy
+
+# 构建多少秒的验证对象
+verifyRedis = JsonRedis()
 
 
 def set_delay_del(msgs, second: int):
@@ -30,9 +34,6 @@ def set_delay_del(msgs, second: int):
     )
     scheduler.start()
 
-
-# 构建多少秒的验证对象
-verifyRedis = JsonRedis()
 
 global _csonfig
 
@@ -57,15 +58,14 @@ async def About(bot, message, config):
         if config.desc:
             await bot.reply_to(message, botWorker.convert(config.desc), parse_mode='MarkdownV2')
         else:
-            await bot.reply_to(message,
-                               "自定义题库的生物信息验证 Bot，Love From Project:https://github.com/TelechaBot/TelechaBot")
+            await bot.reply_to(message, "自定义题库的生物信息验证 Bot，"
+                                        "Love From Project:https://github.com/TelechaBot/TelechaBot")
 
 
 # Control
 async def Switch(bot, message, config):
-    userID = message.from_user.id
     load_csonfig()
-    if str(userID) == config.ClientBot.owner:
+    if str(message.from_user.id) == config.ClientBot.owner:
         try:
             command = message.text
             if command == "/show":
@@ -146,38 +146,25 @@ async def Switch(bot, message, config):
                     _csonfig["whiteGroup"] = list(set(_csonfig["whiteGroup"]))
                 save_csonfig()
         except Exception as e:
+            logger.error(e)
             await bot.reply_to(message, "Error:" + str(e))
 
 
-async def Banme(bot, message, config):
-    if len(message.text) == 6:
-        if "+banme" == message.text:
-            # resign_key = verifyRedis.resign_user(str(message.from_user.id), str(message.chat.id))
-            # user_ke = str(resign_key) + " " + str("left") + " " + str(message.from_user.id)
-            # user_key = binascii.b2a_hex(user_ke.encode('ascii')).decode('ascii')
-            # InviteLink = config.link + "?start=" + str(user_key)
-            # bot_link = InlineKeyboardMarkup()  # Created Inline Keyboard Markup
-            # bot_link.add(
-            #    InlineKeyboardButton("点击这里进行生物验证", url=InviteLink))  # Added Invite Link to Inline Keyboard
-            mins = (random.randint(1, 20) * 1)
-            user = botWorker.convert(message.from_user.first_name)
-            msgs = await bot.reply_to(message,
-                                      f"[{user}](tg://openmessage?user_id={message.from_user.id}) "
-                                      f"获得了 {mins} 分钟封锁"
-                                      # f"答题可以解锁，但是不答题或答错会被踢出群组，等待6分钟\n\n"
-                                      f"管理员手动解封请使用 `+unban {message.from_user.id}` ",
-                                      # reply_markup=bot_link,
-                                      parse_mode='MarkdownV2')
-            set_delay_del(msgs, second=10)
-            try:
-                # userId = "".join(list(filter(str.isdigit, user)))
-                # verifyRedis.checker(unban=[key])
-                await bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
-                                               can_send_media_messages=False,
-                                               can_send_other_messages=False, until_date=message.date + mins * 60)
-            except Exception as e:
-                print(e)
-                pass
+async def Group_User(bot, message, config):
+    if "/banme" == message.text or ("/banme@" in message.text):
+        _min = (random.randint(1, 20) * 1)
+        user = botWorker.convert(message.from_user.first_name)
+        msgs = await bot.reply_to(message,
+                                  f"好的... [{user}](tg://openmessage?user_id={message.from_user.id}) "
+                                  f"获得了 {_min} 分钟封锁",
+                                  parse_mode='MarkdownV2')
+        set_delay_del(msgs, second=25)
+        try:
+            await bot.restrict_chat_member(message.chat.id, message.from_user.id, can_send_messages=False,
+                                           can_send_media_messages=False,
+                                           can_send_other_messages=False, until_date=message.date + _min * 60)
+        except Exception as e:
+            logger.error(e)
 
 
 class Command(object):
@@ -231,8 +218,8 @@ async def Admin(bot, message, config):
         load_csonfig()
         command = Command.parseDoorCommand(message.text)
         if command:
-            _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
-            if command[0] in botWorker.get_door_strategy().keys():
+            _Setting = GroupStrategy.GetGroupStrategy(group_id=message.chat.id)
+            if command[0] in GroupStrategy.get_door_strategy().keys():
                 if not _Setting["scanUser"].get(command[0]):
                     _Setting["scanUser"][command[0]] = {}
                 _Setting["scanUser"][command[0]].update(command[1])
@@ -243,7 +230,7 @@ async def Admin(bot, message, config):
 
     # What Strategy
     if "/whatstrategy" == message.text or ("/whatstrategy" in message.text and "@" in message.text):
-        _Setting = botWorker.GetGroupStrategy(group_id=message.chat.id)
+        _Setting = GroupStrategy.GetGroupStrategy(group_id=message.chat.id)
         Config = _Setting["scanUser"]
         info = []
         after_info = []
@@ -255,22 +242,12 @@ async def Admin(bot, message, config):
             else:
                 after_info.append(f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n")
         info.extend(after_info)
-        _types = botWorker.get_door_strategy().keys()
+        _types = GroupStrategy.get_door_strategy().keys()
         msgs = await bot.reply_to(message, f"本群验证前策略为\n{''.join(info)} \n Support Type:{','.join(_types)}")
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
-        set_delay_del(msgs, second=12)
-
-    if "+oncasspam" == message.text or ("+oncasspam" in message.text and "@" in message.text):
-        botWorker.casSystem(message.chat.id, True)
-        msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
-        set_delay_del(msgs, second=12)
-
-    if "+offcasspam" == message.text or ("+offcasspam" in message.text and "@" in message.text):
-        botWorker.casSystem(message.chat.id, False)
-        msgs = await bot.reply_to(message, f"启动了CAS反诈系统")
         set_delay_del(msgs, second=12)
 
     if "/select" == message.text or ("/select@" in message.text):
@@ -421,8 +398,6 @@ async def Verify(bot, message, config):
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, group_k)
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
                 # msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
-                # aioschedule.every(2).seconds.do(botWorker.delmsg, msgs.chat.id, msgs.message_id).tag(
-                #     msgs.message_id * abs(msgs.chat.id))
                 # 删除状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
@@ -562,22 +537,6 @@ async def Start(bot, message, config):
                 await bot.reply_to(message, "NO ongoing verification tasks")
                 # pass
                 # 防止洪水攻击
-
-
-"""
-        code = botWorker.extract_arg(message.text)
-        if len(code) == 1:
-            PassID = code[0]
-            param = binascii.a2b_hex(code[0].encode('ascii')).decode('ascii').split()
-            if len(param) == 3:
-                key = param[0]
-                statu = param[1]
-                user_id = param[2]
-                if str(user_id) != str(message.from_user.id):
-                    group_k = False
-                if statu in ["member", "left"]:
-                    well_unban = True
-"""
 
 
 async def NewRequest(bot, msg, config):

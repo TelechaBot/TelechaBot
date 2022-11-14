@@ -3,14 +3,13 @@
 # @FileName: censor.py.py
 # @Software: PyCharm
 # @Github    ：spirit-yzk
-from utils.DfaDetecte import DFA
+from utils.DfaDetect import DFA
 import random
 import time
 
 ban_words_set = set()
 ban_words_list = list()
 example100k = list()
-
 
 
 def test_get_words():

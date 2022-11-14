@@ -1,6 +1,6 @@
-requests
+loguru
 pathlib
-pyTelegramBotAPI=4.7.1
+pyTelegramBotAPI==4.7.1
 rich
 redis
 rtoml
@@ -11,3 +11,4 @@ Pillow
 apscheduler
 zxing
 httpx
+pydantic

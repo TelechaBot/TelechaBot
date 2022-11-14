@@ -3,6 +3,8 @@
 # @FileName: main.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+from pathlib import Path
+
 from Bot.Controller import clientBot
 from utils.BotTool import Check, Tool
 
@@ -17,4 +19,4 @@ Tool().console.print("News: 3.0.1 增加TTS验证，可选使用， sudo apt ins
 Tool().console.print("News: 2.1.0 配置解析库已经改动，请填写新的机器人设置文件", style="yellow")
 
 # pushService = sendBot(config.botToken)
-clientBot().run()
+clientBot(ConfigPath=str(Path.cwd()) + "/Captcha.toml").run()
