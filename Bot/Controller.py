@@ -54,7 +54,7 @@ global _csonfig
 # IO
 def load_csonfig():
     global _csonfig
-    with open("config.json", encoding="utf-8") as f:
+    with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
@@ -78,7 +78,7 @@ class clientBot(object):
     def run(self):
         load_csonfig()
         if _csonfig.get("statu"):
-            Tool().console.print("Bot Running", style='blue')
+            logger.info("Bot Start")
             bot, config = self.botCreate()
             if config.get("Proxy"):
                 if config.Proxy.status:

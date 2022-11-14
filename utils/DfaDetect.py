@@ -19,7 +19,7 @@ def base64ToStr(s):
 
 class Censor:
     @staticmethod
-    def InitWords(url: dict, proxy=None):
+    def InitWords(url: dict, home_dir: str = "./", proxy=None):
         error = []
         for ir in url:
             Words = []
@@ -42,7 +42,7 @@ class Censor:
                         print(f"初始化失败 -> {i}")
                         error.append({i})
             if Words:
-                with open(ir, "w+", encoding='utf-8') as code:
+                with open(home_dir + ir, "w+", encoding='utf-8') as code:
                     code.write("\n".join(list(set(Words))))
             print(f"初始化 -> {ir}")
         return url.keys(), error

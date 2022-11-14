@@ -17,7 +17,7 @@ from telebot.util import quick_markup
 
 from Bot.Redis import JsonRedis
 # import binascii
-from utils import ChatSystem
+from utils import ChatSystem, DataManager
 from utils.BotTool import botWorker, userStates, GroupStrategy
 
 # 构建多少秒的验证对象
@@ -41,14 +41,14 @@ global _csonfig
 # IO
 def load_csonfig():
     global _csonfig
-    with open("config.json", encoding="utf-8") as f:
+    with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
         return _csonfig
 
 
 # IO
 def save_csonfig():
-    with open("config.json", "w", encoding="utf8") as f:
+    with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
@@ -594,6 +594,7 @@ async def PrepareCheck(bot, msg, userId, groupId):
             "is_premium": msg.from_user.is_premium,
             "first_name": msg.from_user.first_name,
             "last_name": msg.from_user.last_name,
+            "name": msg.from_user.first_name + msg.from_user.last_name,
             "username": msg.from_user.username,
             "id": userId,
             "photo": pic_id,
@@ -604,7 +605,7 @@ async def PrepareCheck(bot, msg, userId, groupId):
         CheckSystem = ChatSystem.UserUtils()
         # Commands = {"command": "error", "info": "error"}
         Commands = await CheckSystem.Check(bot=bot, userId=userId, groupId=str(groupId),
-                                           UserProfile=UserThis, _csonfig=load_csonfig())
+                                           UserProfile=DataManager.UserProfileData(**UserThis), _csonfig=load_csonfig())
     except Exception as e:
         Commands = {"level": 1, "command": "error", "type": "on", "info": e}
 

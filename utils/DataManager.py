@@ -6,6 +6,22 @@
 
 # 这里是数据基本类
 from pydantic import BaseModel, ValidationError, validator
+from typing import Optional, Union
+
+
+class UserProfileData(BaseModel):
+    language_code: Optional[str]
+    is_bot: Optional[bool]
+    is_premium: Optional[bool]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    username: Optional[str]
+    photo: Optional[str]
+    bio: Optional[str]
+    time: Union[None, str, int]
+    token: Optional[str]
+    name: Optional[str]
+    id: int
 
 
 class Commander(BaseModel):
@@ -89,4 +105,21 @@ if __name__ == "__main__":
         }
     }
     user = GroupStrategy(**default)
-    print(user.scanUser)
+
+    UserThis = {
+        "language_code": None,
+        "is_bot": None,
+        "is_premium": None,
+        "first_name": None,
+        "last_name": None,
+        "username": None,
+        "id": 1,
+        "photo": None,
+        "bio": None,
+        "time": None,
+        "token": None,
+    }
+    users = UserProfileData(**UserThis)
+    print(users)
+    if users.first_name:
+        print(0)

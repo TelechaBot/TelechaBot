@@ -22,12 +22,12 @@ global _csonfig
 
 def load_csonfig():
     global _csonfig
-    with open("config.json", encoding="utf-8") as f:
+    with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
 def save_csonfig():
-    with open("config.json", "w", encoding="utf8") as f:
+    with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
@@ -392,15 +392,15 @@ class ReadConfig(object):
 class Check(object):
     def __init__(self):
         self.file = [
-            "/config.json",
-            "/Captcha.toml",
+            "/Config/config.json",
+            "/Config/Captcha.toml",
         ]
         self.dir = [
             "/Data",
             "/TTS",
         ]
         self.inits = [
-            "/config.json"
+            "/Config/config.json"
         ]
         self.RootDir = str(pathlib.Path().cwd())
 
@@ -419,7 +419,7 @@ class Check(object):
 
     def run(self):
         init_config = {
-            "/config.json": """
+            "./Config/config.json": """
 {
     "statu": true,
     "whiteGroupSwitch": false,
