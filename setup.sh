@@ -88,19 +88,19 @@ run() {
       echox skyBlue "初始化备份文件夹：init ${dataBack}...."
       mkdir "$dataBack"
     fi
-
-
+    if [ ! -d "$config" ]; then
+      echox skyBlue "初始化配置文件夹：init ${config}...."
+      mkdir "$config"
+    fi
     # 备份配置文件
     if [ -f "${dir}/Captcha.toml" ]; then
-      echox skyBlue "移动配置文件：backup ${dir}/Captcha.toml to ${dataBack} ...."
+      echox skyBlue "移动配置文件：backup ${dir}/Captcha.toml to ${config} ...."
       cp -f "${dir}/Captcha.toml" "$config"
     fi
     # 备份配置文件
     if [ -f "${dir}/config.json" ]; then
-      echox skyBlue "移动配置文件：backup ${dir}/config.json to ${dataBack} ...."
+      echox skyBlue "移动配置文件：backup ${dir}/config.json to ${config} ...."
       cp -f "${dir}/config.json" "$config"
-
-
     # 备份配置文件
     if [ -f "${dir}/taskRedis.json" ]; then
       echox skyBlue "移动配置文件：backup ${dir}/taskRedis.json to ${dataBack} ...."
