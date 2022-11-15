@@ -89,7 +89,7 @@ run() {
       mkdir "$dataBack"
     fi
     if [ ! -d "$config" ]; then
-      echox skyBlue "初始化备份文件夹：init ${config}...."
+      echox skyBlue "初始化配置文件夹：init ${config}...."
       mkdir "$config"
     fi
     # 备份配置文件
