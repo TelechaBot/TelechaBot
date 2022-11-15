@@ -12,11 +12,15 @@
 
 *TelechaBot* 是一个使用 Python 编写的机器人项目，使用 可更新模组 进行生物验证！ 项目经过模块化，便于扩展。
 
-为了给群组提供有效的验证模式，便捷的以**筛选**为目的**梯度验证**模式，它支持诸如 **成语验证** **普通语音听力验证** **图片验证** **文本验证** **诗词验证** **数学** **物理** **化学** **生物** **哔哩哔哩题库** 等验证模式。
+为了给群组提供有效的验证模式，便捷的以**筛选**为目的**梯度验证**模式，它支持诸如 **成语验证** **普通语音听力验证** **
+图片验证** **文本验证** **诗词验证** **数学** **物理** **化学** **生物** **哔哩哔哩题库** 等验证模式。
 
-这让它既可以作为普通群组的智能安全的验证工具(推荐 听力验证 和 科目一 等系列)，也可以作为严肃型群组的得力助手(例如数学验证)。
+这让它既可以作为普通群组的智能安全的验证工具(推荐 听力验证 和 科目一 等系列)，也可以作为严肃型群组的得力助手(
+例如数学验证)。
 
-目前由 `Sudoskys` 做维护支持，点击 [使用一个可爱的实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users) *如果服务器没钱可能就不会维护*
+目前由 `Sudoskys`
+做维护支持，点击 [使用一个可爱的实例](https://t.me/SmartCapthaBot?startgroup=start&admin=can_invite_users) *
+如果服务器没钱可能就不会维护*
 
 ## 👋特性
 
@@ -37,7 +41,7 @@
 
 - 机器人的封禁策略
 
-延迟定时封禁。到时间自动释放(博弈交给机器人)，避免误封后永不解封的问题。
+延迟定时封禁：到时间自动释放(博弈交给机器人)，避免误封后永不解封的问题。
 
 如果遇到了碰撞入群的情况，请开启高级 不可枚举题库 或语音验证。
 
@@ -47,7 +51,7 @@
 
 本机器人采用 **自动审批邀请** 的验证方式，舍弃旧的禁言公屏验证方式。
 
-* 防止机器人宕机拦截不及时
+* 防止机器人宕机导致门禁失效
 * 防止响应过慢导致的拦截不住
 * 防止操作记录被污染和打扰聊天(邀请只能管理员看到)
 * 适应 Topic 验证
@@ -83,7 +87,6 @@
 | `/upantispam`             | 更新反诈库                      | 私聊  | 主人           |
 | `/whatstrategy`           | 查看本群策略                     | 群组  | 管理           |
 
-
 #### ⚒群组管理命令
 
 缇茶 *目前* 使用 `+` 作为关键符。
@@ -104,6 +107,7 @@
 缇茶会在验证之前先根据群组的策略进行分流筛选，然后根据特征将待验证者分流到不同的操作逻辑。
 
 * 样式
+
 ```
 !door!premium=[level=1|type=off]
 ```
@@ -111,8 +115,8 @@
 使用 ``/whatstrategy`` 查看策略和支持的键类型。
 
 支持的属性为 ["level", "type", "command"]  
-`level` 为优先级（冲突时高等级策略优先），`type` 为 `on` 或者 `off` ，`command` 分 `ask`(验证),`ban`(禁止),`pass`(绿卡通过) 找不到默认 ask。
-
+`level` 为优先级（冲突时高等级策略优先），`type` 为 `on` 或者 `off` ，`command` 分 `ask`(验证),`ban`(禁止),`pass`(绿卡通过)
+找不到默认 ask。
 
 ### 🔨待办
 
@@ -186,13 +190,13 @@ pip install -r requirements.txt
 
 ```shell
 sudo apt install nano
-cp Captcha_exp.toml Captcha.toml
-nano Captcha.toml 
+cp Config/Captcha_exp.toml Config/Captcha.toml
+nano Config/Captcha.toml 
 ```
 
 #### 📚配置文件说明
 
-* nano Captcha.toml
+* nano Config/Captcha.toml
 
 ```toml
 # Sample
@@ -217,7 +221,6 @@ url = "http://127.0.0.1:7890"
 
 #### 📚命令模板
 
-
 ```md
 start - 私聊 开始验证
 about - 私聊 关于这个好玩的Bot
@@ -236,7 +239,6 @@ redis - 主人 查看目前队列
 groupuser - 主人 查看使用者
 ```
 
-
 #### 🧊后台运行
 
 ```shell
@@ -251,12 +253,14 @@ cat output.log
 ```
 
 * 查看进程
+
 ```shell
 ps -aux|grep python3
 ```
 
 * 终止进程
-后加进程号码
+  后加进程号码
+
 ```shell
 kill -9  
 ```
@@ -268,6 +272,7 @@ cd TelechaBot
 ```
 
 小型更新也可以使用 `git pull`
+
 ```shell
 curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh && sh setup.sh
 ```
@@ -288,7 +293,7 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 
 `some = model_name.Importer().pull(difficulty_limit=5)`
 
-[项目详细信息和参数信息](https://github.com/TelechaBot/CaptchCore)
+[项目详细信息和参数信息](https://github.com/TelechaBot/CaptchaCore)
 
 **实例**
 
@@ -318,11 +323,12 @@ curl -LO https://raw.githubusercontent.com/TelechaBot/TelechaBot/main/setup.sh &
 调试需要启动 `redis-server`
 
 ### 协议和信息保管
+
 #### 用户信息协议
 
 本项目会保存验证人员的用户数据画像用于反垃圾内容系统的识别。
 
-本项目不会向其他组织共享任何数据。
+本项目不会向其他组织共享任何敏感数据。
 
 本项目的实例不保证提供稳定的服务。
 

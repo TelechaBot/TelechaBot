@@ -1,0 +1,22 @@
+version: "3.8"
+services:
+  bots:
+    build: .
+    volumes:
+      # 数据持久化
+      # - ${HOME}/telecha/Data:/app/Data
+      - ${HOME}/telecha/Config:/app/Config
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    links:
+      - redis
+    depends_on:
+      - redis
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379"
+    deploy:
+      restart_policy:
+        condition: on-failure

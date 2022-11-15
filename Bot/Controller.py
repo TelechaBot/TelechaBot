@@ -4,20 +4,25 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 # import aiohttp
+import json
 import asyncio
 import datetime
-import json
 from pathlib import Path
 
 import telebot
-import Bot.Model
-import CaptchaCore
 from telebot.async_telebot import AsyncTeleBot
 from telebot.asyncio_storage import StateMemoryStorage
 from telebot import types, util
+
+import Bot.Model
+import CaptchaCore
 from utils.BotTool import Tool
 from utils.BotTool import botWorker, userStates
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from loguru import logger
+
+logger.add("run.log", rotation="100MB", encoding="utf-8", enqueue=True, retention="4 days")
 
 
 def set_delay_del(msgs, second: int):
@@ -32,36 +37,40 @@ def set_delay_del(msgs, second: int):
 
 
 async def set_cron(funcs, second: int):
+    """
+    启动一个异步定时器
+    :param funcs: 回调函数
+    :param second: 秒数
+    :return:
+    """
     tick_scheduler = AsyncIOScheduler()
     tick_scheduler.add_job(funcs, 'interval', seconds=second)
     tick_scheduler.start()
 
 
+global _csonfig
+
+
 # IO
 def load_csonfig():
     global _csonfig
-    with open("config.json", encoding="utf-8") as f:
+    with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
 class clientBot(object):
-    def __init__(self):
+    def __init__(self, ConfigPath: str = None):
         from utils.BotTool import ReadConfig
-        self.config = ReadConfig().parseFile(str(Path.cwd()) + "/Captcha.toml")
-        # ReadYaml(str(Path.cwd()) + "/Captcha.yaml").get()
+        if not ConfigPath:
+            ConfigPath = str(Path.cwd()) + "/Config/Captcha.toml"
+        self.config = ReadConfig().parseFile(ConfigPath)
 
     def botCreate(self):
-        # if pathlib.Path("project.ini").exists():
-        #     from configparser import ConfigParser
-        #     value = ConfigParser()
-        #     value.read("project.ini")
-        #     version = value.get('project', 'version')
-        #     Tool().console.print("Create Async Bot Obj,版本:" + version, style='blue')
         bot = AsyncTeleBot(self.config.botToken, state_storage=StateMemoryStorage())
         return bot, self.config
 
     def SyncBotCreate(self):
-        print("Create NoAsync Bot Obj")
+        logger.info("Create NoAsync Bot Obj")
         bot = telebot.TeleBot(self.config.botToken)
         return bot, self.config
 
@@ -69,19 +78,20 @@ class clientBot(object):
     def run(self):
         load_csonfig()
         if _csonfig.get("statu"):
-            Tool().console.print("Bot Running", style='blue')
+            logger.info("Bot Start")
             bot, config = self.botCreate()
             if config.get("Proxy"):
                 if config.Proxy.status:
                     from telebot import asyncio_helper
                     asyncio_helper.proxy = config.Proxy.url  # 'http://127.0.0.1:7890'  # url
-                    print("正在使用隧道！")
+                    logger.info("正在使用隧道！")
 
             # 捕获加群请求
             @bot.chat_join_request_handler()
             async def new_request(message: telebot.types.ChatJoinRequest):
                 await Bot.Model.NewRequest(bot, message, config)
 
+            # 捕获私聊启动请求
             @bot.message_handler(commands=["start", 'about'])
             async def handle_command(message):
                 if "/start" in message.text:
@@ -110,7 +120,7 @@ class clientBot(object):
             # 非管理命令捕获
             @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
             async def group_msg_no_admin(message):
-                await Bot.Model.Banme(bot, message, config)
+                await Bot.Model.Group_User(bot, message, config)
 
             # 管理命令捕获
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
@@ -136,16 +146,11 @@ class clientBot(object):
                     if call.from_user.id == call.message.json.get("reply_to_message").get("from").get("id"):
                         if botWorker.set_model(call.message.chat.id, model=call.data):
                             await bot.answer_callback_query(call.id, "Success Change")
-                            # msgs = await bot.reply_to(call.message.json.get("reply_to_message").get("id"),
-                            #                          f"Info:群组验证模式已经切换至{call.data}")
-                            # set_delay_del(msgs=msgs, second=30)
-
-                else:
-                    # 如果不是题库定义的方法，那就向下执行
-                    listP = call.data.split('+')
-                    listKey = listP[0]
-                    if listKey in ["Ban", "Pass"]:
-                        pass
+                            msgs = await bot.send_message(call.message.chat.id,
+                                                          f"Info:群组验证模式已经切换至{call.data}",
+                                                          reply_to_message_id=call.message.json["reply_to_message"][
+                                                              "message_id"])
+                            set_delay_del(msgs=msgs, second=120)
 
             from telebot import asyncio_filters
             bot.add_custom_filter(asyncio_filters.IsAdminFilter(bot))
@@ -154,7 +159,6 @@ class clientBot(object):
             from Bot.Redis import JsonRedis
             JsonRedis.start()
 
-            # aioschedule.every(3).seconds.do(JsonRedis.checker)
             # 不再使用的
             # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
             async def main():

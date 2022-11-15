@@ -3,16 +3,17 @@
 # @FileName: ChatSystem.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+
+# 基于 Redis 的存储系统
+
 import ast
 import json
 import pathlib
 import time
-
-import requests
-
-from utils.BotTool import botWorker
+from utils.BotTool import GroupStrategy
+from utils.DataManager import UserProfileData
 from utils.safeDetect import Nude
-from utils.DfaDetecte import DFA, Censor
+from utils.DfaDetect import DFA, Censor
 from utils.BotTool import ReadConfig
 
 redis_installed = True
@@ -22,6 +23,7 @@ try:
 except Exception:
     redis_installed = False
 
+# 远端敏感词库
 urlForm = {
     "AntiSpam.bin": [
         "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Spam.txt",
@@ -44,22 +46,23 @@ urlForm = {
 
 
 def InitCensor():
-    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Captcha.toml")
+    config = ReadConfig().parseFile(str(pathlib.Path.cwd()) + "/Config/Captcha.toml")
     if config.Proxy.status:
         proxies = {
             'all://': config.Proxy.url,
         }  # 'http://127.0.0.1:7890'  # url
-        return Censor.InitWords(url=urlForm, proxy=proxies)
+        return Censor.InitWords(url=urlForm, home_dir="./Data/", proxy=proxies)
     else:
-        return Censor.InitWords(url=urlForm)
+        return Censor.InitWords(url=urlForm, home_dir="./Data/")
 
 
-if not pathlib.Path("AntiSpam.bin").exists():
+if not pathlib.Path("./Data/AntiSpam.bin").exists():
     InitCensor()
-SpamDfa = DFA(path="AntiSpam.bin")
-NsfwDfa = DFA(path="Nsfw.bin")
-PoliticsDfa = DFA(path="Politics.bin")
-AbsolutelySafeDfa = DFA(path="AbsolutelySafe.bin")
+# 初始化反 Spam 系统，供下面使用
+SpamDfa = DFA(path="./Data/AntiSpam.bin")
+NsfwDfa = DFA(path="./Data/Nsfw.bin")
+PoliticsDfa = DFA(path="./Data/Politics.bin")
+AbsolutelySafeDfa = DFA(path="./Data/AbsolutelySafe.bin")
 
 
 class DataWorker(object):
@@ -153,7 +156,7 @@ class UserUtils(object):
             print(e)
             return False
 
-    async def Check(self, bot, _csonfig, groupId: str, UserProfile: dict, userId: str):
+    async def Check(self, bot, _csonfig, groupId: str, userId: str, UserProfile: UserProfileData):
         """
         检查
         :param bot: 机器人实例
@@ -163,8 +166,8 @@ class UserUtils(object):
         :param userId:
         :return:
         """
-        self.setUser(userId=UserProfile["id"], profile=UserProfile)
-        Setting = botWorker.GetGroupStrategy(group_id=groupId)["scanUser"]
+        self.setUser(userId=userId, profile=UserProfile.dict())
+        Setting = GroupStrategy.GetGroupStrategy(group_id=groupId)["scanUser"]
         _spam = Setting.get("spam")
         _premium = Setting.get("premium")
         _nsfw = Setting.get("nsfw")
@@ -174,7 +177,7 @@ class UserUtils(object):
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
 
-        Status = botWorker.get_door_strategy()
+        Status = GroupStrategy.get_door_strategy()
         suspect = 0
 
         # Status["24hjoin"] = False
@@ -188,24 +191,28 @@ class UserUtils(object):
         if _politics:
             if _politics.get("type") == "on":
                 # Check profile text
-                if UserProfile["token"]:
-                    if PoliticsDfa.exists(UserProfile["token"]):
+                if UserProfile.token:
+                    if PoliticsDfa.exists(UserProfile.token):
                         Status["politics"] = getlevel(_politics)
         if _safe:
             if _safe.get("type") == "on":
                 # Check photo
-                if not UserProfile["photo"]:
+                if not UserProfile.photo:
                     Status["safe"] = getlevel(_safe)
                 # Check profile text
-                if UserProfile["token"]:
-                    if AbsolutelySafeDfa.exists(UserProfile["token"]):
+                if UserProfile.token:
+                    if AbsolutelySafeDfa.exists(UserProfile.token):
                         Status["safe"] = getlevel(_safe)
         if _spam:
             if _spam.get("type") == "on":
                 # Check photo
-                if UserProfile["photo"]:
+                if UserProfile.first_name:
+                    if len(UserProfile.first_name) < 2:
+                        Status["spam"] = getlevel(_spam)
+
+                if UserProfile.photo:
                     if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile["photo"])
+                        file_path = await bot.get_file(UserProfile.photo)
                         downloaded_file = await bot.download_file(file_path.file_path)
                         with open(_photoPath, 'wb') as new_file:
                             new_file.write(downloaded_file)
@@ -214,16 +221,16 @@ class UserUtils(object):
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
                 # Check profile text
-                if UserProfile["token"]:
-                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile["token"], userId=userId)
+                if UserProfile.token:
+                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile.token)
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
         # NSFW
         if _nsfw:
             if _nsfw.get("type") == "on":
-                if UserProfile["photo"]:
+                if UserProfile.photo:
                     if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile["photo"])
+                        file_path = await bot.get_file(UserProfile.photo)
                         downloaded_file = await bot.download_file(file_path.file_path)
                         with open(_photoPath, 'wb') as new_file:
                             new_file.write(downloaded_file)
@@ -233,27 +240,27 @@ class UserUtils(object):
                     n.parse()
                     if n.result:
                         Status["nsfw"] = getlevel(_nsfw)
-                if UserProfile["token"]:
-                    if NsfwDfa.exists(UserProfile["token"]):
+                if UserProfile.token:
+                    if NsfwDfa.exists(UserProfile.token):
                         Status["nsfw"] = getlevel(_nsfw)
         # suspect
         if _suspect:
             if _suspect.get("type") == "on":
                 total = 30
-                if not UserProfile["photo"]:
+                if not UserProfile.photo:
                     suspect += 10
-                if not UserProfile["bio"]:
+                if not UserProfile.bio:
                     suspect += 10
-                if not UserProfile["username"]:
+                if not UserProfile.username:
                     suspect += 10
-                if UserProfile["is_premium"]:
+                if UserProfile.is_premium:
                     suspect -= 20
                 if suspect < (total / 2):
                     Status["suspect"] = getlevel(_suspect)
         # Check premium
         if _premium:
             if _premium.get("type") == "on":
-                if UserProfile["is_premium"]:
+                if UserProfile.is_premium:
                     Status["premium"] = getlevel(_premium)
         # 排序启用的命令
         key = max(Status, key=Status.get)
@@ -286,25 +293,16 @@ class SpamUtils(object):
         return self.DataWorker.getPuffix("Spams_")
         # self.DataWorker.getList("Spam")
 
-    async def checkUser(self, _csonfig, info: str, userId: str):
+    async def checkUser(self, _csonfig, info: str):
         spam = False
         # print(_csonfig)
         # if self.isUserSpam(userId):
         #    return True
         if info:
-            if not pathlib.Path("AntiSpam.bin").exists():
+            if not pathlib.Path("./Data/AntiSpam.bin").exists():
                 await SpamUtils.renewAnti(message=None)
             if SpamDfa.exists(info):
                 return True
-        if _csonfig.get("casSystem") and userId:
-            try:
-                netWork = requests.get(f'https://api.cas.chat/check?user_id={userId}')
-            except:
-                pass
-            else:
-                if netWork.status_code == 200:
-                    if netWork.json().get("ok"):
-                        return True
         return spam
 
     @staticmethod
@@ -316,7 +314,8 @@ class SpamUtils(object):
             error = '\n'.join(_error)
             errors = f"Error:\n{error}"
         else:
-            SpamDfa.change_words(path="AntiSpam.bin")
-            errors = "No Error"
+            # 重载 AntiSpam 主题库
+            SpamDfa.change_words(path="./Data/AntiSpam.bin")
+            errors = "Success"
         if message:
             await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")

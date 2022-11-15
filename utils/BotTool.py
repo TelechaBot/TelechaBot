@@ -3,15 +3,11 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github    ：sudoskys
-import pathlib
-from pathlib import Path
-
-import rtoml
-import time
 import json
-
+import pathlib
+import time
+import rtoml
 from rich.console import Console
-
 from telebot.asyncio_handler_backends import State, StatesGroup
 
 
@@ -21,14 +17,17 @@ class userStates(StatesGroup):
     is_start = State()
 
 
+global _csonfig
+
+
 def load_csonfig():
     global _csonfig
-    with open("config.json", encoding="utf-8") as f:
+    with open("./Config/config.json", encoding="utf-8") as f:
         _csonfig = json.load(f)
 
 
 def save_csonfig():
-    with open("config.json", "w", encoding="utf8") as f:
+    with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
 
@@ -56,16 +55,46 @@ def dict_add(raw, new):
     raw.update(update_dict)
 
 
+class LogForm(object):
+    @staticmethod
+    async def send_ok(message, bot, groups):
+        user = botWorker.convert(message.from_user.id)
+        msgss = await bot.send_message(groups,
+                                       f"刚刚{user}通过了验证！",
+                                       parse_mode='MarkdownV2')
+        return msgss
+
+    @staticmethod
+    async def send_ban(message, bot, groups):
+        """
+        通知 Ban
+        :param message:
+        :param bot:
+        :param groups:
+        :return:
+        """
+        if _csonfig.get("GroupForm"):
+            msgss = await bot.send_message(groups,
+                                           f"刚刚{message.from_user.id}没有通过验证，已经被扭送月球...！"
+                                           f"\n用户12分钟后自动从黑名单中被保释")
+            return msgss
+
+
 class botWorker(object):
     def __init__(self):
         pass
 
     @staticmethod
     async def delmsg(chat, message):
+        """
+        通知 Ban
+        :param chat:
+        :param message:
+        :return:
+        """
         from Bot.Controller import clientBot
         bot, config = clientBot().botCreate()
         await bot.delete_message(chat, message)
-        # aioschedule.clear(message * abs(chat))
 
     @staticmethod
     async def un_restrict(message, bot, groups, un_restrict_all=False):
@@ -87,29 +116,10 @@ class botWorker(object):
                                            )
 
     @staticmethod
-    async def send_ban(message, bot, groups):
-        msgss = await bot.send_message(groups,
-                                       f"刚刚{message.from_user.id}没有通过验证，已经被扭送月球...！"
-                                       f"\n用户12分钟后自动从黑名单中被保释")
-        return msgss
-
-    @staticmethod
     async def unbanUser(bot, chat, user):
         msgss = await bot.unban_chat_member(chat, user_id=user, only_if_banned=True)
         print("执行了移除黑名单:" + str(user))
         # aioschedule.clear(user * abs(chat))
-        return msgss
-
-    @staticmethod
-    async def send_ok(message, bot, groups, well_unban):
-        # if well_unban:
-        #     info = "完全解封"
-        # else:
-        #     info = "给予普通权限"
-        user = botWorker.convert(message.from_user.id)
-        msgss = await bot.send_message(groups,
-                                       f"刚刚{user}通过了验证！",
-                                       parse_mode='MarkdownV2')
         return msgss
 
     @staticmethod
@@ -165,32 +175,6 @@ class botWorker(object):
         if Model is None:
             Model = "数学题库"
         return Model
-
-    @staticmethod
-    def AntiSpam(group_id, isOn: bool):
-        load_csonfig()
-        if _csonfig.get("antiSpam") is None:
-            _csonfig["antiSpam"] = {}
-            save_csonfig()
-        OK = False
-        if not (isOn is None):
-            _csonfig["antiSpam"][str(group_id)] = isOn
-            OK = True
-        save_csonfig()
-        return OK
-
-    @staticmethod
-    def casSystem(group_id, isOn: bool):
-        load_csonfig()
-        if _csonfig.get("casSystem") is None:
-            _csonfig["casSystem"] = {}
-            save_csonfig()
-        OK = False
-        if not (isOn is None):
-            _csonfig["casSystem"][str(group_id)] = isOn
-            OK = True
-        save_csonfig()
-        return OK
 
     @staticmethod
     def set_model(group_id, model=None):
@@ -274,6 +258,8 @@ class botWorker(object):
         else:
             return True
 
+
+class GroupStrategy(object):
     @staticmethod
     def GetGroupStrategy(group_id: str) -> dict:
         load_csonfig()
@@ -341,7 +327,14 @@ class botWorker(object):
 
     @staticmethod
     def SetScanUserStrategy(group_id: str, key, tables):
-        _Setting = botWorker.GetGroupStrategy(group_id=group_id)
+        """
+        暂时没有用也没有测试过的类，请注意
+        :param group_id:
+        :param key:
+        :param tables:
+        :return:
+        """
+        _Setting = GroupStrategy.GetGroupStrategy(group_id=group_id)
         if _Setting["scanUser"].get(key):
             _Setting["scanUser"][key] = tables
             _csonfig["GroupStrategy"][str(group_id)] = _Setting
@@ -350,21 +343,6 @@ class botWorker(object):
     @staticmethod
     def get_door_strategy():
         return {"spam": False, "premium": False, "nsfw": False, "suspect": False, "safe": False, "politics": False}
-
-
-class yamler(object):
-    # sudoskys@github
-    def __init__(self):
-        self.debug = False
-        self.home = Path().cwd()
-
-    def debug(self, log):
-        if self.debug:
-            print(log)
-
-    @staticmethod
-    def rm(top):
-        Path(top).unlink()
 
 
 class Dict(dict):
@@ -414,36 +392,51 @@ class ReadConfig(object):
 class Check(object):
     def __init__(self):
         self.file = [
-            "/config.json",
-            "/Captcha.toml",
+            "/Config/config.json",
+            "/Config/Captcha.toml",
         ]
         self.dir = [
-            # "/Data",
+            "/Data",
+            "/TTS",
         ]
         self.inits = [
-            "/Data/whitelist.user",
-            "/Data/blacklist.user",
+            "/Config/config.json"
         ]
         self.RootDir = str(pathlib.Path().cwd())
 
-    def mk(self, tab, context, mkdir=True):
-
+    def mk(self, tab: list, context: dict, is_dir: bool = True):
         for i in tab:
-            if mkdir:
+            if is_dir:
                 pathlib.Path(self.RootDir + i).mkdir(parents=True, exist_ok=True)
             else:
                 files = pathlib.Path(self.RootDir + i)
                 if not files.exists():
                     files.touch(exist_ok=True)
-                    if i in self.inits:
+                    # 初始化内容
+                    if i in self.inits and context.get(i):
                         with files.open("w") as fs:
-                            fs.write(context)
-
-    # 禁用此函数
-    # def initConfig(self, path):
-    #     with open(path, "w") as file:
-    #         file.write("{}")
+                            fs.write(context.get(i))
 
     def run(self):
-        self.mk(self.dir, "{}", mkdir=True)
-        self.mk(self.file, "{}", mkdir=False)
+        init_config = {
+            "./Config/config.json": """
+{
+    "statu": true,
+    "whiteGroupSwitch": false,
+    "Model": {
+    },
+    "difficulty_limit": {},
+    "difficulty_min": {},
+    "whiteGroup": [
+    ],
+    "GroupStrategy": {
+    },
+    "antiSpam": {
+    },
+    "casSystem": {
+    }
+}
+            """
+        }
+        self.mk(self.dir, {}, is_dir=True)
+        self.mk(self.file, init_config, is_dir=False)

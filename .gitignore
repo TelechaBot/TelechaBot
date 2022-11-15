@@ -3,7 +3,8 @@ luac.out
 *.bin
 TTS/*.mp3
 /*/**.bin
-
+test/TestData
+test/RawData
 .idea
 Captcha.yaml
 venv
@@ -52,4 +53,4 @@ Data/*
 /.idea/misc.xml
 /life.pkl
 /Data/list.json
-/Captcha.toml
+/Config/Captcha.toml
