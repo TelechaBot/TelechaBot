@@ -8,7 +8,9 @@ test/RawData
 .idea
 Captcha.yaml
 venv
-
+*.log
+*.rdb
+VerifyUser.jpg
 Data/*
 *.user
 
