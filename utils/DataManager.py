@@ -24,6 +24,14 @@ class UserProfileData(BaseModel):
     id: int
 
 
+class Group(BaseModel):
+    id: int
+    bio: Optional[str]
+    # 联盟线
+    line: int
+    method: dict
+
+
 class Commander(BaseModel):
     level: int = 1
     command: str = "off"
