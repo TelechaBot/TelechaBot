@@ -96,14 +96,14 @@ async def Switch(bot, message, config):
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
 
-            if "/groupuser" in command:
-                import redis
-                # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
-                task = ChatSystem.ChatUtils().getGroupItem()
-                with open('tmp.log', 'w') as f:  # 设置文件对象
-                    f.write(str(task))
-                doc = open('tmp.log', 'rb')
-                await bot.send_document(message.chat.id, doc)
+            # if "/groupuser" in command:
+            #     import redis
+            #     # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+            #     task = ChatSystem.ChatUtils().getGroupItem()
+            #     with open('tmp.log', 'w') as f:  # 设置文件对象
+            #         f.write(str(task))
+            #     doc = open('tmp.log', 'rb')
+            #     await bot.send_document(message.chat.id, doc)
 
             if "/redis" in command:
                 import redis
@@ -559,22 +559,6 @@ async def NewRequest(bot, msg, config):
     # 白名单参数检查
     WorkOn = await botWorker.checkGroup(bot, msg, config)
     if WorkOn:
-        _Group = DataManager.GroupManger(groupId=msg.chat.id)
-        # 记录群组数据
-        _GroupData = _Group.read()
-        if not _GroupData:
-            _GroupData = {
-                "id": msg.chat.id,
-                "user": {"": True},
-                "keys": "",
-                "times": 1,
-            }
-        else:
-            _GroupData["times"] += 1
-            if _GroupData["user"].get(str(msg.from_user.id)):
-                pass
-            _GroupData["user"][str(msg.from_user.id)] = {}
-        _Group.save(profile=_GroupData)
         # ChatSystem.ChatUtils().addGroup()
         if True:  # not await PrepareCheck(bot, message, userId=message.from_user.id, groupId=msg.chat.id):
             group_k, key = verifyRedis.read_user(msg.from_user.id)

@@ -6,13 +6,14 @@
 
 # 基于 Redis 的存储系统
 
-import pathlib
 import time
-from utils.DataManager import UserProfile, DataWorker, CommandTable, GroupStrategyManger, GroupStrategy
+import pathlib
 from utils.safeDetect import Nude
-from utils.DfaDetect import DFA, Censor
 from utils.BotTool import ReadConfig
-from utils.DataManager import UserManger
+from utils.DfaDetect import DFA, Censor
+from utils.DataManager import DataWorker, CommandTable
+from utils.DataManager import GroupStrategy, UserTrack, UserProfile, GroupProfile
+from utils.DataManager import UserTrackManger, UserManger, GroupManger, GroupStrategyManger
 
 # 远端敏感词库
 urlForm = {
@@ -56,9 +57,123 @@ PoliticsDfa = DFA(path="./Data/Politics.bin")
 AbsolutelySafeDfa = DFA(path="./Data/AbsolutelySafe.bin")
 
 
-class UserUtils(object):
-    def __init__(self):
-        pass
+class UserTrackUtils(object):
+    def __init__(self, userId: str, groupId: str = "1"):
+        self.group_id = groupId
+        self.user_id = userId
+        self._Manger = UserTrackManger(userId=userId)
+        # 初始化策略组
+        if not self._Manger.read():
+            default_setting = CommandTable.UserTrack_default()
+            self._Manger.save(userTrackObj=UserTrack(**default_setting))
+
+    def resignGroup(self, groupId: str, status: str):
+        self.group_id = groupId
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        Group = _Main.group.get(str(groupId))
+        _Now = {"time": int(time.time() * 1000), "result": status}
+        if Group:
+            Group.append(_Now)
+            _Main.group.update({groupId: Group})
+        else:
+            _Main.group.update({groupId: [_Now]})
+        _UpdateData = _Main.dict()
+        # DictUpdate.dict_update(_Track, _UpdateData)
+        self._Manger.save(userTrackObj=UserTrack(**_UpdateData))
+        return _Main.group
+
+    def resignDetect(self, groupId: str, status: str, score: int = -1):
+        self.group_id = groupId
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        Score = _Main.score.get(str(groupId))
+        _Now = {"time": int(time.time() * 1000), "result": status, "score": score}
+        if Score:
+            Score.append(_Now)
+            _Main.score.update({groupId: Score})
+        else:
+            _Main.score.update({groupId: [_Now]})
+        _UpdateData = _Main.dict()
+        # DictUpdate.dict_update(_Track, _UpdateData)
+        self._Manger.save(userTrackObj=UserTrack(**_UpdateData))
+        return _Main.score
+
+    def getGroupHistory(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        return _Main.group.get(str(groupId))
+
+    def getDetectHistory(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        return _Main.score.get(str(groupId))
+
+    def isBaka(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        if not _Main.group:
+            return -1
+        _rs = 0
+        _total = 1
+        _timeout = 0
+        for k, d in _Main.group.items():
+            for i in d:
+                if isinstance(i, dict):
+                    _total += 1
+                    if i.get("result") == "ban":
+                        _rs += 1
+                    if i.get("result") == "timeout":
+                        _timeout += 1
+        BakaScore = (_rs + _timeout) / _total
+        DangerScore = _timeout / _total
+        WellMan = _total / 10
+        return [BakaScore, DangerScore, WellMan]
+
+
+class GroupUtils(object):
+    def __init__(self, groupId: str, userId: str = "1"):
+        self.group_id = groupId
+        self.user_id = userId
+        self._Manger = GroupManger(groupId=groupId)
+        # 初始化策略组
+        if not self._Manger.read():
+            default_setting = CommandTable.GroupUtils_default(groupId=self.group_id, userId=self.user_id)
+            self._Manger.save(profileObj=GroupProfile(**default_setting))
+
+    def setUser(self, userId: str, status: str = None):
+        """
+        设定群组设定的用户状态
+        :param userId:
+        :param status:
+        :return:
+        """
+        self.user_id = userId
+        _GroupData = self._Manger.read()
+        _UpdateData = {
+            "id": self.group_id,
+            "user": {userId: {"status": status}},
+        }
+        DictUpdate.dict_update(_GroupData, _UpdateData)
+        self._Manger.save(profileObj=GroupProfile(**_GroupData))
+
+    def recordStatus(self, userId: str, status: str):
+        """
+        增加验证次数
+        :param status:
+        :param userId:
+        :return:
+        """
+        _GroupData = self._Manger.read()
+        if not _GroupData.get("time"):
+            _GroupData["user"][userId]["time"] = []
+        _UpdateData = {
+            "id": self.group_id,
+            "user": {userId: {"time": _GroupData["time"].append([int(time.time()), status])}},
+            "times": _GroupData["times"] + 1
+        }
+        DictUpdate.dict_update(_GroupData, _UpdateData)
+        self._Manger.save(profileObj=GroupProfile(**_GroupData))
 
 
 class SpamUtils(object):
@@ -158,15 +273,16 @@ class strategyUtils(object):
 
     def __init__(self, groupId: str):
         self.group_id = groupId
-        _Strategy = GroupStrategyManger(groupId=groupId).read()
+        _Strategy = GroupStrategyManger(groupId=groupId)
         # 初始化策略组
-        if not _Strategy:
+        if not _Strategy.read():
             default_setting = CommandTable.GroupStrategy_default_strategy()
-            GroupStrategyManger(groupId=groupId).save(groupStrategyObj=GroupStrategy(**default_setting))
+            _Strategy.save(groupStrategyObj=GroupStrategy(**default_setting))
 
     def getDoorStrategy(self) -> dict:
         default = CommandTable.GroupStrategy_default_door_strategy()
-        setting = GroupStrategyManger(groupId=self.group_id).read()
+        _Manger = GroupStrategyManger(groupId=self.group_id)
+        setting = _Manger.read()
         if setting.get("door"):
             DictUpdate.dict_update(default, setting.get("door"))
             return default
@@ -177,12 +293,13 @@ class strategyUtils(object):
                 "door": default,
             }
             DictUpdate.dict_update(setting, _Strategy)
-            GroupStrategyManger(groupId=self.group_id).save(groupStrategyObj=GroupStrategy(**setting))
+            _Manger.save(groupStrategyObj=GroupStrategy(**setting))
             return default
 
     def setDoorStrategy(self, key: dict) -> bool:
         door_strategy = self.getDoorStrategy()
-        setting = GroupStrategyManger(groupId=self.group_id).read()
+        _Manger = GroupStrategyManger(groupId=self.group_id)
+        setting = _Manger.read()
         # 更新策略组
         DictUpdate.dict_update(door_strategy, key)
         _Strategy = {
@@ -190,7 +307,7 @@ class strategyUtils(object):
             "door": door_strategy,
         }
         DictUpdate.dict_update(setting, _Strategy)
-        GroupStrategyManger(groupId=self.group_id).save(groupStrategyObj=GroupStrategy(**setting))
+        _Manger.save(groupStrategyObj=GroupStrategy(**setting))
         return True
 
 
@@ -264,10 +381,6 @@ class TelechaEvaluator(object):
         if _spam:
             if _spam.get("type") == "on":
                 # Check photo
-                if UserProfile.first_name:
-                    if len(UserProfile.first_name) < 2:
-                        Status["spam"] = getlevel(_spam)
-
                 if UserProfile.photo:
                     if not _downPhoto:
                         file_path = await bot.get_file(UserProfile.photo)

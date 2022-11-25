@@ -68,15 +68,29 @@ class CommandTable(object):
     def GroupStrategy_default_strategy() -> dict:
         return GroupStrategy(id="").dict()
 
+    @staticmethod
+    def GroupUtils_default(groupId: str, userId: str):
+        return GroupProfile(id=groupId, user={userId: {}}).dict()
+
+    @staticmethod
+    def UserTrack_default():
+        return UserTrack().dict()
+
+
+class UserTrack(BaseModel):
+    group: Optional[dict] = {
+        # "1": [{"time": 1, "result": "ban"}]
+    }
+    score: Optional[dict] = {
+        # "1": [{"time": 1, "detect": "ban", "score": 1}]
+    }
+    deliver: Optional[bool] = False
+    level: Optional[int] = 1
+
 
 class GroupStrategy(BaseModel):
     id: str
     door: Optional[dict] = {}
-
-
-class History(BaseModel):
-    groupHistory: dict
-    nameHistory: dict
 
 
 class UserProfile(BaseModel):
@@ -92,7 +106,22 @@ class UserProfile(BaseModel):
     token: Optional[str]
     name: Optional[str]
     id: int
-    history: Optional[History]
+
+
+class Commander(BaseModel):
+    """
+    命令
+    """
+    level: int = 1
+    command: str = "off"
+    type: str = "ask"
+    info: str
+
+    @validator('info', always=True)
+    def check_consistency(cls, v, values):
+        if v is None and values.get('data') is None:
+            raise ValueError('must provide data or error')
+        return v
 
 
 class GroupProfile(BaseModel):
@@ -112,10 +141,14 @@ class GroupProfile(BaseModel):
     user: Optional[dict]
     # 联盟线
     keys: Optional[int]
-    times: int = 0
+    times: Optional[int] = 0
 
 
 class DataWorker(object):
+    """
+    Redis 数据基类
+    """
+
     def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
         self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
         # self.con = Redis(connection_pool=self.redis) -> use this when necessary
@@ -171,6 +204,10 @@ class DataWorker(object):
 
 
 class GroupManger(object):
+    """
+    群组，目前没用
+    """
+
     def __init__(self, groupId: Union[str, int]):
         self.groupId = str(groupId)
         self.DataWorker = DataWorker(prefix="Telecha_Group_")
@@ -191,6 +228,10 @@ class GroupManger(object):
 
 
 class UserManger(object):
+    """
+    用户材料更新
+    """
+
     def __init__(self, userId: Union[str, int]):
         self.userId = str(userId)
         self.DataWorker = DataWorker(prefix="Telecha_Users_")
@@ -208,6 +249,10 @@ class UserManger(object):
 
 
 class GroupStrategyManger(object):
+    """
+    策略机，提供群组策略的查看
+    """
+
     def __init__(self, groupId: Union[str, int]):
         self.groupId = str(groupId)
         self.DataWorker = DataWorker(prefix="Telecha_GroupStrategy_")
@@ -224,17 +269,28 @@ class GroupStrategyManger(object):
         return _Strategy
 
 
-class Commander(BaseModel):
-    level: int = 1
-    command: str = "off"
-    type: str = "ask"
-    info: str
+class UserTrackManger(object):
+    """
+    用户行为持久化机，提供历史数据查看和数据记录功能
+    """
 
-    @validator('info', always=True)
-    def check_consistency(cls, v, values):
-        if v is None and values.get('data') is None:
-            raise ValueError('must provide data or error')
-        return v
+    def __init__(self, userId: Union[str, int]):
+        self.userId = str(userId)
+        self.DataWorker = DataWorker(prefix="Telecha_Tracker_")
+
+    def save(self, _userTrack: dict = None, userTrackObj: UserTrack = None) -> bool:
+        if not any([_userTrack, userTrackObj]):
+            return False
+        if userTrackObj:
+            _userTrack = userTrackObj.dict()
+        return self.DataWorker.setKey(key=self.userId, obj=_userTrack)
+
+    def read(self) -> Union[dict]:
+        _Group = self.DataWorker.getKey(self.userId)
+        return _Group
+
+    def getAllHistory(self):
+        return self.DataWorker.getPuffix("Telecha_Tracker_")
 
 
 if __name__ == "__main__":
