@@ -206,9 +206,6 @@ class UserUtils(object):
         if _spam:
             if _spam.get("type") == "on":
                 # Check photo
-                if UserProfile.first_name:
-                    if len(UserProfile.first_name) < 2:
-                        Status["spam"] = getlevel(_spam)
 
                 if UserProfile.photo:
                     if not _downPhoto:
