@@ -6,22 +6,13 @@
 
 # 基于 Redis 的存储系统
 
-import ast
-import json
 import pathlib
 import time
-from utils.BotTool import GroupStrategy
-from utils.DataManager import UserProfileData
+from utils.DataManager import UserProfile, DataWorker, CommandTable, GroupStrategyManger, GroupStrategy
 from utils.safeDetect import Nude
 from utils.DfaDetect import DFA, Censor
 from utils.BotTool import ReadConfig
-
-redis_installed = True
-
-try:
-    from redis import Redis, ConnectionPool
-except Exception:
-    redis_installed = False
+from utils.DataManager import UserManger
 
 # 远端敏感词库
 urlForm = {
@@ -65,82 +56,14 @@ PoliticsDfa = DFA(path="./Data/Politics.bin")
 AbsolutelySafeDfa = DFA(path="./Data/AbsolutelySafe.bin")
 
 
-class DataWorker(object):
-    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
-        self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
-        # self.con = Redis(connection_pool=self.redis) -> use this when necessary
-        #
-        # {chat_id: {user_id: {'state': None, 'data': {}}, ...}, ...}
-        self.prefix = prefix
-        if not redis_installed:
-            raise Exception("Redis is not installed. Install it via 'pip install redis'")
-
-    def setKey(self, key, obj, exN=None):
-        connection = Redis(connection_pool=self.redis)
-        connection.set(self.prefix + str(key), json.dumps(obj), ex=exN)
-        connection.close()
-        return True
-
-    def deleteKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        connection.delete(self.prefix + str(key))
-        connection.close()
-        return True
-
-    def getKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        result = connection.get(self.prefix + str(key))
-        connection.close()
-        if result:
-            return json.loads(result)
-        else:
-            return False
-
-    def addToList(self, key, listData: list):
-        data = self.getKey(key)
-        if isinstance(data, str):
-            listGet = ast.literal_eval(data)
-        else:
-            listGet = []
-        listGet = listGet + listData
-        listGet = list(set(listGet))
-        if self.setKey(key, str(listGet)):
-            return True
-
-    def getList(self, key):
-        listGet = ast.literal_eval(self.getKey(key))
-        if not listGet:
-            listGet = []
-        return listGet
-
-    def getPuffix(self, fix):
-        connection = Redis(connection_pool=self.redis)
-        listGet = connection.scan_iter(f"{fix}*")
-        connection.close()
-        return listGet
-
-
-class ChatUtils(object):
-    def __init__(self):
-        self.DataWorker = DataWorker(prefix="Utils_")
-
-    def addGroup(self, groupId: str):
-        self.DataWorker.addToList("Chat", [groupId])
-
-    def getGroupItem(self):
-        return self.DataWorker.getList("Chat")
-
-
 class UserUtils(object):
     def __init__(self):
-        self.DataWorker = DataWorker(prefix="Users_")
+        pass
 
-    def setUser(self, userId: str, profile: dict):
-        return self.DataWorker.setKey(key=userId, obj=profile)
 
-    def getUser(self, userId: str):
-        listSpam = self.DataWorker.getKey(userId)
-        return listSpam
+class SpamUtils(object):
+    def __init__(self):
+        self.DataWorker = DataWorker(prefix="Spams_")
 
     @staticmethod
     def checkQrcode(filepath: str):
@@ -156,18 +79,154 @@ class UserUtils(object):
             print(e)
             return False
 
-    async def Check(self, bot, _csonfig, groupId: str, userId: str, UserProfile: UserProfileData):
+    def addSpamUser(self, userId: str, groupId: str):
+        self.DataWorker.setKey(userId, str(time.time()), exN=43200)  # 86400 * 1)
+        if groupId:
+            self.DataWorker.addToList(groupId, [userId])
+
+    def isUserSpam(self, userId: str):
+        listSpam = self.DataWorker.getKey(userId)
+        if listSpam:
+            return True
+        else:
+            return False
+
+    def getGroupSpamListHistory(self, groupId: str):
+        return self.DataWorker.getList(groupId)
+
+    def getAllSpamUser(self):
+        return self.DataWorker.getPuffix("Spams_")
+        # self.DataWorker.getList("Spam")
+
+    async def checkUser(self, _csonfig, info: str):
+        spam = False
+        # print(_csonfig)
+        # if self.isUserSpam(userId):
+        #    return True
+        if info:
+            if not pathlib.Path("./Data/AntiSpam.bin").exists():
+                await SpamUtils.renewAnti(message=None)
+            if SpamDfa.exists(info):
+                return True
+        return spam
+
+    @staticmethod
+    async def renewAnti(message):
+        from Bot.Controller import clientBot
+        bot, config = clientBot().botCreate()
+        keys, _error = InitCensor()
+        if _error:
+            error = '\n'.join(_error)
+            errors = f"Error:\n{error}"
+        else:
+            # 重载 AntiSpam 主题库
+            SpamDfa.change_words(path="./Data/AntiSpam.bin")
+            errors = "Success"
+        if message:
+            await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
+
+
+class DictUpdate(object):
+    @staticmethod
+    def dict_update(raw, new):
+        DictUpdate.dict_update_iter(raw, new)
+        DictUpdate.dict_add(raw, new)
+
+    @staticmethod
+    def dict_update_iter(raw, new):
+        for key in raw:
+            if key not in new.keys():
+                continue
+            if isinstance(raw[key], dict) and isinstance(new[key], dict):
+                DictUpdate.dict_update(raw[key], new[key])
+            else:
+                raw[key] = new[key]
+
+    @staticmethod
+    def dict_add(raw, new):
+        update_dict = {}
+        for key in new:
+            if key not in raw.keys():
+                update_dict[key] = new[key]
+        raw.update(update_dict)
+
+
+class strategyUtils(object):
+    """
+    策略组提取/修复/创建，供给给预处理管线
+    """
+
+    def __init__(self, groupId: str):
+        self.group_id = groupId
+        _Strategy = GroupStrategyManger(groupId=groupId).read()
+        # 初始化策略组
+        if not _Strategy:
+            default_setting = CommandTable.GroupStrategy_default_strategy()
+            GroupStrategyManger(groupId=groupId).save(groupStrategyObj=GroupStrategy(**default_setting))
+
+    def getDoorStrategy(self) -> dict:
+        default = CommandTable.GroupStrategy_default_door_strategy()
+        setting = GroupStrategyManger(groupId=self.group_id).read()
+        if setting.get("door"):
+            DictUpdate.dict_update(default, setting.get("door"))
+            return default
+        else:
+            # 初始化 door 字段
+            _Strategy = {
+                "id": self.group_id,
+                "door": default,
+            }
+            DictUpdate.dict_update(setting, _Strategy)
+            GroupStrategyManger(groupId=self.group_id).save(groupStrategyObj=GroupStrategy(**setting))
+            return default
+
+    def setDoorStrategy(self, key: dict) -> bool:
+        door_strategy = self.getDoorStrategy()
+        setting = GroupStrategyManger(groupId=self.group_id).read()
+        # 更新策略组
+        DictUpdate.dict_update(door_strategy, key)
+        _Strategy = {
+            "id": self.group_id,
+            "door": door_strategy,
+        }
+        DictUpdate.dict_update(setting, _Strategy)
+        GroupStrategyManger(groupId=self.group_id).save(groupStrategyObj=GroupStrategy(**setting))
+        return True
+
+
+class TelechaEvaluator(object):
+    """
+    预先检查管线
+    """
+
+    def __init__(self, groupId: str, userId: str):
+        self.groupId = str(groupId)
+        self.userId = str(userId)
+
+    def _lowLevel(self):
+        pass
+
+    def _highLevel(self):
+        pass
+
+    def _warnForm(self):
+        pass
+
+    def _selectorCreate(self):
+        pass
+
+    async def checkUser(self, bot, _csonfig, UserProfileData: UserProfile):
         """
         检查
+        :param UserProfileData: UserProfile class
         :param bot: 机器人实例
-        :param _csonfig:
-        :param groupId:
-        :param UserProfile:
-        :param userId:
+        :param _csonfig: 设置
         :return:
         """
-        self.setUser(userId=userId, profile=UserProfile.dict())
-        Setting = GroupStrategy.GetGroupStrategy(group_id=groupId)["scanUser"]
+        CuteCat = UserManger(userId=self.userId)
+        if not CuteCat.read():
+            CuteCat.save(profileObj=UserProfileData)
+        Setting = strategyUtils(groupId=self.groupId).getDoorStrategy()
         _spam = Setting.get("spam")
         _premium = Setting.get("premium")
         _nsfw = Setting.get("nsfw")
@@ -176,8 +235,7 @@ class UserUtils(object):
         _safe = Setting.get("safe")
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
-
-        Status = GroupStrategy.get_door_strategy()
+        Status = CommandTable.GroupStrategy_door_strategy()
         suspect = 0
 
         # Status["24hjoin"] = False
@@ -217,7 +275,7 @@ class UserUtils(object):
                         with open(_photoPath, 'wb') as new_file:
                             new_file.write(downloaded_file)
                             _downPhoto = True
-                    IsSpam = self.checkQrcode(filepath=_photoPath)
+                    IsSpam = SpamUtils.checkQrcode(filepath=_photoPath)
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
                 # Check profile text
@@ -268,54 +326,3 @@ class UserUtils(object):
             return Setting.get(key)
         else:
             return {"level": 1, "command": "none", "type": "on", "info": "没有策略组"}
-
-
-class SpamUtils(object):
-    def __init__(self):
-        self.DataWorker = DataWorker(prefix="Spams_")
-
-    def addSpamUser(self, userId: str, groupId: str):
-        self.DataWorker.setKey(userId, str(time.time()), exN=43200)  # 86400 * 1)
-        if groupId:
-            self.DataWorker.addToList(groupId, [userId])
-
-    def isUserSpam(self, userId: str):
-        listSpam = self.DataWorker.getKey(userId)
-        if listSpam:
-            return True
-        else:
-            return False
-
-    def getGroupSpamListHistory(self, groupId: str):
-        return self.DataWorker.getList(groupId)
-
-    def getAllSpamUser(self):
-        return self.DataWorker.getPuffix("Spams_")
-        # self.DataWorker.getList("Spam")
-
-    async def checkUser(self, _csonfig, info: str):
-        spam = False
-        # print(_csonfig)
-        # if self.isUserSpam(userId):
-        #    return True
-        if info:
-            if not pathlib.Path("./Data/AntiSpam.bin").exists():
-                await SpamUtils.renewAnti(message=None)
-            if SpamDfa.exists(info):
-                return True
-        return spam
-
-    @staticmethod
-    async def renewAnti(message):
-        from Bot.Controller import clientBot
-        bot, config = clientBot().botCreate()
-        keys, _error = InitCensor()
-        if _error:
-            error = '\n'.join(_error)
-            errors = f"Error:\n{error}"
-        else:
-            # 重载 AntiSpam 主题库
-            SpamDfa.change_words(path="./Data/AntiSpam.bin")
-            errors = "Success"
-        if message:
-            await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")

@@ -4,12 +4,82 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 
+import ast
+import json
 # 这里是数据基本类
 from pydantic import BaseModel, ValidationError, validator
 from typing import Optional, Union
 
+redis_installed = True
 
-class UserProfileData(BaseModel):
+try:
+    from redis import Redis, ConnectionPool
+except Exception:
+    redis_installed = False
+
+
+class CommandTable(object):
+    @staticmethod
+    def GroupStrategy_door_strategy():
+        return {"spam": False, "premium": False, "nsfw": False, "suspect": False, "safe": False, "politics": False}
+
+    @staticmethod
+    def GroupStrategy_default_door_strategy():
+        return {
+            "spam": {
+                "level": 8,
+                "command": "ban",
+                "type": "on",
+                "info": "群组策略:反垃圾系统"
+            },
+            "premium": {
+                "level": 5,
+                "command": "pass",
+                "type": "off",
+                "info": "群组策略:自动通过"
+            },
+            "nsfw": {
+                "level": 4,
+                "command": "ask",
+                "type": "off",
+                "info": "群组策略:色情审查"
+            },
+            "safe": {
+                "level": 1,
+                "command": "ban",
+                "type": "off",
+                "info": "群组策略:安全审查"
+            },
+            "suspect": {
+                "level": 2,
+                "command": "ask",
+                "type": "off",
+                "info": "群组策略:嫌疑识别"
+            },
+            "politics": {
+                "level": 2,
+                "command": "ask",
+                "type": "off",
+                "info": "群组策略:立场审查"
+            }
+        }
+
+    @staticmethod
+    def GroupStrategy_default_strategy() -> dict:
+        return GroupStrategy(id="").dict()
+
+
+class GroupStrategy(BaseModel):
+    id: str
+    door: Optional[dict] = {}
+
+
+class History(BaseModel):
+    groupHistory: dict
+    nameHistory: dict
+
+
+class UserProfile(BaseModel):
     language_code: Optional[str]
     is_bot: Optional[bool]
     is_premium: Optional[bool]
@@ -22,14 +92,136 @@ class UserProfileData(BaseModel):
     token: Optional[str]
     name: Optional[str]
     id: int
+    history: Optional[History]
 
 
-class Group(BaseModel):
+class GroupProfile(BaseModel):
+    """
+    param id int
+
+    param bio Optional[str]
+
+    :param user Optional[dict]
+
+    :param keys Optional[int]
+
+    :param times
+    """
     id: int
     bio: Optional[str]
+    user: Optional[dict]
     # 联盟线
-    line: int
-    method: dict
+    keys: Optional[int]
+    times: int = 0
+
+
+class DataWorker(object):
+    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
+        self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
+        # self.con = Redis(connection_pool=self.redis) -> use this when necessary
+        #
+        # {chat_id: {user_id: {'state': None, 'data': {}}, ...}, ...}
+        self.prefix = prefix
+        if not redis_installed:
+            raise Exception("Redis is not installed. Install it via 'pip install redis'")
+
+    def setKey(self, key, obj, exN=None):
+        connection = Redis(connection_pool=self.redis)
+        connection.set(self.prefix + str(key), json.dumps(obj), ex=exN)
+        connection.close()
+        return True
+
+    def deleteKey(self, key):
+        connection = Redis(connection_pool=self.redis)
+        connection.delete(self.prefix + str(key))
+        connection.close()
+        return True
+
+    def getKey(self, key):
+        connection = Redis(connection_pool=self.redis)
+        result = connection.get(self.prefix + str(key))
+        connection.close()
+        if result:
+            return json.loads(result)
+        else:
+            return {}
+
+    def addToList(self, key, listData: list):
+        data = self.getKey(key)
+        if isinstance(data, str):
+            listGet = ast.literal_eval(data)
+        else:
+            listGet = []
+        listGet = listGet + listData
+        listGet = list(set(listGet))
+        if self.setKey(key, str(listGet)):
+            return True
+
+    def getList(self, key):
+        listGet = ast.literal_eval(self.getKey(key))
+        if not listGet:
+            listGet = []
+        return listGet
+
+    def getPuffix(self, fix):
+        connection = Redis(connection_pool=self.redis)
+        listGet = connection.scan_iter(f"{fix}*")
+        connection.close()
+        return listGet
+
+
+class GroupManger(object):
+    def __init__(self, groupId: Union[str, int]):
+        self.groupId = str(groupId)
+        self.DataWorker = DataWorker(prefix="Telecha_Group_")
+
+    def save(self, profile: dict = None, profileObj: GroupProfile = None):
+        if not any([profile, profileObj]):
+            return False
+        if profileObj:
+            profile = profileObj.dict()
+        return self.DataWorker.setKey(key=self.groupId, obj=profile)
+
+    def read(self) -> Union[dict]:
+        _Group = self.DataWorker.getKey(self.groupId)
+        return _Group
+
+    def getAllGroup(self):
+        return self.DataWorker.getPuffix("Telecha_Group_")
+
+
+class UserManger(object):
+    def __init__(self, userId: Union[str, int]):
+        self.userId = str(userId)
+        self.DataWorker = DataWorker(prefix="Telecha_Users_")
+
+    def save(self, profile: dict = None, profileObj: UserProfile = None):
+        if not any([profile, profileObj]):
+            return False
+        if profileObj:
+            profile = profileObj.dict()
+        return self.DataWorker.setKey(key=self.userId, obj=profile)
+
+    def read(self) -> Union[dict]:
+        _who = self.DataWorker.getKey(self.userId)
+        return _who
+
+
+class GroupStrategyManger(object):
+    def __init__(self, groupId: Union[str, int]):
+        self.groupId = str(groupId)
+        self.DataWorker = DataWorker(prefix="Telecha_GroupStrategy_")
+
+    def save(self, groupStrategy: dict = None, groupStrategyObj: GroupStrategy = None) -> bool:
+        if not any([groupStrategy, groupStrategyObj]):
+            return False
+        if groupStrategyObj:
+            groupStrategy = groupStrategyObj.dict()
+        return self.DataWorker.setKey(key=self.groupId, obj=groupStrategy)
+
+    def read(self) -> Union[dict]:
+        _Strategy = self.DataWorker.getKey(self.groupId)
+        return _Strategy
 
 
 class Commander(BaseModel):
@@ -43,24 +235,6 @@ class Commander(BaseModel):
         if v is None and values.get('data') is None:
             raise ValueError('must provide data or error')
         return v
-
-
-class ScanUser(BaseModel):
-    spam: Commander
-    premium: Commander
-    nsfw: Commander
-    safe: Commander
-    suspect: Commander
-    politics: Commander
-
-
-class afterVerify(BaseModel):
-    unpass: Commander
-
-
-class GroupStrategy(BaseModel):
-    scanUser: ScanUser
-    afterVerify: afterVerify
 
 
 if __name__ == "__main__":
@@ -112,7 +286,7 @@ if __name__ == "__main__":
             }
         }
     }
-    user = GroupStrategy(**default)
+    # user = GroupStrategy(**default)
 
     UserThis = {
         "language_code": None,
@@ -127,7 +301,7 @@ if __name__ == "__main__":
         "time": None,
         "token": None,
     }
-    users = UserProfileData(**UserThis)
+    users = UserProfile(**UserThis)
     print(users)
     if users.first_name:
         print(0)

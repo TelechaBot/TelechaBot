@@ -190,5 +190,3 @@ class JsonRedis(object):
     @staticmethod
     def crateKey(user_id, group_id):
         return f"Task_{user_id}_{group_id}"
-
-# OJ
