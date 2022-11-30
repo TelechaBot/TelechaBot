@@ -9,6 +9,7 @@ test/RawData
 Captcha.yaml
 venv
 *.log
+taskRedis.json
 *.rdb
 VerifyUser.jpg
 Data/*
