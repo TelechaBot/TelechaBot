@@ -350,6 +350,7 @@ class TelechaEvaluator(object):
         _suspect = Setting.get("suspect")
         _politics = Setting.get("politics")
         _safe = Setting.get("safe")
+        _lang = Setting.get("lang")
         _downPhoto = False
         _photoPath = "VerifyUser.jpg"
         Status = CommandTable.GroupStrategy_door_strategy()
@@ -363,27 +364,32 @@ class TelechaEvaluator(object):
             else:
                 return 1
 
+        if _lang:
+            if _lang.get("type") == "on":
+                if UserProfileData.language_code:
+                    if str(UserProfileData.language_code) in _lang.get("flag"):
+                        Status["lang"] = getlevel(_lang)
         if _politics:
             if _politics.get("type") == "on":
                 # Check profile text
-                if UserProfile.token:
+                if UserProfileData.token:
                     if PoliticsDfa.exists(UserProfile.token):
                         Status["politics"] = getlevel(_politics)
         if _safe:
             if _safe.get("type") == "on":
                 # Check photo
-                if not UserProfile.photo:
+                if not UserProfileData.photo:
                     Status["safe"] = getlevel(_safe)
                 # Check profile text
-                if UserProfile.token:
-                    if AbsolutelySafeDfa.exists(UserProfile.token):
+                if UserProfileData.token:
+                    if AbsolutelySafeDfa.exists(UserProfileData.token):
                         Status["safe"] = getlevel(_safe)
         if _spam:
             if _spam.get("type") == "on":
                 # Check photo
-                if UserProfile.photo:
+                if UserProfileData.photo:
                     if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile.photo)
+                        file_path = await bot.get_file(UserProfileData.photo)
                         downloaded_file = await bot.download_file(file_path.file_path)
                         with open(_photoPath, 'wb') as new_file:
                             new_file.write(downloaded_file)
@@ -392,16 +398,16 @@ class TelechaEvaluator(object):
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
                 # Check profile text
-                if UserProfile.token:
-                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile.token)
+                if UserProfileData.token:
+                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfileData.token)
                     if IsSpam:
                         Status["spam"] = getlevel(_spam)
         # NSFW
         if _nsfw:
             if _nsfw.get("type") == "on":
-                if UserProfile.photo:
+                if UserProfileData.photo:
                     if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile.photo)
+                        file_path = await bot.get_file(UserProfileData.photo)
                         downloaded_file = await bot.download_file(file_path.file_path)
                         with open(_photoPath, 'wb') as new_file:
                             new_file.write(downloaded_file)
@@ -411,27 +417,27 @@ class TelechaEvaluator(object):
                     n.parse()
                     if n.result:
                         Status["nsfw"] = getlevel(_nsfw)
-                if UserProfile.token:
-                    if NsfwDfa.exists(UserProfile.token):
+                if UserProfileData.token:
+                    if NsfwDfa.exists(UserProfileData.token):
                         Status["nsfw"] = getlevel(_nsfw)
         # suspect
         if _suspect:
             if _suspect.get("type") == "on":
                 total = 30
-                if not UserProfile.photo:
+                if not UserProfileData.photo:
                     suspect += 10
-                if not UserProfile.bio:
+                if not UserProfileData.bio:
                     suspect += 10
-                if not UserProfile.username:
+                if not UserProfileData.username:
                     suspect += 10
-                if UserProfile.is_premium:
+                if UserProfileData.is_premium:
                     suspect -= 20
                 if suspect < (total / 2):
                     Status["suspect"] = getlevel(_suspect)
         # Check premium
         if _premium:
             if _premium.get("type") == "on":
-                if UserProfile.is_premium:
+                if UserProfileData.is_premium:
                     Status["premium"] = getlevel(_premium)
         # 排序启用的命令
         key = max(Status, key=Status.get)

@@ -21,7 +21,8 @@ except Exception:
 class CommandTable(object):
     @staticmethod
     def GroupStrategy_door_strategy():
-        return {"spam": False, "premium": False, "nsfw": False, "suspect": False, "safe": False, "politics": False}
+        return {"spam": False, "premium": False, "nsfw": False, "suspect": False, "safe": False, "politics": False,
+                "lang": False}
 
     @staticmethod
     def GroupStrategy_default_door_strategy():
@@ -30,37 +31,50 @@ class CommandTable(object):
                 "level": 8,
                 "command": "ban",
                 "type": "on",
+                "flag": "None",
                 "info": "群组策略:反垃圾系统"
             },
             "premium": {
                 "level": 5,
                 "command": "pass",
                 "type": "off",
+                "flag": "None",
                 "info": "群组策略:自动通过"
             },
             "nsfw": {
                 "level": 4,
                 "command": "ask",
                 "type": "off",
+                "flag": "None",
                 "info": "群组策略:色情审查"
             },
             "safe": {
                 "level": 1,
                 "command": "ban",
                 "type": "off",
+                "flag": "None",
                 "info": "群组策略:安全审查"
             },
             "suspect": {
                 "level": 2,
                 "command": "ask",
                 "type": "off",
+                "flag": "None",
                 "info": "群组策略:嫌疑识别"
             },
             "politics": {
                 "level": 2,
                 "command": "ask",
                 "type": "off",
+                "flag": "None",
                 "info": "群组策略:立场审查"
+            },
+            "lang": {
+                "level": 1,
+                "command": "ask",
+                "type": "off",
+                "flag": "None",
+                "info": "群组策略:语言限制"
             }
         }
 

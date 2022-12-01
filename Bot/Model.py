@@ -185,7 +185,7 @@ class Command(object):
         """
         import re
         table = {}
-        allowKey = ["level", "type", "command"]
+        allowKey = ["level", "type", "command", "flag"]
         key = re.findall(r"!door!(.+?)=", text)
         content = re.findall(r"\[(.+)\]", text)
         if not key:
@@ -560,7 +560,7 @@ async def NewRequest(bot, msg, config):
     WorkOn = await botWorker.checkGroup(bot, msg, config)
     if WorkOn:
         # ChatSystem.ChatUtils().addGroup()
-        if True:  # not await PrepareCheck(bot, message, userId=message.from_user.id, groupId=msg.chat.id):
+        if not await PrepareCheck(bot, msg, userId=msg.from_user.id, groupId=msg.chat.id):
             group_k, key = verifyRedis.read_user(msg.from_user.id)
             if not group_k:
                 resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
@@ -600,7 +600,7 @@ async def PrepareCheck(bot, msg, userId, groupId):
             "is_premium": msg.from_user.is_premium,
             "first_name": msg.from_user.first_name,
             "last_name": msg.from_user.last_name,
-            "name": msg.from_user.first_name + msg.from_user.last_name,
+            "name": f"{msg.from_user.first_name}{msg.from_user.last_name}",
             "username": msg.from_user.username,
             "id": userId,
             "photo": pic_id,
@@ -614,8 +614,8 @@ async def PrepareCheck(bot, msg, userId, groupId):
                                                                                         **UserThis),
                                                                                     _csonfig=load_csonfig())
     except Exception as e:
+        print(e)
         Commands = {"level": 1, "command": "error", "type": "on", "info": e}
-
     # RUN
     if not Commands:
         return False
