@@ -367,8 +367,12 @@ class TelechaEvaluator(object):
         if _lang:
             if _lang.get("type") == "on":
                 if UserProfileData.language_code:
-                    if str(UserProfileData.language_code) in _lang.get("flag"):
-                        Status["lang"] = getlevel(_lang)
+                    if "NOT" in _lang.get("flag"):
+                        if not str(UserProfileData.language_code) in _lang.get("flag"):
+                            Status["lang"] = getlevel(_lang)
+                    else:
+                        if str(UserProfileData.language_code) in _lang.get("flag"):
+                            Status["lang"] = getlevel(_lang)
         if _politics:
             if _politics.get("type") == "on":
                 # Check profile text
