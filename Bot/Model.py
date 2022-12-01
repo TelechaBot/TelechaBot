@@ -3,7 +3,7 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github  :sudoskys
-# import binascii
+
 import datetime
 import json
 import pathlib
@@ -18,7 +18,9 @@ from telebot.util import quick_markup
 from Bot.Redis import JsonRedis
 # import binascii
 from utils import ChatSystem, DataManager
-from utils.BotTool import botWorker, userStates, GroupStrategy
+from utils.BotTool import botWorker, userStates
+from utils.ChatSystem import TelechaEvaluator, strategyUtils
+from utils.DataManager import CommandTable, GroupProfile
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis()
@@ -94,14 +96,14 @@ async def Switch(bot, message, config):
                     else:
                         await bot.reply_to(message, "这个文件没有找到....")
 
-            if "/groupuser" in command:
-                import redis
-                # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
-                task = ChatSystem.ChatUtils().getGroupItem()
-                with open('tmp.log', 'w') as f:  # 设置文件对象
-                    f.write(str(task))
-                doc = open('tmp.log', 'rb')
-                await bot.send_document(message.chat.id, doc)
+            # if "/groupuser" in command:
+            #     import redis
+            #     # pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
+            #     task = ChatSystem.ChatUtils().getGroupItem()
+            #     with open('tmp.log', 'w') as f:  # 设置文件对象
+            #         f.write(str(task))
+            #     doc = open('tmp.log', 'rb')
+            #     await bot.send_document(message.chat.id, doc)
 
             if "/redis" in command:
                 import redis
@@ -183,7 +185,7 @@ class Command(object):
         """
         import re
         table = {}
-        allowKey = ["level", "type", "command"]
+        allowKey = {"level": 4, "type": 2, "command": 8, "flag": 50}
         key = re.findall(r"!door!(.+?)=", text)
         content = re.findall(r"\[(.+)\]", text)
         if not key:
@@ -196,11 +198,13 @@ class Command(object):
             if len(command) == 2:
                 keys = command[0]
                 tls = command[1]
-                if keys in allowKey and len(tls) < 5:
-                    if keys in ["level"]:
-                        table[keys] = int(''.join(filter(str.isdigit, tls)))
-                    else:
-                        table[keys] = str(tls)
+                # 检查非法键和组合长度
+                if keys in allowKey.keys():
+                    if len(tls) < allowKey.get(keys):
+                        if keys in ["level"]:
+                            table[keys] = int(''.join(filter(str.isdigit, tls)))
+                        else:
+                            table[keys] = str(tls)
         return [key[0].strip(), table]
 
 
@@ -213,44 +217,46 @@ async def Admin(bot, message, config):
     :param config: 配置
     :return:
     """
+
     # Door
     if message.text.strip().startswith('!door!'):
-        load_csonfig()
         command = Command.parseDoorCommand(message.text)
         if command:
-            _Setting = GroupStrategy.GetGroupStrategy(group_id=message.chat.id)
-            if command[0] in GroupStrategy.get_door_strategy().keys():
-                if not _Setting["scanUser"].get(command[0]):
-                    _Setting["scanUser"][command[0]] = {}
-                _Setting["scanUser"][command[0]].update(command[1])
-                _csonfig["GroupStrategy"][str(message.chat.id)] = _Setting
-                save_csonfig()
-            msgs = await bot.reply_to(message, f"设置完毕{command[1]}")
-            set_delay_del(msgs, second=24)
+            _update = {command[0]: command[1]}
+            # 检查非法指令
+            if command[0] in CommandTable.GroupStrategy_default_door_strategy().keys():
+                if strategyUtils(groupId=message.chat.id).setDoorStrategy(key=_update):
+                    _reply = f"设置完毕{command[1]}"
+                else:
+                    _reply = f"设置失败{command[1]}"
+                msgs = await bot.reply_to(message, _reply)
+                set_delay_del(msgs, second=24)
 
     # What Strategy
     if "/whatstrategy" == message.text or ("/whatstrategy" in message.text and "@" in message.text):
-        _Setting = GroupStrategy.GetGroupStrategy(group_id=message.chat.id)
-        Config = _Setting["scanUser"]
+        _Setting = strategyUtils(groupId=message.chat.id).getDoorStrategy()
+        Config = _Setting
         info = []
         after_info = []
         Config = dict(sorted(Config.items(), key=lambda x: x[1]["level"], reverse=True))
         for key in Config:
             item = Config[key]
+            _info = f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n"
             if item['type'] == "on":
-                info.append(f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n")
+                info.append(_info)
             else:
-                after_info.append(f"{key} Use-{item['command']} Status-{item['type']} Level-{item['level']}\n")
+                after_info.append(_info)
         info.extend(after_info)
-        _types = GroupStrategy.get_door_strategy().keys()
-        msgs = await bot.reply_to(message, f"本群验证前策略为\n{''.join(info)} \n Support Type:{','.join(_types)}")
+        _types = CommandTable.GroupStrategy_default_door_strategy().keys()
+        msgs = await bot.reply_to(message, f"本群入群策略为\n{''.join(info)} \n Support Type:{','.join(_types)}")
 
     if "/whatmodel" == message.text or ("/whatmodel" in message.text and "@" in message.text):
         tiku = botWorker.get_model(message.chat.id)
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
         set_delay_del(msgs, second=12)
 
-    if "/select" == message.text or ("/select@" in message.text):
+    if any(["/select" == message.text or ("/select@" in message.text),
+            "/choose" == message.text or ("/choose@" in message.text)]):
         def gen_markup():
             import CaptchaCore
             Get = {}
@@ -554,9 +560,8 @@ async def NewRequest(bot, msg, config):
     # 白名单参数检查
     WorkOn = await botWorker.checkGroup(bot, msg, config)
     if WorkOn:
-        # 记录群组数据
-        ChatSystem.ChatUtils().addGroup(msg.chat.id)
-        if True:  # not await PrepareCheck(bot, message, userId=message.from_user.id, groupId=msg.chat.id):
+        # ChatSystem.ChatUtils().addGroup()
+        if not await PrepareCheck(bot, msg, userId=msg.from_user.id, groupId=msg.chat.id):
             group_k, key = verifyRedis.read_user(msg.from_user.id)
             if not group_k:
                 resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
@@ -596,7 +601,7 @@ async def PrepareCheck(bot, msg, userId, groupId):
             "is_premium": msg.from_user.is_premium,
             "first_name": msg.from_user.first_name,
             "last_name": msg.from_user.last_name,
-            "name": msg.from_user.first_name + msg.from_user.last_name,
+            "name": f"{msg.from_user.first_name}{msg.from_user.last_name}",
             "username": msg.from_user.username,
             "id": userId,
             "photo": pic_id,
@@ -604,13 +609,14 @@ async def PrepareCheck(bot, msg, userId, groupId):
             "time": msg.date,
             "token": f"{msg.from_user.first_name}{msg.from_user.last_name}{_chat_info.bio}"
         }
-        CheckSystem = ChatSystem.UserUtils()
         # Commands = {"command": "error", "info": "error"}
-        Commands = await CheckSystem.Check(bot=bot, userId=userId, groupId=str(groupId),
-                                           UserProfile=DataManager.UserProfileData(**UserThis), _csonfig=load_csonfig())
+        Commands = await TelechaEvaluator(groupId=groupId, userId=userId).checkUser(bot=bot,
+                                                                                    UserProfileData=DataManager.UserProfile(
+                                                                                        **UserThis),
+                                                                                    _csonfig=load_csonfig())
     except Exception as e:
+        print(e)
         Commands = {"level": 1, "command": "error", "type": "on", "info": e}
-
     # RUN
     if not Commands:
         return False

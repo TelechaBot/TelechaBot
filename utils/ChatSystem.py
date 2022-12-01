@@ -6,22 +6,14 @@
 
 # 基于 Redis 的存储系统
 
-import ast
-import json
-import pathlib
 import time
-from utils.BotTool import GroupStrategy
-from utils.DataManager import UserProfileData
+import pathlib
 from utils.safeDetect import Nude
-from utils.DfaDetect import DFA, Censor
 from utils.BotTool import ReadConfig
-
-redis_installed = True
-
-try:
-    from redis import Redis, ConnectionPool
-except Exception:
-    redis_installed = False
+from utils.DfaDetect import DFA, Censor
+from utils.DataManager import DataWorker, CommandTable
+from utils.DataManager import GroupStrategy, UserTrack, UserProfile, GroupProfile
+from utils.DataManager import UserTrackManger, UserManger, GroupManger, GroupStrategyManger
 
 # 远端敏感词库
 urlForm = {
@@ -65,82 +57,128 @@ PoliticsDfa = DFA(path="./Data/Politics.bin")
 AbsolutelySafeDfa = DFA(path="./Data/AbsolutelySafe.bin")
 
 
-class DataWorker(object):
-    def __init__(self, host='localhost', port=6379, db=0, password=None, prefix='Telecha_'):
-        self.redis = ConnectionPool(host=host, port=port, db=db, password=password)
-        # self.con = Redis(connection_pool=self.redis) -> use this when necessary
-        #
-        # {chat_id: {user_id: {'state': None, 'data': {}}, ...}, ...}
-        self.prefix = prefix
-        if not redis_installed:
-            raise Exception("Redis is not installed. Install it via 'pip install redis'")
+class UserTrackUtils(object):
+    def __init__(self, userId: str, groupId: str = "1"):
+        self.group_id = groupId
+        self.user_id = userId
+        self._Manger = UserTrackManger(userId=userId)
+        # 初始化策略组
+        if not self._Manger.read():
+            default_setting = CommandTable.UserTrack_default()
+            self._Manger.save(userTrackObj=UserTrack(**default_setting))
 
-    def setKey(self, key, obj, exN=None):
-        connection = Redis(connection_pool=self.redis)
-        connection.set(self.prefix + str(key), json.dumps(obj), ex=exN)
-        connection.close()
-        return True
-
-    def deleteKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        connection.delete(self.prefix + str(key))
-        connection.close()
-        return True
-
-    def getKey(self, key):
-        connection = Redis(connection_pool=self.redis)
-        result = connection.get(self.prefix + str(key))
-        connection.close()
-        if result:
-            return json.loads(result)
+    def resignGroup(self, groupId: str, status: str):
+        self.group_id = groupId
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        Group = _Main.group.get(str(groupId))
+        _Now = {"time": int(time.time() * 1000), "result": status}
+        if Group:
+            Group.append(_Now)
+            _Main.group.update({groupId: Group})
         else:
-            return False
+            _Main.group.update({groupId: [_Now]})
+        _UpdateData = _Main.dict()
+        # DictUpdate.dict_update(_Track, _UpdateData)
+        self._Manger.save(userTrackObj=UserTrack(**_UpdateData))
+        return _Main.group
 
-    def addToList(self, key, listData: list):
-        data = self.getKey(key)
-        if isinstance(data, str):
-            listGet = ast.literal_eval(data)
+    def resignDetect(self, groupId: str, status: str, score: int = -1):
+        self.group_id = groupId
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        Score = _Main.score.get(str(groupId))
+        _Now = {"time": int(time.time() * 1000), "result": status, "score": score}
+        if Score:
+            Score.append(_Now)
+            _Main.score.update({groupId: Score})
         else:
-            listGet = []
-        listGet = listGet + listData
-        listGet = list(set(listGet))
-        if self.setKey(key, str(listGet)):
-            return True
+            _Main.score.update({groupId: [_Now]})
+        _UpdateData = _Main.dict()
+        # DictUpdate.dict_update(_Track, _UpdateData)
+        self._Manger.save(userTrackObj=UserTrack(**_UpdateData))
+        return _Main.score
 
-    def getList(self, key):
-        listGet = ast.literal_eval(self.getKey(key))
-        if not listGet:
-            listGet = []
-        return listGet
+    def getGroupHistory(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        return _Main.group.get(str(groupId))
 
-    def getPuffix(self, fix):
-        connection = Redis(connection_pool=self.redis)
-        listGet = connection.scan_iter(f"{fix}*")
-        connection.close()
-        return listGet
+    def getDetectHistory(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        return _Main.score.get(str(groupId))
+
+    def isBaka(self, groupId: str):
+        _Track = self._Manger.read()
+        _Main = UserTrack(**_Track)
+        if not _Main.group:
+            return -1
+        _rs = 0
+        _total = 1
+        _timeout = 0
+        for k, d in _Main.group.items():
+            for i in d:
+                if isinstance(i, dict):
+                    _total += 1
+                    if i.get("result") == "ban":
+                        _rs += 1
+                    if i.get("result") == "timeout":
+                        _timeout += 1
+        BakaScore = (_rs + _timeout) / _total
+        DangerScore = _timeout / _total
+        WellMan = _total / 10
+        return [BakaScore, DangerScore, WellMan]
 
 
-class ChatUtils(object):
+class GroupUtils(object):
+    def __init__(self, groupId: str, userId: str = "1"):
+        self.group_id = groupId
+        self.user_id = userId
+        self._Manger = GroupManger(groupId=groupId)
+        # 初始化策略组
+        if not self._Manger.read():
+            default_setting = CommandTable.GroupUtils_default(groupId=self.group_id, userId=self.user_id)
+            self._Manger.save(profileObj=GroupProfile(**default_setting))
+
+    def setUser(self, userId: str, status: str = None):
+        """
+        设定群组设定的用户状态
+        :param userId:
+        :param status:
+        :return:
+        """
+        self.user_id = userId
+        _GroupData = self._Manger.read()
+        _UpdateData = {
+            "id": self.group_id,
+            "user": {userId: {"status": status}},
+        }
+        DictUpdate.dict_update(_GroupData, _UpdateData)
+        self._Manger.save(profileObj=GroupProfile(**_GroupData))
+
+    def recordStatus(self, userId: str, status: str):
+        """
+        增加验证次数
+        :param status:
+        :param userId:
+        :return:
+        """
+        _GroupData = self._Manger.read()
+        if not _GroupData.get("time"):
+            _GroupData["user"][userId]["time"] = []
+        _UpdateData = {
+            "id": self.group_id,
+            "user": {userId: {"time": _GroupData["time"].append([int(time.time()), status])}},
+            "times": _GroupData["times"] + 1
+        }
+        DictUpdate.dict_update(_GroupData, _UpdateData)
+        self._Manger.save(profileObj=GroupProfile(**_GroupData))
+
+
+class SpamUtils(object):
     def __init__(self):
-        self.DataWorker = DataWorker(prefix="Utils_")
-
-    def addGroup(self, groupId: str):
-        self.DataWorker.addToList("Chat", [groupId])
-
-    def getGroupItem(self):
-        return self.DataWorker.getList("Chat")
-
-
-class UserUtils(object):
-    def __init__(self):
-        self.DataWorker = DataWorker(prefix="Users_")
-
-    def setUser(self, userId: str, profile: dict):
-        return self.DataWorker.setKey(key=userId, obj=profile)
-
-    def getUser(self, userId: str):
-        listSpam = self.DataWorker.getKey(userId)
-        return listSpam
+        self.DataWorker = DataWorker(prefix="Spams_")
 
     @staticmethod
     def checkQrcode(filepath: str):
@@ -155,121 +193,6 @@ class UserUtils(object):
         except Exception as e:
             print(e)
             return False
-
-    async def Check(self, bot, _csonfig, groupId: str, userId: str, UserProfile: UserProfileData):
-        """
-        检查
-        :param bot: 机器人实例
-        :param _csonfig:
-        :param groupId:
-        :param UserProfile:
-        :param userId:
-        :return:
-        """
-        self.setUser(userId=userId, profile=UserProfile.dict())
-        Setting = GroupStrategy.GetGroupStrategy(group_id=groupId)["scanUser"]
-        _spam = Setting.get("spam")
-        _premium = Setting.get("premium")
-        _nsfw = Setting.get("nsfw")
-        _suspect = Setting.get("suspect")
-        _politics = Setting.get("politics")
-        _safe = Setting.get("safe")
-        _downPhoto = False
-        _photoPath = "VerifyUser.jpg"
-
-        Status = GroupStrategy.get_door_strategy()
-        suspect = 0
-
-        # Status["24hjoin"] = False
-        # 因为检查成本过高，所以换用逐项判定的方式
-        def getlevel(clas):
-            if clas.get("level"):
-                return clas["level"]
-            else:
-                return 1
-
-        if _politics:
-            if _politics.get("type") == "on":
-                # Check profile text
-                if UserProfile.token:
-                    if PoliticsDfa.exists(UserProfile.token):
-                        Status["politics"] = getlevel(_politics)
-        if _safe:
-            if _safe.get("type") == "on":
-                # Check photo
-                if not UserProfile.photo:
-                    Status["safe"] = getlevel(_safe)
-                # Check profile text
-                if UserProfile.token:
-                    if AbsolutelySafeDfa.exists(UserProfile.token):
-                        Status["safe"] = getlevel(_safe)
-        if _spam:
-            if _spam.get("type") == "on":
-                # Check photo
-
-                if UserProfile.photo:
-                    if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile.photo)
-                        downloaded_file = await bot.download_file(file_path.file_path)
-                        with open(_photoPath, 'wb') as new_file:
-                            new_file.write(downloaded_file)
-                            _downPhoto = True
-                    IsSpam = self.checkQrcode(filepath=_photoPath)
-                    if IsSpam:
-                        Status["spam"] = getlevel(_spam)
-                # Check profile text
-                if UserProfile.token:
-                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfile.token)
-                    if IsSpam:
-                        Status["spam"] = getlevel(_spam)
-        # NSFW
-        if _nsfw:
-            if _nsfw.get("type") == "on":
-                if UserProfile.photo:
-                    if not _downPhoto:
-                        file_path = await bot.get_file(UserProfile.photo)
-                        downloaded_file = await bot.download_file(file_path.file_path)
-                        with open(_photoPath, 'wb') as new_file:
-                            new_file.write(downloaded_file)
-                            _downPhoto = True
-                    n = Nude(_photoPath)
-                    n.resize(maxheight=160, maxwidth=160)
-                    n.parse()
-                    if n.result:
-                        Status["nsfw"] = getlevel(_nsfw)
-                if UserProfile.token:
-                    if NsfwDfa.exists(UserProfile.token):
-                        Status["nsfw"] = getlevel(_nsfw)
-        # suspect
-        if _suspect:
-            if _suspect.get("type") == "on":
-                total = 30
-                if not UserProfile.photo:
-                    suspect += 10
-                if not UserProfile.bio:
-                    suspect += 10
-                if not UserProfile.username:
-                    suspect += 10
-                if UserProfile.is_premium:
-                    suspect -= 20
-                if suspect < (total / 2):
-                    Status["suspect"] = getlevel(_suspect)
-        # Check premium
-        if _premium:
-            if _premium.get("type") == "on":
-                if UserProfile.is_premium:
-                    Status["premium"] = getlevel(_premium)
-        # 排序启用的命令
-        key = max(Status, key=Status.get)
-        if Status[key]:
-            return Setting.get(key)
-        else:
-            return {"level": 1, "command": "none", "type": "on", "info": "没有策略组"}
-
-
-class SpamUtils(object):
-    def __init__(self):
-        self.DataWorker = DataWorker(prefix="Spams_")
 
     def addSpamUser(self, userId: str, groupId: str):
         self.DataWorker.setKey(userId, str(time.time()), exN=43200)  # 86400 * 1)
@@ -316,3 +239,213 @@ class SpamUtils(object):
             errors = "Success"
         if message:
             await bot.reply_to(message, f"{'|'.join(keys)}\n\n{errors}")
+
+
+class DictUpdate(object):
+    @staticmethod
+    def dict_update(raw, new):
+        DictUpdate.dict_update_iter(raw, new)
+        DictUpdate.dict_add(raw, new)
+
+    @staticmethod
+    def dict_update_iter(raw, new):
+        for key in raw:
+            if key not in new.keys():
+                continue
+            if isinstance(raw[key], dict) and isinstance(new[key], dict):
+                DictUpdate.dict_update(raw[key], new[key])
+            else:
+                raw[key] = new[key]
+
+    @staticmethod
+    def dict_add(raw, new):
+        update_dict = {}
+        for key in new:
+            if key not in raw.keys():
+                update_dict[key] = new[key]
+        raw.update(update_dict)
+
+
+class strategyUtils(object):
+    """
+    策略组提取/修复/创建，供给给预处理管线
+    """
+
+    def __init__(self, groupId: str):
+        self.group_id = groupId
+        _Strategy = GroupStrategyManger(groupId=groupId)
+        # 初始化策略组
+        if not _Strategy.read():
+            default_setting = CommandTable.GroupStrategy_default_strategy()
+            _Strategy.save(groupStrategyObj=GroupStrategy(**default_setting))
+
+    def getDoorStrategy(self) -> dict:
+        default = CommandTable.GroupStrategy_default_door_strategy()
+        _Manger = GroupStrategyManger(groupId=self.group_id)
+        setting = _Manger.read()
+        if setting.get("door"):
+            DictUpdate.dict_update(default, setting.get("door"))
+            return default
+        else:
+            # 初始化 door 字段
+            _Strategy = {
+                "id": self.group_id,
+                "door": default,
+            }
+            DictUpdate.dict_update(setting, _Strategy)
+            _Manger.save(groupStrategyObj=GroupStrategy(**setting))
+            return default
+
+    def setDoorStrategy(self, key: dict) -> bool:
+        door_strategy = self.getDoorStrategy()
+        _Manger = GroupStrategyManger(groupId=self.group_id)
+        setting = _Manger.read()
+        # 更新策略组
+        DictUpdate.dict_update(door_strategy, key)
+        _Strategy = {
+            "id": self.group_id,
+            "door": door_strategy,
+        }
+        DictUpdate.dict_update(setting, _Strategy)
+        _Manger.save(groupStrategyObj=GroupStrategy(**setting))
+        return True
+
+
+class TelechaEvaluator(object):
+    """
+    预先检查管线
+    """
+
+    def __init__(self, groupId: str, userId: str):
+        self.groupId = str(groupId)
+        self.userId = str(userId)
+
+    def _lowLevel(self):
+        pass
+
+    def _highLevel(self):
+        pass
+
+    def _warnForm(self):
+        pass
+
+    def _selectorCreate(self):
+        pass
+
+    async def checkUser(self, bot, _csonfig, UserProfileData: UserProfile):
+        """
+        检查
+        :param UserProfileData: UserProfile class
+        :param bot: 机器人实例
+        :param _csonfig: 设置
+        :return:
+        """
+        CuteCat = UserManger(userId=self.userId)
+        if not CuteCat.read():
+            CuteCat.save(profileObj=UserProfileData)
+        Setting = strategyUtils(groupId=self.groupId).getDoorStrategy()
+        _spam = Setting.get("spam")
+        _premium = Setting.get("premium")
+        _nsfw = Setting.get("nsfw")
+        _suspect = Setting.get("suspect")
+        _politics = Setting.get("politics")
+        _safe = Setting.get("safe")
+        _lang = Setting.get("lang")
+        _downPhoto = False
+        _photoPath = "VerifyUser.jpg"
+        Status = CommandTable.GroupStrategy_door_strategy()
+        suspect = 0
+
+        # Status["24hjoin"] = False
+        # 因为检查成本过高，所以换用逐项判定的方式
+        def getlevel(clas):
+            if clas.get("level"):
+                return clas["level"]
+            else:
+                return 1
+
+        if _lang:
+            if _lang.get("type") == "on":
+                if UserProfileData.language_code:
+                    if "NOT" in _lang.get("flag"):
+                        if not str(UserProfileData.language_code) in _lang.get("flag"):
+                            Status["lang"] = getlevel(_lang)
+                    else:
+                        if str(UserProfileData.language_code) in _lang.get("flag"):
+                            Status["lang"] = getlevel(_lang)
+        if _politics:
+            if _politics.get("type") == "on":
+                # Check profile text
+                if UserProfileData.token:
+                    if PoliticsDfa.exists(UserProfile.token):
+                        Status["politics"] = getlevel(_politics)
+        if _safe:
+            if _safe.get("type") == "on":
+                # Check photo
+                if not UserProfileData.photo:
+                    Status["safe"] = getlevel(_safe)
+                # Check profile text
+                if UserProfileData.token:
+                    if AbsolutelySafeDfa.exists(UserProfileData.token):
+                        Status["safe"] = getlevel(_safe)
+        if _spam:
+            if _spam.get("type") == "on":
+                # Check photo
+                if UserProfileData.photo:
+                    if not _downPhoto:
+                        file_path = await bot.get_file(UserProfileData.photo)
+                        downloaded_file = await bot.download_file(file_path.file_path)
+                        with open(_photoPath, 'wb') as new_file:
+                            new_file.write(downloaded_file)
+                            _downPhoto = True
+                    IsSpam = SpamUtils.checkQrcode(filepath=_photoPath)
+                    if IsSpam:
+                        Status["spam"] = getlevel(_spam)
+                # Check profile text
+                if UserProfileData.token:
+                    IsSpam = await SpamUtils().checkUser(_csonfig=_csonfig, info=UserProfileData.token)
+                    if IsSpam:
+                        Status["spam"] = getlevel(_spam)
+        # NSFW
+        if _nsfw:
+            if _nsfw.get("type") == "on":
+                if UserProfileData.photo:
+                    if not _downPhoto:
+                        file_path = await bot.get_file(UserProfileData.photo)
+                        downloaded_file = await bot.download_file(file_path.file_path)
+                        with open(_photoPath, 'wb') as new_file:
+                            new_file.write(downloaded_file)
+                            _downPhoto = True
+                    n = Nude(_photoPath)
+                    n.resize(maxheight=160, maxwidth=160)
+                    n.parse()
+                    if n.result:
+                        Status["nsfw"] = getlevel(_nsfw)
+                if UserProfileData.token:
+                    if NsfwDfa.exists(UserProfileData.token):
+                        Status["nsfw"] = getlevel(_nsfw)
+        # suspect
+        if _suspect:
+            if _suspect.get("type") == "on":
+                total = 30
+                if not UserProfileData.photo:
+                    suspect += 10
+                if not UserProfileData.bio:
+                    suspect += 10
+                if not UserProfileData.username:
+                    suspect += 10
+                if UserProfileData.is_premium:
+                    suspect -= 20
+                if suspect < (total / 2):
+                    Status["suspect"] = getlevel(_suspect)
+        # Check premium
+        if _premium:
+            if _premium.get("type") == "on":
+                if UserProfileData.is_premium:
+                    Status["premium"] = getlevel(_premium)
+        # 排序启用的命令
+        key = max(Status, key=Status.get)
+        if Status[key]:
+            return Setting.get(key)
+        else:
+            return {"level": 1, "command": "none", "type": "on", "info": "没有策略组"}
