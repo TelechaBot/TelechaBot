@@ -12,3 +12,5 @@ apscheduler
 zxing
 httpx
 pydantic
+Faker
+gTTS

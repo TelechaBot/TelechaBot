@@ -32,6 +32,66 @@ def MD5(strs: str):
     return hl.hexdigest()
 
 
+class TTS_CN(object):
+    def __init__(self, sample):
+        self.id = sample
+        pass
+
+    @property
+    def difficulty(self):
+        return 1
+
+    @staticmethod
+    def nofind():
+        lena = (random.randint(5, 20) * 2)
+        r = (random.randint(5, 10) * 2)
+        Q = f"CNTTSFileNoFind:扇形弧的长是{lena}，半径s{r}，求其面积为多少 π（结果四舍五入，只答出数字）"
+        A = (lena * r) / 2
+        Question = {"question": Q, "type": "text"}
+        Answer = {"rightKey": round(A)}
+        return Question, Answer
+
+    @staticmethod
+    def GetText(seed: int):
+        import random
+        from faker import Faker
+        faker = Faker("zh_CN")  # 设置中文
+        Faker.seed(seed)
+        _answer = faker.words(nb=5)
+        answer = "".join(_answer)
+        _random_int = random.randint(seed * 2, seed * 4)  # 噪音
+        Faker.seed(_random_int)
+        _noise = faker.words(nb=10)
+        noise = list(set(_noise + _answer))
+        random.shuffle(noise)
+        return answer, noise
+
+    @staticmethod
+    def create():
+        try:
+            from gtts import gTTS
+            pathlib.Path("TTS/CN/").mkdir(exist_ok=True, parents=True)
+            # 初始化随机数据
+            seed = random.randint(1, 70)
+            _answer, _noise = TTS_CN.GetText(seed)
+            noise = '|'.join(_noise)
+            # 文件生成
+            file_name = f'TTS/CN/{MD5(_answer)}.mp3'
+            if not os.path.exists(file_name):
+                tts = gTTS(_answer, lang='zh')
+                tts.save(file_name)
+            # 生成失败
+            if not os.path.exists(file_name):
+                raise FileNotFoundError("NO TTS File")
+            Q = f"听这段音频，它由中文组成\n发送你听到的内容\n词汇表：{noise}"
+            A = _answer
+            Question = {"question": Q, "voice_path": file_name, "type": "voice"}
+            Answer = {"rightKey": A}
+        except FileNotFoundError:
+            Question, Answer = Idiom_verification.nofind()
+        return Question, Answer
+
+
 # TTS
 class TTS_verification(object):
     def __init__(self, sample):
@@ -763,6 +823,14 @@ def TTS_VOICE(s):
     return _TTS_VOICE
 
 
+def TTS_CNR(s):
+    _TTS_VOICE = [
+        {"diff": TTS_CN(s).difficulty,
+         "obj": TTS_CN(s).create()},
+    ]
+    return _TTS_VOICE
+
+
 def Idiom_Pic(s):
     _Idiom_Pic = [
         {"diff": Idiom_verification(s).difficulty,
@@ -874,7 +942,7 @@ class Importer(object):
     @staticmethod
     def getMethod():
         return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一",
-                "哔哩硬核测试", "图形成语", "基础听力验证"]
+                "哔哩硬核测试", "图形成语", "基础听力验证", "中文语音"]
 
     def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
         difficulty_min = int(difficulty_min)
@@ -931,6 +999,8 @@ class Importer(object):
             verify = bili(id_now)[0]
         elif model_name == "基础听力验证":
             verify = TTS_VOICE(id_now)[0]
+        elif model_name == "中文语音":
+            verify = TTS_CNR(id_now)[0]
         return verify.get("obj")
 
 # print(chemical_formula.create())
