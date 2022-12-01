@@ -185,7 +185,7 @@ class Command(object):
         """
         import re
         table = {}
-        allowKey = {"level": 4, "type": 2, "command": 8, "flag": 50}
+        allowKey = {"level": 8, "type": 8, "command": 8, "flag": 50}
         key = re.findall(r"!door!(.+?)=", text)
         content = re.findall(r"\[(.+)\]", text)
         if not key:
