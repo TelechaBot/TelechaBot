@@ -363,7 +363,7 @@ class TelechaEvaluator(object):
                 return clas["level"]
             else:
                 return 1
-        print(_lang)
+
         if _lang:
             if _lang.get("type") == "on":
                 if UserProfileData.language_code:
