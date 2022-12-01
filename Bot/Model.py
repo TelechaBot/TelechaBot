@@ -185,7 +185,7 @@ class Command(object):
         """
         import re
         table = {}
-        allowKey = ["level", "type", "command", "flag"]
+        allowKey = {"level": 4, "type": 2, "command": 8, "flag": 50}
         key = re.findall(r"!door!(.+?)=", text)
         content = re.findall(r"\[(.+)\]", text)
         if not key:
@@ -199,11 +199,12 @@ class Command(object):
                 keys = command[0]
                 tls = command[1]
                 # 检查非法键和组合长度
-                if keys in allowKey and len(tls) < 8:
-                    if keys in ["level"]:
-                        table[keys] = int(''.join(filter(str.isdigit, tls)))
-                    else:
-                        table[keys] = str(tls)
+                if keys in allowKey.keys():
+                    if len(tls) < allowKey.get(keys):
+                        if keys in ["level"]:
+                            table[keys] = int(''.join(filter(str.isdigit, tls)))
+                        else:
+                            table[keys] = str(tls)
         return [key[0].strip(), table]
 
 
