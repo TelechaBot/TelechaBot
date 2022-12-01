@@ -57,7 +57,7 @@ class TTS_CN(object):
         from faker import Faker
         faker = Faker("zh_CN")  # 设置中文
         Faker.seed(seed)
-        _answer = faker.words(nb=4)
+        _answer = faker.words(nb=5)
         answer = "".join(_answer)
         _random_int = random.randint(seed * 2, seed * 4)  # 噪音
         Faker.seed(_random_int)
