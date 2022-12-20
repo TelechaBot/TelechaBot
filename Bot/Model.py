@@ -369,8 +369,7 @@ async def deal_send(bot, message, sth, tip):
         await bot.send_message(message.chat.id,
                                text=botWorker.convert(sth[0].get(
                                    "question")) + tip)
-        await bot.send_voice(message.chat.id, voice=open(sth[0].get("voice_path"), 'rb'),
-                             protect_content=True)
+        await bot.send_audio(message.chat.id, audio=open(sth[0].get("voice_path"), 'rb'))
     else:
         await bot.reply_to(message, "题库出现了没有标记的类型数据，无法出题")
 
@@ -509,9 +508,9 @@ async def Start(bot, message, config):
     """
     if message.chat.type == "private":
         _New_User = True
-        if resign_Record.getKey(f"{message.from_user.id}"):
-            _New_User = False
         group_k, key = verifyRedis.read_user(message.from_user.id)
+        if resign_Record.getKey(f"{message.from_user.id}") == group_k:
+            _New_User = False
         if _New_User and group_k:
             if await PrepareCheck(bot, message, userId=message.from_user.id, groupId=group_k):
                 await verifyRedis.remove_user(userId=message.from_user.id, groupId=group_k)
