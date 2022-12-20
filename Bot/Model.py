@@ -256,8 +256,8 @@ async def Admin(bot, message, config):
         msgs = await bot.reply_to(message, f"本群题库目前为 {tiku} ")
         set_delay_del(msgs, second=12)
 
-    if any(["/select" == message.text or ("/select@" in message.text),
-            "/choose" == message.text or ("/choose@" in message.text)]):
+    if any(["/select" == message.text, ("/select@" in message.text),
+            "/choose" == message.text, ("/choose@" in message.text)]):
         def gen_markup():
             import CaptchaCore
             Get = {}
