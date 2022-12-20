@@ -20,7 +20,7 @@ from Bot.Redis import JsonRedis
 from utils import ChatSystem, DataManager
 from utils.BotTool import botWorker, userStates
 from utils.ChatSystem import TelechaEvaluator, strategyUtils
-from utils.DataManager import CommandTable, GroupProfile
+from utils.DataManager import CommandTable, GroupProfile, DataWorker
 
 # 构建多少秒的验证对象
 verifyRedis = JsonRedis()
@@ -38,6 +38,7 @@ def set_delay_del(msgs, second: int):
 
 
 global _csonfig
+resign_Record = DataWorker(prefix="Telecha_resign_")
 
 
 # IO
@@ -405,6 +406,7 @@ async def Verify(bot, message, config):
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
                 # msgs = await botWorker.send_ok(message, bot, group_k, well_unban)
                 # 删除状态
+                resign_Record.setKey(f"{message.from_user.id}", message.chat.id, exN=1)
                 await bot.delete_state(message.from_user.id, message.chat.id)
             else:
                 await bot.reply_to(message, '可惜是错误的回答....你还有一次机会，不能重置')
@@ -442,9 +444,11 @@ async def Verify2(bot, message, config):
                 await bot.reply_to(message, f"好了，您已经被添加进群组了\nPassID {verify_info}")
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
+                resign_Record.setKey(f"{message.from_user.id}", message.chat.id, exN=1)
             else:
                 # 取消状态
                 await bot.delete_state(message.from_user.id, message.chat.id)
+                resign_Record.setKey(f"{message.from_user.id}", message.chat.id, exN=1)
                 _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
                 await verifyRedis.checker(ban=[_keys])
                 await bot.reply_to(message, '回答错误')
@@ -504,13 +508,9 @@ async def Start(bot, message, config):
     :return:
     """
     if message.chat.type == "private":
-        try:
-            if await bot.get_state(message.from_user.id, message.chat.id):
-                _New_User = False
-            else:
-                _New_User = True
-        except Exception as e:
-            _New_User = True
+        _New_User = True
+        if resign_Record.getKey(f"{message.from_user.id}"):
+            _New_User = False
         group_k, key = verifyRedis.read_user(message.from_user.id)
         if _New_User and group_k:
             if await PrepareCheck(bot, message, userId=message.from_user.id, groupId=group_k):
@@ -525,6 +525,7 @@ async def Start(bot, message, config):
                 load_csonfig()
                 min_, limit_ = botWorker.get_difficulty(group_k)
                 model = botWorker.get_model(group_k)
+                resign_Record.setKey(f"{message.from_user.id}", group_k, exN=300)
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
                 # 拉取题目例子

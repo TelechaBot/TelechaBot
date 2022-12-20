@@ -12,10 +12,13 @@ import redis
 import uuid
 import multiprocessing
 
+from utils.DataManager import DataWorker
+
 task_lock = multiprocessing.Lock()
 _redis_pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True)
 _redis = redis.Redis(host='localhost', port=6379, decode_responses=True)
 _MsgTask = {}
+resign_Record = DataWorker(prefix="Telecha_resign_")
 
 
 class JsonRedis(object):
@@ -165,6 +168,7 @@ class JsonRedis(object):
             except Exception as e:
                 loguru.logger.error(e)
             finally:
+                resign_Record.setKey(f"{userId}", groupId, exN=1)
                 await bot.delete_state(user_id=userId, chat_id=groupId)
         for key in ban:
             profile = key
@@ -185,6 +189,7 @@ class JsonRedis(object):
                 else:
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
                 finally:
+                    resign_Record.setKey(f"{userId}", groupId, exN=1)
                     await bot.delete_state(user_id=userId, chat_id=groupId)
 
     @staticmethod
