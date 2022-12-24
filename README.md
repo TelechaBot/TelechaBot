@@ -267,10 +267,6 @@ kill -9
 
 * 更新
 
-```shell
-cd TelechaBot
-```
-
 小型更新也可以使用 `git pull`
 
 ```shell
