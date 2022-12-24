@@ -9,6 +9,8 @@ import json
 import pathlib
 import random
 import time
+from typing import Union
+
 # import telebot.types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -176,7 +178,7 @@ class Command(object):
     """
 
     @staticmethod
-    def parseDoorCommand(text: str) -> [list | bool]:
+    def parseDoorCommand(text: str) -> Union[list, bool]:
         """
         !set!premium=[level=5|type=on|info=1,3]
         command="11,22",
