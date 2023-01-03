@@ -31,7 +31,8 @@ def set_delay_del(msgs, second: int):
         botWorker.delmsg,
         args=[msgs.chat.id, msgs.message_id],
         trigger='date',
-        run_date=datetime.datetime.now() + datetime.timedelta(seconds=second)
+        run_date=datetime.datetime.now() + datetime.timedelta(seconds=second),
+        max_instances=10
     )
     scheduler.start()
 
@@ -44,7 +45,7 @@ async def set_cron(funcs, second: int):
     :return:
     """
     tick_scheduler = AsyncIOScheduler()
-    tick_scheduler.add_job(funcs, 'interval', seconds=second)
+    tick_scheduler.add_job(funcs, 'interval', max_instances=10, seconds=second)
     tick_scheduler.start()
 
 
@@ -162,7 +163,7 @@ class clientBot(object):
             # 不再使用的
             # await asyncio.gather(bot.infinity_polling(skip_pending=False, allowed_updates=util.update_types),
             async def main():
-                await asyncio.gather(bot.polling(skip_pending=True, non_stop=True, allowed_updates=util.update_types),
-                                     set_cron(JsonRedis.checker, second=3))
+                await asyncio.gather(bot.polling(skip_pending=False, non_stop=True, allowed_updates=util.update_types),
+                                     set_cron(JsonRedis.checker, second=5))
 
             asyncio.run(main())

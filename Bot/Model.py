@@ -10,7 +10,7 @@ import pathlib
 import random
 import time
 from typing import Union
-
+from telebot import types, util
 # import telebot.types
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
@@ -549,7 +549,7 @@ async def Start(bot, message, config):
                 # 防止洪水攻击
 
 
-async def NewRequest(bot, msg, config):
+async def NewRequest(bot, msg: types.Message, config):
     """
     处理新请求
     :param bot: 机器人对象
@@ -559,6 +559,7 @@ async def NewRequest(bot, msg, config):
     """
     # 加载一次设置
     load_csonfig()
+    logger.info(f"NewReq:{msg.from_user.id}:{msg.chat.id} --user {msg.from_user.id} --title {msg.chat.title}")
     # 白名单参数检查
     WorkOn = await botWorker.checkGroup(bot, msg, config)
     if WorkOn:

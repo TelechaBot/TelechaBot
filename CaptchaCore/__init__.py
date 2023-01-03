@@ -942,9 +942,9 @@ class Importer(object):
     @staticmethod
     def getMethod():
         return ["数学题库", "物理题库", "化学题库", "生物题库", "图形化学", "学习强国", "宋词300", "论语问答", "科目一",
-                "哔哩硬核测试", "图形成语", "基础听力验证", "中文语音"]
+                "哔哩硬核测试", "图形成语"]  # ",基础听力验证", "中文语音"]
 
-    def pull(self, difficulty_min=1, difficulty_limit=5, model_name="数学题库"):
+    def pull(self, difficulty_min=1, difficulty_limit=5, model_name="物理题库"):
         difficulty_min = int(difficulty_min)
         difficulty_limit = int(difficulty_limit)
         id_now = time.time()

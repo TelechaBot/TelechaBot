@@ -33,8 +33,9 @@ class JsonRedis(object):
         global _MsgTask, task_lock
         try:
             task_lock.acquire()
-            if len(_MsgTask) == 0:
-                if Course := _redis.get("_Telecha_Task"):
+            if not _MsgTask:
+                Course = _redis.get("_Telecha_Task")
+                if Course:
                     _MsgTask = json.loads(Course)
                     # print("队列:初始化上次检查的数据")
         except Exception as err:
@@ -111,7 +112,8 @@ class JsonRedis(object):
     async def grant_resign(userId: int, groupId: int):
         request_ = {"user_id": userId, "group_id": groupId}
         _key, _data = JsonRedis.create_data(**request_)
-        if Data := _MsgTask.get(_key):
+        Data = _MsgTask.get(_key)
+        if Data:
             await JsonRedis.checker(unban=[_data])
             return Data.get("uuid")
         else:
@@ -154,8 +156,8 @@ class JsonRedis(object):
         except Exception as err:
             raise err
         finally:
-            task_lock.release()
             _redis.set("_Telecha_Task", json.dumps(_MsgTask))
+            task_lock.release()
         # 处理掉数据
         for key in unban:
             profile = key

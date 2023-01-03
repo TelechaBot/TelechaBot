@@ -34,8 +34,8 @@ class Censor:
                 else:
                     if response.status_code == 200:
                         tmpList = response.text.encode(response.encoding).decode('utf-8').split("\n")
-                        for i in tmpList:
-                            item = i.strip(",").strip("\n")
+                        for ia in tmpList:
+                            item = ia.strip(",").strip("\n")
                             if item:
                                 Words.append(item)
                     else:
