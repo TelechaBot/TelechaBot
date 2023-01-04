@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "telecha",
+      "script": "python3 telecha.py",
+      "instances": 1,
+      "error_file": "main_error.log",
+      "out_file": "main_out.log",
+      "log_date_format": "YYYY-MM-DD HH-mm-ss",
+      "max_memory_restart": "5120M"
+    }
+  ]
+}
