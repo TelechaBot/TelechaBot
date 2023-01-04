@@ -483,16 +483,22 @@ async def Start(bot, message, config):
     """
     if message.chat.type == "private":
         _New_User = True
-        group_k, key = verifyRedis.read_user(message.from_user.id)
+        group_k, UUID = verifyRedis.read_user(message.from_user.id)
         if resign_Record.getKey(f"{message.from_user.id}") == group_k:
             _New_User = False
         if _New_User and group_k:
-            if await PrepareCheck(bot, message, userId=message.from_user.id, groupId=group_k):
-                await verifyRedis.remove_user(userId=message.from_user.id, groupId=group_k)
+            status, result = await PrepareCheck(bot, message, userId=message.from_user.id, groupId=group_k)
+            if status:
+                await LogForm(bot=bot, logChannel=config.logChannel).send(
+                    tag=f"{result} \n 自动策略处理",
+                    user=UUID,
+                    group=group_k
+                )
+                logger.info(f"PerCheck: {message.from_user.id}{group_k} --user {message.from_user.last_name}")
             else:
                 # 开始判断
                 _seem = f"开始验证群组 {group_k}" \
-                        f"\n\nPassID #U{key}" \
+                        f"\n\nPassID #U{UUID}" \
                         f"\nAuthID {message.from_user.id}"
                 await bot.reply_to(message, _seem)
                 # 拉取设置信息
@@ -505,7 +511,7 @@ async def Start(bot, message, config):
                 Question, Answer = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 QAPair = [Question, Answer]
                 await deal_send(bot, message, sth=QAPair, tip="\n\n输入 /saveme 重新生成题目.")
-                data = {'QaPair': QAPair, 'Group': group_k, 'Times': RETRIES, "UUID": str(key)}
+                data = {'QaPair': QAPair, 'Group': group_k, 'Times': RETRIES, "UUID": str(UUID)}
                 resign_Record.setKey(f"{message.from_user.id}_data", User_Data(**data).dict(), exN=500)
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
@@ -562,7 +568,7 @@ async def NewRequest(bot, msg: types.Message, config):
             await bot.send_message(msg.from_user.id, botWorker.convert(_info), parse_mode='MarkdownV2')
 
 
-async def PrepareCheck(bot, msg, userId, groupId):
+async def PrepareCheck(bot, msg, userId, groupId) -> tuple:
     """
     预先检查
     :param bot: 机器人对象
@@ -601,13 +607,11 @@ async def PrepareCheck(bot, msg, userId, groupId):
         Commands = {"level": 1, "command": "error", "type": "on", "info": e}
     # RUN
     if not Commands:
-        return False
+        return False, "#None"
     elif Commands.get("command") == "ban":
         # await verifyRedis.checker(fail_user=[msg.from_user.id])
-        await bot.decline_chat_join_request(chat_id=str(groupId), user_id=str(userId))
-        await bot.ban_chat_member(chat_id=str(groupId), user_id=str(userId),
-                                  until_date=datetime.datetime.timestamp(
-                                      datetime.datetime.now() + datetime.timedelta(minutes=15)))
+        _, _keys = verifyRedis.create_data(user_id=userId, group_id=groupId)
+        await verifyRedis.checker(ban=[_keys])
         try:
             await bot.send_message(userId, botWorker.convert(
                 f"GroupPolicy {Commands.get('info')}causes Intercept，wait 15～50 min \n "
@@ -615,15 +619,16 @@ async def PrepareCheck(bot, msg, userId, groupId):
                                    parse_mode='MarkdownV2')
         except:
             pass
-        return True
+        return True, "#AutoBan"
     elif Commands.get("command") == "pass":
-        await bot.approve_chat_join_request(chat_id=str(groupId), user_id=str(userId))
+        _, _keys = verifyRedis.create_data(user_id=userId, group_id=groupId)
+        await verifyRedis.checker(unban=[_keys])
         try:
             await bot.send_message(userId, botWorker.convert(
                 f"GroupPolicy {Commands.get('info')}causes AutoMaticPassing"),
                                    parse_mode='MarkdownV2')
         except:
             pass
-        return True
+        return True, "#AutoPass"
     else:
-        return False
+        return False, ""
