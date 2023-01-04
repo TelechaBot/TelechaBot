@@ -64,10 +64,11 @@ class JsonRedis(object):
         import hashlib
         my_string = str(f"{user_id}{group_id}")
         hash_object = hashlib.sha256(my_string.encode())
+        _uuid = str(hash_object.hexdigest())[0:7]
         return f"Task_{user_id}_{group_id}", {"user": user_id,
                                               "group": group_id,
                                               "time": _time,
-                                              "uuid": str(hash_object.hexdigest()),
+                                              "uuid": _uuid,
                                               "interval": 240,
                                               }
 
