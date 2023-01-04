@@ -491,10 +491,10 @@ async def Start(bot, message, config):
                 await verifyRedis.remove_user(userId=message.from_user.id, groupId=group_k)
             else:
                 # 开始判断
-                _seem = f"开始验证群组 `{group_k}`" \
-                        f"\n\nPassID:`{key}`" \
-                        f"\nAuthID:`{message.from_user.id}`"
-                await bot.reply_to(message, _seem, parse_mode='MarkdownV2')
+                _seem = f"开始验证群组 {group_k}" \
+                        f"\n\nPassID #U{key}" \
+                        f"\nAuthID {message.from_user.id}"
+                await bot.reply_to(message, _seem)
                 # 拉取设置信息
                 load_csonfig()
                 min_, limit_ = botWorker.get_difficulty(group_k)
