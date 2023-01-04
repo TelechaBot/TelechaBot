@@ -48,7 +48,7 @@ class LogForm(object):
         try:
             if self.__logChannel < 0:
                 await self.__bot.send_message(self.__logChannel,
-                                              f"{tag} \n #User{uuid} -> #Group{str(group).strip('-')} \n{msg}")
+                                              f"{tag} \n User #U{uuid} -> #Group{str(group).strip('-')} \n{msg}")
         except Exception as e:
             logger.error(f"日志无法发送:{e}")
             return
