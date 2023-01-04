@@ -21,7 +21,6 @@ urlForm = {
         "https://raw.githubusercontent.com/TelechaBot/AntiSpam/main/Spam.txt",
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/色情类.txt",
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/广告.txt",
-        "https://raw.githubusercontent.com/Jaimin1304/sensitive-word-detector/main/sample_files/sample_banned_words.txt",
     ],
     "Nsfw.bin": [
         "https://raw.githubusercontent.com/fwwdn/sensitive-stop-words/master/色情类.txt"],
