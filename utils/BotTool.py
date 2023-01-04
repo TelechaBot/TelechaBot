@@ -9,6 +9,7 @@ import time
 import rtoml
 from rich.console import Console
 from telebot.asyncio_handler_backends import State, StatesGroup
+from loguru import logger
 
 
 class userStates(StatesGroup):
@@ -30,28 +31,25 @@ def save_csonfig():
     with open("./Config/config.json", "w", encoding="utf8") as f:
         json.dump(_csonfig, f, indent=4, ensure_ascii=False)
 
-class LogForm(object):
-    @staticmethod
-    async def send_ok(message, bot, groups):
-        user = botWorker.convert(message.from_user.id)
-        msgss = await bot.send_message(groups,
-                                       f"刚刚{user}通过了验证！",
-                                       parse_mode='MarkdownV2')
-        return msgss
 
-    @staticmethod
-    async def send_ban(message, bot, groups):
-        """
-        通知 Ban
-        :param message:
-        :param bot:
-        :param groups:
-        :return:
-        """
-        if _csonfig.get("GroupForm"):
-            msgss = await bot.send_message(groups,
-                                           f"刚刚{message.from_user.id}没有通过验证，已经被扭送月球...！"
-                                           f"\n用户12分钟后自动从黑名单中被保释")
+class LogForm(object):
+    def __init__(self, bot, logChannel):
+        self.__bot = bot
+        self.__logChannel = logChannel
+        pass
+
+    async def send(self, tag: str, user: int, group: int, msg: str = ""):
+        user = str(user)
+        group = str(group)
+        user = user[:-4] + "****"
+        # group = group[:-2] + "**"
+        try:
+            msgss = await self.__bot.send_message(self.__logChannel,
+                                                  f"{tag} \n #User{user} -> #Group{str(group).strip('-')} \n{msg}")
+        except Exception as e:
+            logger.error(f"日志无法发送:{e}")
+            return
+        else:
             return msgss
 
 

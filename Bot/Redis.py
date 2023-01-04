@@ -11,7 +11,7 @@ import loguru
 import redis
 import uuid
 import multiprocessing
-
+from loguru import logger
 from utils.DataManager import DataWorker
 
 task_lock = multiprocessing.Lock()
@@ -80,14 +80,14 @@ class JsonRedis(object):
             task_lock.acquire()
             groupKey = False
             key = False
-            for item in _MsgTask:
-                _Data = _MsgTask[item]
+            for keys in _MsgTask.keys():
+                _Data = _MsgTask[keys]
                 if str(_Data.get("user")) == str(userId):
                     groupKey = _Data.get("group")
                     key = _Data.get("uuid")
             return groupKey, key
         except Exception as err:
-            raise err
+            logger.error(f"ReadUser:{err}")
         finally:
             task_lock.release()
 
@@ -117,7 +117,7 @@ class JsonRedis(object):
             await JsonRedis.checker(unban=[_data])
             return Data.get("uuid")
         else:
-            return "没有记录"
+            return "无法寻址，你已经从表中被移除"
 
     @staticmethod
     async def remove_user(userId: int, groupId: int):
@@ -135,7 +135,7 @@ class JsonRedis(object):
         if ban is None:
             ban = []
         # 筛选数据
-        for key in _MsgTask:
+        for key in _MsgTask.keys():
             _data = _MsgTask[key]
             if abs(int(time.time()) - int(_data["time"])) > int(_data["interval"]):
                 ban.append({"user": _data["user"], "group": _data["group"]})
@@ -181,15 +181,20 @@ class JsonRedis(object):
                 from Bot.Controller import clientBot
                 bot, config = clientBot().botCreate()
                 try:
-                    await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
-                    await bot.ban_chat_member(chat_id=groupId, user_id=userId,
-                                              until_date=datetime.datetime.timestamp(
-                                                  datetime.datetime.now() + datetime.timedelta(minutes=12)))
-                except Exception as e:
-                    loguru.logger.error(e)
-                    # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
-                else:
+                    logger.info(f"拒绝了 {userId}{groupId}")
+                    try:
+                        await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
+                    except Exception as e:
+                        logger.info(f"请求不存在 {userId}{groupId}")
+                    else:
+                        await bot.ban_chat_member(chat_id=groupId,
+                                                  user_id=userId,
+                                                  until_date=datetime.datetime.timestamp(
+                                                      datetime.datetime.now() + datetime.timedelta(minutes=12)))
                     await bot.send_message(userId, f"验证失败或超时，此群组会话验证需要冷却 12 分钟")
+                except Exception as e:
+                    logger.error(f"验证消息发送失败:{e}")
+                    # await bot.decline_chat_join_request(chat_id=groupId, user_id=userId)
                 finally:
                     resign_Record.setKey(f"{userId}", groupId, exN=1)
                     await bot.delete_state(user_id=userId, chat_id=groupId)
