@@ -4,6 +4,7 @@
 # @Software: PyCharm
 # @Github    ：sudoskys
 import datetime
+import hashlib
 import json
 import time
 
@@ -60,11 +61,13 @@ class JsonRedis(object):
         user_id = str(user_id)
         # 上版的时间戳导致了重复的几率，所以采用新的队列算法
         _time = str(int(time.time()))
-        _uukey = uuid.uuid5(uuid.NAMESPACE_DNS, f"{user_id}{group_id}")
+        import hashlib
+        my_string = str(f"{user_id}{group_id}")
+        hash_object = hashlib.sha256(my_string.encode())
         return f"Task_{user_id}_{group_id}", {"user": user_id,
                                               "group": group_id,
                                               "time": _time,
-                                              "uuid": str(_uukey),
+                                              "uuid": str(hash_object.hexdigest()),
                                               "interval": 240,
                                               }
 
