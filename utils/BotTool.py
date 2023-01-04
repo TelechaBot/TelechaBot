@@ -44,13 +44,14 @@ class LogForm(object):
         user = user[:-4] + "****"
         # group = group[:-2] + "**"
         try:
-            msgss = await self.__bot.send_message(self.__logChannel,
-                                                  f"{tag} \n #User{user} -> #Group{str(group).strip('-')} \n{msg}")
+            if self.__logChannel < 0:
+                msgss = await self.__bot.send_message(self.__logChannel,
+                                                      f"{tag} \n #User{user} -> #Group{str(group).strip('-')} \n{msg}")
         except Exception as e:
             logger.error(f"日志无法发送:{e}")
             return
         else:
-            return msgss
+            return True
 
 
 class botWorker(object):

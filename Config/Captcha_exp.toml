@@ -2,6 +2,8 @@
 desc = "生物信息验证 Bot\nChannel @TelechaBot_real\ngithub.com/TelechaBot/TelechaBot"
 link = "https://t.me/SmartCapthaBot"
 botToken = '57xxxxxxxxxxxxxxxxxxxxdqMuqPs'
+logChannel = 0
+
 
 [ClientBot]
 owner = '5477776859'
