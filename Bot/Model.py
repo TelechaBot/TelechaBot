@@ -413,7 +413,7 @@ async def Verify(bot, message, config):
                 await bot.delete_state(message.from_user.id, message.chat.id)
                 #
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, int(group_k))
-                await LogForm(bot=bot, logChannel=config.logChannel).send(tag="#Pass #V1",
+                await LogForm(bot=bot, logChannel=config.logChannel).send(tag="#Pass",
                                                                           user=message.from_user.id,
                                                                           group=int(group_k)
                                                                           )
