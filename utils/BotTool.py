@@ -3,9 +3,12 @@
 # @FileName: Model.py
 # @Software: PyCharm
 # @Github    ：sudoskys
+import hashlib
 import json
 import pathlib
 import time
+from typing import Union
+
 import rtoml
 from rich.console import Console
 from telebot.asyncio_handler_backends import State, StatesGroup
@@ -38,15 +41,14 @@ class LogForm(object):
         self.__logChannel = logChannel
         pass
 
-    async def send(self, tag: str, user: int, group: int, msg: str = ""):
-        user = str(user)
+    async def send(self, tag: str, user: str, group: Union[int, str], msg: str = ""):
+        uuid = str(user)
         group = str(group)
-        user = user[:-4] + "****"
         # group = group[:-2] + "**"
         try:
             if self.__logChannel < 0:
-                msgss = await self.__bot.send_message(self.__logChannel,
-                                                      f"{tag} \n #User{user} -> #Group{str(group).strip('-')} \n{msg}")
+                await self.__bot.send_message(self.__logChannel,
+                                              f"{tag} \n #User{uuid} -> #Group{str(group).strip('-')} \n{msg}")
         except Exception as e:
             logger.error(f"日志无法发送:{e}")
             return

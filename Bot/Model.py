@@ -403,6 +403,7 @@ async def Verify(bot, message, config):
             data = User_Data(**data_raw)
             group_k = data.Group
             QA = data.QaPair
+            UUID = data.UUID
         else:
             logger.error(f"Bad Verify")
             return
@@ -414,7 +415,7 @@ async def Verify(bot, message, config):
                 #
                 verify_info = await verifyRedis.grant_resign(message.from_user.id, int(group_k))
                 await LogForm(bot=bot, logChannel=config.logChannel).send(tag="#Pass",
-                                                                          user=message.from_user.id,
+                                                                          user=UUID,
                                                                           group=int(group_k)
                                                                           )
                 #
@@ -428,7 +429,7 @@ async def Verify(bot, message, config):
                 _, _keys = verifyRedis.create_data(user_id=message.from_user.id, group_id=group_k)
                 await verifyRedis.checker(ban=[_keys])
                 await LogForm(bot=bot, logChannel=config.logChannel).send(tag="#Unpass ",
-                                                                          user=message.from_user.id,
+                                                                          user=UUID,
                                                                           group=int(group_k)
                                                                           )
                 await bot.reply_to(message, '回答错误')
@@ -470,8 +471,10 @@ async def Saveme(bot, message, config):
                 # 处理发送题目 paper tip
                 await deal_send(bot, message, sth=QAPair, tip=tip)
                 # await bot.delete_state(message.from_user.id, message.chat.id)
-                data = {'QaPair': QAPair, 'Group': group_k, 'Times': times}
-                resign_Record.setKey(f"{message.from_user.id}_data", User_Data(**data).dict(), exN=500)
+                new_data = {'QaPair': QAPair, 'Group': group_k, 'Times': times}
+                _now = data.dict()
+                _now.update(new_data)
+                resign_Record.setKey(f"{message.from_user.id}_data", User_Data(**_now).dict(), exN=500)
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
 
 
@@ -507,7 +510,7 @@ async def Start(bot, message, config):
                 Question, Answer = CaptchaCore.Importer(s=time.time()).pull(min_, limit_, model_name=model)
                 QAPair = [Question, Answer]
                 await deal_send(bot, message, sth=QAPair, tip="\n\n输入 /saveme 重新生成题目.")
-                data = {'QaPair': QAPair, 'Group': group_k, 'Times': RETRIES}
+                data = {'QaPair': QAPair, 'Group': group_k, 'Times': RETRIES, "UUID": str(key)}
                 resign_Record.setKey(f"{message.from_user.id}_data", User_Data(**data).dict(), exN=500)
                 # 注册状态
                 await bot.set_state(message.from_user.id, userStates.answer, message.chat.id)
@@ -533,16 +536,16 @@ async def NewRequest(bot, msg: types.Message, config):
     logger.info(f"NewReq:{msg.from_user.id}:{msg.chat.id} --user {msg.from_user.last_name} --title {msg.chat.title}")
     WorkOn = await botWorker.checkGroup(bot, msg, config)
     if WorkOn:
-        group_k, key = verifyRedis.read_user(msg.from_user.id)
+        group_k, UUID = verifyRedis.read_user(msg.from_user.id)
         if not group_k:
-            resign_key = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
+            UUID = verifyRedis.resign_user(msg.from_user.id, msg.chat.id)
             # 字符处理
             user = botWorker.convert(msg.from_user.id)
             group_name = botWorker.convert(msg.chat.title)
             _info = f"您正在申请加入 `{group_name}` " \
                     f"\nAuthID `{user}`" \
                     f"\nChatID `{msg.chat.id}`" \
-                    f"\nPassID `{resign_key}`" \
+                    f"\nPassID `{UUID}`" \
                     f"\n从现在开始您有 240 秒时间开始验证！如果期间您被管理员拒绝或同意,机器人并不会向您发送通知" \
                     f"\n按下 \/start 开始验证"
             try:
@@ -551,12 +554,12 @@ async def NewRequest(bot, msg: types.Message, config):
                 logger.error(f"InitRequest:{e}")
                 await LogForm(bot=bot, logChannel=config.logChannel).send(
                     tag=f"#UnreachableRequest \n{msg.chat.title}",
-                    user=msg.from_user.id,
+                    user=UUID,
                     group=msg.chat.id
                 )
             else:
                 await LogForm(bot=bot, logChannel=config.logChannel).send(tag=f"#Request \n{msg.chat.title}",
-                                                                          user=msg.from_user.id,
+                                                                          user=UUID,
                                                                           group=msg.chat.id
                                                                           )
         else:

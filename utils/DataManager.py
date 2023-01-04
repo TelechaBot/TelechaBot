@@ -22,6 +22,7 @@ class User_Data(BaseModel):
     QaPair: list
     Group: str
     Times: int
+    UUID: str = "not found"
 
 
 class CommandTable(object):
