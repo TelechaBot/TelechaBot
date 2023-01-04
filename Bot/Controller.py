@@ -79,22 +79,22 @@ class clientBot(object):
     def run(self):
         load_csonfig()
         if _csonfig.get("statu"):
-            logger.info("Bot Start")
+            logger.success("Bot Start")
             bot, config = self.botCreate()
             if config.get("Proxy"):
                 if config.Proxy.status:
                     from telebot import asyncio_helper
                     asyncio_helper.proxy = config.Proxy.url  # 'http://127.0.0.1:7890'  # url
-                    logger.info("正在使用隧道！")
+                    logger.success("正在使用隧道！")
 
             # 捕获加群请求
             @bot.chat_join_request_handler()
-            async def new_request(message: telebot.types.ChatJoinRequest):
+            async def new_request(message):
                 await Bot.Model.NewRequest(bot, message, config)
 
             # 捕获私聊启动请求
             @bot.message_handler(commands=["start", 'about'])
-            async def handle_command(message):
+            async def handle_command(message: types.Message):
                 if "/start" in message.text:
                     await Bot.Model.Start(bot, message, config)
                 elif "/about" in message.text:
@@ -102,30 +102,26 @@ class clientBot(object):
 
             # 验证
             @bot.message_handler(state="*", commands='saveme')
-            async def save_me(message):
+            async def save_me(message: types.Message):
                 await Bot.Model.Saveme(bot, message, config)
 
             @bot.message_handler(state=userStates.answer)
-            async def check_answer(message):
+            async def check_answer(message: types.Message):
                 await Bot.Model.Verify(bot, message, config)
-
-            @bot.message_handler(state=userStates.answer2)
-            async def check_answer(message):
-                await Bot.Model.Verify2(bot, message, config)
 
             # 私聊事件捕获
             @bot.message_handler(content_types=['text'], chat_types=['private'])
-            async def handle_private_msg(message):
+            async def handle_private_msg(message: types.Message):
                 await Bot.Model.Switch(bot, message, config)
 
             # 非管理命令捕获
             @bot.message_handler(is_chat_admin=False, chat_types=['supergroup', 'group'])
-            async def group_msg_no_admin(message):
+            async def group_msg_no_admin(message: types.Message):
                 await Bot.Model.Group_User(bot, message, config)
 
             # 管理命令捕获
             @bot.message_handler(chat_types=['supergroup', 'group'], is_chat_admin=True)
-            async def group_msg_admin(message):
+            async def group_msg_admin(message: types.Message):
                 await Bot.Model.Admin(bot, message, config)
 
             # 加群提示

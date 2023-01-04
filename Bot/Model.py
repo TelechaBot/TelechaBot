@@ -361,21 +361,16 @@ async def deal_send(bot, message, sth, tip):
     # "\n\n输入 /saveme 重新生成题目，答题后不能重置。"
     if sth[0].get("type") == "text" or sth[0].get("type") is None:
         await bot.reply_to(message,
-                           botWorker.convert(
-                               sth[0].get("question")) + tip,
-                           parse_mode='MarkdownV2'
+                           sth[0].get("question") + tip,
                            )
     elif sth[0].get("type") == "photo":
         await bot.send_photo(message.chat.id,
-                             caption=botWorker.convert(
-                                 sth[0].get("question")) + tip,
+                             caption=sth[0].get("question") + tip,
                              photo=sth[0].get("picture"),
-                             parse_mode='MarkdownV2'
                              )
     elif sth[0].get("type") == "voice":
         await bot.send_message(message.chat.id,
-                               text=botWorker.convert(sth[0].get(
-                                   "question")) + tip, parse_mode='MarkdownV2')
+                               text=sth[0].get("question") + tip)
         await bot.send_audio(message.chat.id, audio=open(sth[0].get("voice_path"), 'rb'))
     else:
         await bot.reply_to(message, "题库出现了没有标记的类型数据，无法出题")
