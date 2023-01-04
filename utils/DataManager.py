@@ -18,6 +18,12 @@ except Exception:
     redis_installed = False
 
 
+class User_Data(BaseModel):
+    QaPair: list
+    Group: str
+    Times: int
+
+
 class CommandTable(object):
     @staticmethod
     def GroupStrategy_door_strategy():

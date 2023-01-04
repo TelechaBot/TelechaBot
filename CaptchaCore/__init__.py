@@ -32,6 +32,57 @@ def MD5(strs: str):
     return hl.hexdigest()
 
 
+sym = [":", ".", ",", "、", " "]
+opt = ["A", "B", "C", "D", "a", "b", "c", "d"]
+_reco = []
+for ir in opt:
+    for idr in sym:
+        _reco.append(ir + idr)
+
+
+def random_sign(weight):
+    seed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    sa = []
+    weight = weight if weight > 0 else 1
+    for i in range(weight):
+        sa.append(random.choice(seed))
+    result = ''.join(sa)
+    return result
+
+
+def random_qa_machine(q_list: list, a: str) -> tuple:
+    # 判定答案
+    mix_bucket = []
+    answer = []
+    if not q_list and not a:
+        return q_list, a
+
+    def _cut(strs: str):
+        strs = strs.strip(" ")
+        for ip in _reco:
+            strs = strs.strip(ip)
+        return strs
+
+    for i in q_list:
+        if a in i[0:3]:
+            answer.append(_cut(i))
+        else:
+            mix_bucket.append(_cut(i))
+    if len(answer) != 1:
+        return q_list, a
+    rando_opt = list(set([random_sign(2) for i in range(len(q_list))]))
+    answer_opt = rando_opt.pop(0)
+    if len(rando_opt) != len(mix_bucket):
+        return q_list, a
+    # 建立映射关系
+    new_list = []
+    for option, items in zip(rando_opt, mix_bucket):
+        new_list.append(f"{option}. {items}")
+    new_answer = f"{answer_opt}. {answer[0]}"
+    new_list.append(new_answer)
+    return new_list, answer_opt
+
+
 class TTS_CN(object):
     def __init__(self, sample):
         self.id = sample
@@ -299,8 +350,10 @@ class bili_hard_core(object):
                 b = str(key_obj.get("opt2"))
                 c = str(key_obj.get("opt3"))
                 d = str(key_obj.get("opt4"))
-                Q = f"{q}\n{a}\n{b}\n{c}\n{d}\n请回答 A|B|C|D 选项大写字母"
-                A = key_obj.get("answer")
+                Q_list = [a, b, c, d]
+                Q_list, A = random_qa_machine(Q_list, key_obj.get("answer"))
+                _opt = '\n'.join(Q_list)
+                Q = f"{q}\n{_opt}\n请回答选项二位大写字母"
                 Question = {"question": Q, "type": "text"}
                 Answer = {"rightKey": A}
             else:
@@ -659,6 +712,7 @@ class binary_first_equation(object):
         if not iss:
             A = 0
         Q = f"已知二元一次方程 ax²+bx+c=0，其中a为{a}，b为{b}，c为{c}。求其两根的和四舍五入后的绝对值。如果无解请写0."
+        Q = f"Given a quadratic equation ax²+bx+c=0, where a is {a}, b is {b} and c is {c}, calculate the absolute value of the sum of the two roots rounded to the nearest integer. If there is no solution, write 0."
         Question = {"question": Q, "type": "text"}
         Answer = {"rightKey": round(abs(A))}
         return Question, Answer
