@@ -132,7 +132,8 @@ class clientBot(object):
             # 服务消息删除
             @bot.message_handler(content_types=util.content_type_service)
             async def service_msg(message: types.Message):
-                await Bot.Model.msg_del(bot, message, config)
+                pass
+                # await Bot.Model.msg_del(bot, message, config)
 
             # 题库回调
             @bot.callback_query_handler(func=lambda call: True)
